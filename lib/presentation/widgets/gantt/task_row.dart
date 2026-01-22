@@ -81,7 +81,7 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final indent = widget.task.level * GanttConstants.treeIndent;
-    final statusColor = AppColors.getTaskStatusColor(widget.task.status);
+    final delayStatus = widget.task.delayStatus;
     final categoryColor = AppColors.getCategoryColor(widget.task.category);
 
     return MouseRegion(
@@ -105,19 +105,22 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
           ),
           child: Row(
             children: [
+              // 左ステータスレール（遅延状態で色が変わる）
+              _buildStatusRail(delayStatus),
+
               // Indentation and expand button
               SizedBox(width: GanttConstants.cellPadding + indent),
               _buildExpandButton(),
               const SizedBox(width: 4),
 
-              // Status indicator
-              _buildStatusIndicator(statusColor),
-              const SizedBox(width: 8),
-
               // Task name and info
               Expanded(
-                child: _buildTaskInfo(categoryColor),
+                child: _buildTaskInfoEnhanced(categoryColor, delayStatus),
               ),
+
+              // 添付アイコン
+              _buildAttachmentIcons(),
+              const SizedBox(width: 8),
 
               // Progress indicator
               _buildProgressBadge(),
@@ -125,6 +128,237 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 左ステータスレール（太め、遅延状態で色変化）
+  Widget _buildStatusRail(DelayStatus status) {
+    return Container(
+      width: 4,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: status.color,
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(2),
+          bottomRight: Radius.circular(2),
+        ),
+      ),
+    );
+  }
+
+  /// 強化版タスク情報（期限・担当者を含む）
+  Widget _buildTaskInfoEnhanced(Color categoryColor, DelayStatus delayStatus) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 1行目: タスク名
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.task.name,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: widget.task.level == 0
+                      ? FontWeight.w600
+                      : FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // 2行目: ステータス・期限・担当者
+        Row(
+          children: [
+            // 遅延/待ちバッジ
+            if (delayStatus != DelayStatus.onTrack) ...[
+              _buildDelayBadge(delayStatus),
+              const SizedBox(width: 6),
+            ],
+            // 期限表示
+            _buildDeadlineChip(),
+            const SizedBox(width: 6),
+            // 担当者チップ
+            if (widget.task.assigneeDisplayText.isNotEmpty) ...[
+              _buildAssigneeChip(),
+              const SizedBox(width: 6),
+            ],
+            // フェーズバッジ
+            if (widget.phase != null) ...[
+              _buildPhaseBadge(widget.phase!),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 遅延/待ちバッジ
+  Widget _buildDelayBadge(DelayStatus status) {
+    String text;
+    if (status == DelayStatus.overdue) {
+      final days = widget.task.daysOverdue;
+      text = '+$days日';
+    } else if (status == DelayStatus.blocked) {
+      text = widget.task.blockingReason?.displayName ?? '待ち';
+    } else {
+      text = status.displayName;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: status.color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: status.color.withValues(alpha: 0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            status.icon,
+            size: 10,
+            color: status.color,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              color: status.color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 期限チップ
+  Widget _buildDeadlineChip() {
+    final deadlineText = widget.task.deadlineText;
+    final isOverdue = widget.task.isOverdue;
+    final isToday = widget.task.isToday;
+
+    Color textColor;
+    if (isOverdue) {
+      textColor = AppColors.error;
+    } else if (isToday) {
+      textColor = AppColors.warning;
+    } else {
+      textColor = AppColors.textSecondary;
+    }
+
+    return Text(
+      '期日 ${widget.task.endDate.month}/${widget.task.endDate.day} ($deadlineText)',
+      style: TextStyle(
+        fontSize: 10,
+        color: textColor,
+        fontWeight: isOverdue ? FontWeight.w600 : FontWeight.w400,
+      ),
+    );
+  }
+
+  /// 担当者チップ
+  Widget _buildAssigneeChip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.person_outline,
+            size: 10,
+            color: AppColors.primary,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            widget.task.assigneeDisplayText,
+            style: const TextStyle(
+              fontSize: 9,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 添付アイコン群
+  Widget _buildAttachmentIcons() {
+    final status = widget.task.attachmentStatus;
+    if (!status.hasAny) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 図面アイコン
+        if (status.hasDrawing)
+          _buildAttachmentIcon(
+            Icons.architecture,
+            status.isLatestDrawing ? AppColors.success : AppColors.textTertiary,
+            status.isLatestDrawing ? '最新' : null,
+          ),
+        // 写真アイコン
+        if (status.photoCount > 0)
+          _buildAttachmentIcon(
+            Icons.photo_camera,
+            status.todayPhotoCount > 0 ? AppColors.primary : AppColors.textTertiary,
+            status.todayPhotoCount > 0 ? '${status.todayPhotoCount}' : null,
+          ),
+        // コメントアイコン
+        if (status.unreadComments > 0)
+          _buildAttachmentIcon(
+            Icons.chat_bubble_outline,
+            status.hasActionRequired ? AppColors.error : AppColors.warning,
+            '${status.unreadComments}',
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAttachmentIcon(IconData icon, Color color, String? badge) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(icon, size: 14, color: color),
+          if (badge != null)
+            Positioned(
+              right: -4,
+              top: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    fontSize: 8,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

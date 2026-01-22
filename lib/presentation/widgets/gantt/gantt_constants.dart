@@ -5,8 +5,14 @@ class GanttConstants {
   GanttConstants._();
 
   // ============== Dimensions ==============
-  /// Height of each task row in the Gantt chart
-  static const double rowHeight = 44.0;
+  /// Height of each task row in the Gantt chart (現場向けに拡大: 56px)
+  static const double rowHeight = 56.0;
+
+  /// Height of parent task row (親タスク用)
+  static const double parentRowHeight = 60.0;
+
+  /// Height of child task row (子タスク用)
+  static const double childRowHeight = 52.0;
 
   /// Height of the timeline header (month + day rows)
   static const double headerHeight = 60.0;
