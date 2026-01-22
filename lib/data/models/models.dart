@@ -8,3 +8,5 @@ export 'material_model.dart';
 export 'project_flow_model.dart';
 export 'dependency_model.dart';
 export 'project_health_model.dart';
+export 'attendance_model.dart';
+export 'construction_photo_model.dart';
