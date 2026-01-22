@@ -22,6 +22,12 @@ class Task {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// フェーズID（バトンパス方式の工程管理用）
+  final String? phaseId;
+
+  /// 担当業者名
+  final String? contractorName;
+
   const Task({
     required this.id,
     required this.projectId,
@@ -42,6 +48,8 @@ class Task {
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.phaseId,
+    this.contractorName,
   });
 
   Task copyWith({
@@ -64,6 +72,8 @@ class Task {
     String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? phaseId,
+    String? contractorName,
   }) {
     return Task(
       id: id ?? this.id,
@@ -85,6 +95,8 @@ class Task {
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      phaseId: phaseId ?? this.phaseId,
+      contractorName: contractorName ?? this.contractorName,
     );
   }
 
@@ -117,6 +129,8 @@ class Task {
       'notes': notes,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'phaseId': phaseId,
+      'contractorName': contractorName,
     };
   }
 
@@ -144,6 +158,8 @@ class Task {
       notes: json['notes'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      phaseId: json['phaseId'] as String?,
+      contractorName: json['contractorName'] as String?,
     );
   }
 
