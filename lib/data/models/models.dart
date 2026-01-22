@@ -16,3 +16,4 @@ export 'notification_feedback_model.dart';
 export 'change_event_model.dart';
 export 'subscription_model.dart';
 export 'row_level_security_model.dart';
+export 'task_change_history_model.dart';

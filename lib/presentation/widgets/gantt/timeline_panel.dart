@@ -510,7 +510,7 @@ class _VerticalGridPainter extends CustomPainter {
   }
 }
 
-/// Today column highlight painter
+/// Today column highlight painter with week band
 class _TodayColumnPainter extends CustomPainter {
   final DateTime startDate;
   final double dayWidth;
@@ -530,21 +530,62 @@ class _TodayColumnPainter extends CustomPainter {
     final daysDiff = today.difference(startDate).inDays;
     final x = daysDiff * dayWidth;
 
-    // Draw today column highlight
+    // 今週の帯を描画（月曜日から日曜日）
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+    final weekEnd = weekStart.add(const Duration(days: 6));
+
+    final weekStartDiff = weekStart.difference(startDate).inDays;
+    final weekEndDiff = weekEnd.difference(startDate).inDays;
+
+    if (weekStartDiff >= 0) {
+      final weekStartX = weekStartDiff * dayWidth;
+      final weekWidth = (weekEndDiff - weekStartDiff + 1) * dayWidth;
+      final weekRect = Rect.fromLTWH(
+        weekStartX.clamp(0.0, size.width),
+        0,
+        weekWidth.clamp(0.0, size.width - weekStartX),
+        size.height,
+      );
+
+      // 今週帯の背景色（薄い）
+      final weekPaint = Paint()
+        ..color = AppColors.primary.withOpacity(GanttConstants.thisWeekBandOpacity)
+        ..style = PaintingStyle.fill;
+
+      canvas.drawRect(weekRect, weekPaint);
+    }
+
+    // 今日のカラム背景（やや強調）
     final rect = Rect.fromLTWH(x, 0, dayWidth, size.height);
     final paint = Paint()
-      ..color = AppColors.ganttToday.withOpacity(0.3)
+      ..color = AppColors.ganttToday.withOpacity(0.35)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(rect, paint);
 
-    // Draw today line
+    // 今日ラインのグロー効果
+    final lineX = x + dayWidth / 2;
+
+    // グロー（外側）
+    final glowPaint = Paint()
+      ..color = AppColors.ganttTodayLine.withOpacity(0.3)
+      ..strokeWidth = GanttConstants.todayLineWidth + GanttConstants.todayLineGlowRadius
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+
+    canvas.drawLine(
+      Offset(lineX, 0),
+      Offset(lineX, size.height),
+      glowPaint,
+    );
+
+    // 今日ライン（太く強調）
     final linePaint = Paint()
       ..color = AppColors.ganttTodayLine
       ..strokeWidth = GanttConstants.todayLineWidth
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
-    final lineX = x + dayWidth / 2;
     canvas.drawLine(
       Offset(lineX, 0),
       Offset(lineX, size.height),

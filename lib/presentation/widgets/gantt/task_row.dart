@@ -199,14 +199,20 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
     );
   }
 
-  /// 遅延/待ちバッジ
+  /// 遅延/待ちバッジ（⚠ +Xd形式で視覚強調）
   Widget _buildDelayBadge(DelayStatus status) {
     String text;
+    bool isUrgent = false;
+
     if (status == DelayStatus.overdue) {
       final days = widget.task.daysOverdue;
-      text = '+$days日';
+      text = '+${days}d';
+      isUrgent = days >= 3; // 3日以上遅延は緊急扱い
     } else if (status == DelayStatus.blocked) {
       text = widget.task.blockingReason?.displayName ?? '待ち';
+    } else if (status == DelayStatus.atRisk) {
+      final days = widget.task.daysRemaining;
+      text = '残${days}d';
     } else {
       text = status.displayName;
     }
@@ -214,28 +220,44 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: status.color.withValues(alpha: 0.15),
+        color: status.color.withValues(alpha: isUrgent ? 0.25 : 0.15),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: status.color.withValues(alpha: 0.4),
-          width: 1,
+          color: status.color.withValues(alpha: isUrgent ? 0.7 : 0.4),
+          width: isUrgent ? 1.5 : 1,
         ),
+        boxShadow: isUrgent
+            ? [
+                BoxShadow(
+                  color: status.color.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  spreadRadius: 0,
+                ),
+              ]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            status.icon,
-            size: 10,
-            color: status.color,
-          ),
+          // ⚠️ アイコン（遅延時は警告マーク）
+          if (status == DelayStatus.overdue)
+            const Text(
+              '⚠',
+              style: TextStyle(fontSize: 10),
+            )
+          else
+            Icon(
+              status.icon,
+              size: 10,
+              color: status.color,
+            ),
           const SizedBox(width: 3),
           Text(
             text,
             style: TextStyle(
               fontSize: 10,
               color: status.color,
-              fontWeight: FontWeight.w600,
+              fontWeight: isUrgent ? FontWeight.w700 : FontWeight.w600,
             ),
           ),
         ],
@@ -757,6 +779,41 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                               color: Colors.white,
                             ),
                           ),
+                        ),
+                      ),
+                    ),
+                  // 遅延インジケーター（⚠ +Xd形式）
+                  if (widget.task.delayStatus == DelayStatus.overdue)
+                    Positioned(
+                      right: widget.width > 80 ? 40 : 4,
+                      top: -8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.error.withOpacity(0.4),
+                              blurRadius: 4,
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('⚠', style: TextStyle(fontSize: 9)),
+                            const SizedBox(width: 2),
+                            Text(
+                              '+${widget.task.daysOverdue}d',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

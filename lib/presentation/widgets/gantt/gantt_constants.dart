@@ -62,8 +62,14 @@ class GanttConstants {
   /// Horizontal gap for dependency routing
   static const double dependencyHorizontalGap = 8.0;
 
-  /// Width of the today line
-  static const double todayLineWidth = 2.0;
+  /// Width of the today line (太く強調)
+  static const double todayLineWidth = 3.0;
+
+  /// Width of this week background band
+  static const double thisWeekBandOpacity = 0.08;
+
+  /// Today line glow blur radius
+  static const double todayLineGlowRadius = 6.0;
 
   /// Width of the progress indicator within task bar
   static const double progressBarHeight = 4.0;

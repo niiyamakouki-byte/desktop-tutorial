@@ -19,3 +19,6 @@ export 'batch_notification_service.dart';
 // Detection & Analysis services
 export 'conflict_detection_service.dart';
 export 'delay_report_generator.dart';
+
+// History services
+export 'change_history_service.dart';
