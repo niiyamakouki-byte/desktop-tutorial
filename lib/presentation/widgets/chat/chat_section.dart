@@ -24,6 +24,7 @@ class ChatSection extends StatefulWidget {
   final VoidCallback? onLoadMore;
   final bool isLoadingMore;
   final bool hasMoreMessages;
+  final bool autoFocusInput;
 
   const ChatSection({
     super.key,
@@ -42,6 +43,7 @@ class ChatSection extends StatefulWidget {
     this.onLoadMore,
     this.isLoadingMore = false,
     this.hasMoreMessages = false,
+    this.autoFocusInput = false,
   });
 
   @override
@@ -51,6 +53,9 @@ class ChatSection extends StatefulWidget {
 class _ChatSectionState extends State<ChatSection> {
   final ScrollController _scrollController = ScrollController();
   bool _showScrollToBottom = false;
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -62,7 +67,40 @@ class _ChatSectionState extends State<ChatSection> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _handleMessageSent() {
+    // Auto-scroll to bottom after sending a message
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: AppConstants.animationNormal,
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchQuery = '';
+        _searchController.clear();
+      }
+    });
+  }
+
+  List<Message> get _filteredMessages {
+    if (_searchQuery.isEmpty) return widget.messages;
+    final query = _searchQuery.toLowerCase();
+    return widget.messages.where((m) {
+      return m.content.toLowerCase().contains(query) ||
+          (m.sender?.name.toLowerCase().contains(query) ?? false);
+    }).toList();
   }
 
   void _onScroll() {
@@ -98,6 +136,7 @@ class _ChatSectionState extends State<ChatSection> {
       child: Column(
         children: [
           _buildChatHeader(),
+          if (_isSearching) _buildSearchBar(),
           Expanded(child: _buildMessageList()),
           if (widget.typingUsers.isNotEmpty)
             TypingIndicator(typingUsers: widget.typingUsers),
@@ -108,6 +147,93 @@ class _ChatSectionState extends State<ChatSection> {
             onTyping: widget.onTyping,
             onAttachmentTap: widget.onAttachmentTap,
             onCancelReply: widget.onCancelReply,
+            autoFocus: widget.autoFocusInput,
+            onMessageSent: _handleMessageSent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    final resultCount = _filteredMessages.length;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.paddingM,
+        vertical: AppConstants.paddingS,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        border: const Border(
+          bottom: BorderSide(color: AppColors.border, width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.inputBackground,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+                decoration: const InputDecoration(
+                  hintText: 'メッセージを検索...',
+                  hintStyle: TextStyle(
+                    color: AppColors.textTertiary,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: AppColors.iconDefault,
+                    size: 18,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: AppConstants.paddingS),
+          if (_searchQuery.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: resultCount > 0 ? AppColors.primary.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$resultCount件',
+                style: TextStyle(
+                  color: resultCount > 0 ? AppColors.primary : AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          const SizedBox(width: AppConstants.paddingS),
+          IconButton(
+            onPressed: _toggleSearch,
+            icon: const Icon(Icons.close, size: 20),
+            color: AppColors.iconDefault,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            padding: EdgeInsets.zero,
           ),
         ],
       ),
@@ -241,19 +367,17 @@ class _ChatSectionState extends State<ChatSection> {
           const SizedBox(width: AppConstants.paddingS),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
+              color: _isSearching ? AppColors.primary.withOpacity(0.1) : AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
-              onPressed: () {
-                // Search functionality
-              },
-              icon: const Icon(
-                Icons.search,
-                color: AppColors.iconDefault,
+              onPressed: _toggleSearch,
+              icon: Icon(
+                _isSearching ? Icons.search_off : Icons.search,
+                color: _isSearching ? AppColors.primary : AppColors.iconDefault,
                 size: 20,
               ),
-              tooltip: 'メッセージを検索',
+              tooltip: _isSearching ? '検索を閉じる' : 'メッセージを検索',
               constraints: const BoxConstraints(
                 minWidth: 36,
                 minHeight: 36,
@@ -267,7 +391,33 @@ class _ChatSectionState extends State<ChatSection> {
   }
 
   Widget _buildMessageList() {
-    final messageGroups = MessageGroup.groupByDate(widget.messages);
+    final messagesToShow = _filteredMessages;
+
+    // Show empty state when search has no results
+    if (_isSearching && _searchQuery.isNotEmpty && messagesToShow.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              color: AppColors.textTertiary,
+              size: 48,
+            ),
+            const SizedBox(height: AppConstants.paddingM),
+            Text(
+              '「$_searchQuery」に一致するメッセージがありません',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final messageGroups = MessageGroup.groupByDate(messagesToShow);
 
     return Stack(
       children: [

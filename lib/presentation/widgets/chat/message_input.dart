@@ -17,6 +17,8 @@ class MessageInput extends StatefulWidget {
   final User? currentUser;
   final bool enabled;
   final String? placeholder;
+  final bool autoFocus;
+  final VoidCallback? onMessageSent;
 
   const MessageInput({
     super.key,
@@ -28,6 +30,8 @@ class MessageInput extends StatefulWidget {
     this.currentUser,
     this.enabled = true,
     this.placeholder,
+    this.autoFocus = false,
+    this.onMessageSent,
   });
 
   @override
@@ -39,11 +43,30 @@ class _MessageInputState extends State<MessageInput> {
   final FocusNode _focusNode = FocusNode();
   final List<Attachment> _pendingAttachments = [];
   bool _isComposing = false;
+  bool _isSending = false;
+  bool _showSentFeedback = false;
 
   @override
   void initState() {
     super.initState();
     _textController.addListener(_onTextChanged);
+    // Auto-focus when widget is first built if autoFocus is true
+    if (widget.autoFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusNode.requestFocus();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(MessageInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Request focus when autoFocus changes from false to true
+    if (widget.autoFocus && !oldWidget.autoFocus && widget.enabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusNode.requestFocus();
+      });
+    }
   }
 
   @override
@@ -64,16 +87,42 @@ class _MessageInputState extends State<MessageInput> {
     widget.onTyping?.call(_textController.text);
   }
 
-  void _handleSend() {
+  void _handleSend() async {
     final text = _textController.text.trim();
     if (text.isEmpty && _pendingAttachments.isEmpty) return;
+    if (_isSending) return; // Prevent double-send
 
+    setState(() {
+      _isSending = true;
+    });
+
+    // Call send callback
     widget.onSend?.call(text, List.from(_pendingAttachments));
+
+    // Clear input
     _textController.clear();
     _pendingAttachments.clear();
+
+    // Show sent feedback briefly
     setState(() {
       _isComposing = false;
+      _isSending = false;
+      _showSentFeedback = true;
     });
+
+    // Notify parent that message was sent (for auto-scroll)
+    widget.onMessageSent?.call();
+
+    // Hide feedback after brief delay
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (mounted) {
+      setState(() {
+        _showSentFeedback = false;
+      });
+    }
+
+    // Keep focus on input for continuous typing
+    _focusNode.requestFocus();
   }
 
   void _handleKeyPress(KeyEvent event) {
@@ -300,10 +349,10 @@ class _MessageInputState extends State<MessageInput> {
             fontSize: 14,
           ),
           decoration: InputDecoration(
-            hintText: widget.placeholder ?? 'メッセージを入力...',
+            hintText: widget.placeholder ?? 'メッセージを入力...  (Enter送信 / Shift+Enter改行)',
             hintStyle: const TextStyle(
               color: AppColors.textTertiary,
-              fontSize: 14,
+              fontSize: 13,
             ),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(
@@ -311,6 +360,21 @@ class _MessageInputState extends State<MessageInput> {
               vertical: AppConstants.paddingS,
             ),
             counterText: '',
+            suffixIcon: _textController.text.length > 4500
+                ? Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      '${_textController.text.length}/${AppConstants.maxMessageLength}',
+                      style: TextStyle(
+                        color: _textController.text.length > 4900
+                            ? AppColors.error
+                            : AppColors.textTertiary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  )
+                : null,
+            suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
           ),
         ),
       ),
@@ -318,40 +382,82 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   Widget _buildSendButton() {
-    final canSend = _isComposing || _pendingAttachments.isNotEmpty;
+    final canSend = (_isComposing || _pendingAttachments.isNotEmpty) && !_isSending;
+
+    // Show sent feedback (checkmark)
+    if (_showSentFeedback) {
+      return AnimatedContainer(
+        duration: AppConstants.animationFast,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.success,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.check,
+            color: Colors.white,
+            size: AppConstants.iconSizeM,
+          ),
+        ),
+      );
+    }
+
+    // Show loading state
+    if (_isSending) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          shape: BoxShape.circle,
+        ),
+        child: const Padding(
+          padding: EdgeInsets.all(10),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
 
     return AnimatedContainer(
       duration: AppConstants.animationFast,
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: canSend && widget.enabled ? _handleSend : null,
-          borderRadius: BorderRadius.circular(AppConstants.radiusRound),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: canSend && widget.enabled
-                  ? AppColors.primaryGradient
-                  : null,
-              color: canSend && widget.enabled ? null : AppColors.surfaceVariant,
-              shape: BoxShape.circle,
-              boxShadow: canSend && widget.enabled
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Icon(
-              Icons.send,
-              color: canSend && widget.enabled
-                  ? AppColors.textOnPrimary
-                  : AppColors.textTertiary,
-              size: AppConstants.iconSizeM,
+        child: Tooltip(
+          message: canSend ? '送信 (Enter)' : '',
+          child: InkWell(
+            onTap: canSend && widget.enabled ? _handleSend : null,
+            borderRadius: BorderRadius.circular(AppConstants.radiusRound),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: canSend && widget.enabled
+                    ? AppColors.primaryGradient
+                    : null,
+                color: canSend && widget.enabled ? null : AppColors.surfaceVariant,
+                shape: BoxShape.circle,
+                boxShadow: canSend && widget.enabled
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                Icons.send,
+                color: canSend && widget.enabled
+                    ? AppColors.textOnPrimary
+                    : AppColors.textTertiary,
+                size: AppConstants.iconSizeM,
+              ),
             ),
           ),
         ),
