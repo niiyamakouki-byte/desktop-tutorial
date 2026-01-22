@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
+import '../../../data/models/dependency_model.dart';
+import '../../../data/services/dependency_service.dart';
 import 'gantt_constants.dart';
+import 'dependency_dialog.dart';
 
 /// Connector point type
 enum ConnectorType { input, output }
@@ -332,13 +335,15 @@ class DependencyDragPainter extends CustomPainter {
 class DependencyCreationLayer extends StatefulWidget {
   final List<Task> tasks;
   final Map<String, Rect> taskBounds;
-  final Function(String fromTaskId, String toTaskId)? onDependencyCreated;
+  final DependencyService? dependencyService;
+  final Function(String fromTaskId, String toTaskId, DependencyType type, int lagDays)? onDependencyCreated;
   final Widget child;
 
   const DependencyCreationLayer({
     super.key,
     required this.tasks,
     required this.taskBounds,
+    this.dependencyService,
     this.onDependencyCreated,
     required this.child,
   });
@@ -393,22 +398,60 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
     });
   }
 
-  void _handleDragEnd() {
+  void _handleDragEnd() async {
     if (_dragState?.hoveredTaskId != null) {
-      widget.onDependencyCreated?.call(
-        _dragState!.fromTaskId,
-        _dragState!.hoveredTaskId!,
-      );
-    }
+      final fromTaskId = _dragState!.fromTaskId;
+      final toTaskId = _dragState!.hoveredTaskId!;
 
-    setState(() {
-      _dragState = null;
-      _hoveredTaskId = null;
-    });
+      // Get tasks for dialog
+      final fromTask = widget.tasks.firstWhere(
+        (t) => t.id == fromTaskId,
+        orElse: () => widget.tasks.first,
+      );
+      final toTask = widget.tasks.firstWhere(
+        (t) => t.id == toTaskId,
+        orElse: () => widget.tasks.first,
+      );
+
+      // Clear drag state first
+      setState(() {
+        _dragState = null;
+        _hoveredTaskId = null;
+      });
+
+      // Show dialog to select dependency type
+      final result = await DependencyDialog.show(
+        context: context,
+        fromTask: fromTask,
+        toTask: toTask,
+      );
+
+      if (result != null) {
+        widget.onDependencyCreated?.call(
+          fromTaskId,
+          toTaskId,
+          result.type,
+          result.lagDays,
+        );
+      }
+    } else {
+      setState(() {
+        _dragState = null;
+        _hoveredTaskId = null;
+      });
+    }
   }
 
   bool _wouldCreateCircular(String targetId) {
-    // Simple check - in production would need full graph traversal
+    // Use DependencyService for proper cycle detection if available
+    if (widget.dependencyService != null && _dragState != null) {
+      return widget.dependencyService!.wouldCreateCycle(
+        _dragState!.fromTaskId,
+        targetId,
+      );
+    }
+
+    // Fallback to simple check
     final targetTask = widget.tasks.firstWhere(
       (t) => t.id == targetId,
       orElse: () => widget.tasks.first,

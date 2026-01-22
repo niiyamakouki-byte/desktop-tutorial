@@ -37,3 +37,6 @@ export 'timeline_panel.dart';
 export 'task_row.dart';
 export 'timeline_header.dart';
 export 'dependency_painter.dart';
+export 'enhanced_dependency_painter.dart';
+export 'dependency_connector.dart';
+export 'dependency_dialog.dart';
