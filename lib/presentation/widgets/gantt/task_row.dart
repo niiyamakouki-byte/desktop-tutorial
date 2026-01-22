@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
+import '../../../data/models/phase_model.dart';
 import 'gantt_constants.dart';
 
 /// Individual task row component for the task list panel
@@ -15,6 +16,9 @@ class TaskRow extends StatefulWidget {
   final VoidCallback? onExpandToggle;
   final double width;
 
+  /// Phase information for display
+  final Phase? phase;
+
   const TaskRow({
     super.key,
     required this.task,
@@ -24,6 +28,7 @@ class TaskRow extends StatefulWidget {
     this.onDoubleTap,
     this.onExpandToggle,
     this.width = GanttConstants.taskListWidth,
+    this.phase,
   });
 
   @override
@@ -208,6 +213,11 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
         const SizedBox(height: 2),
         Row(
           children: [
+            // Phase badge (if task has a phase)
+            if (widget.phase != null) ...[
+              _buildPhaseBadge(widget.phase!),
+              const SizedBox(width: 6),
+            ],
             // Category badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
@@ -226,16 +236,56 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
             ),
             const SizedBox(width: 8),
             // Date range
-            Text(
-              _formatDateRange(),
-              style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.textTertiary,
+            Flexible(
+              child: Text(
+                _formatDateRange(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textTertiary,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildPhaseBadge(Phase phase) {
+    final phaseColor = PhaseColors.getColorForOrder(phase.order);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: phaseColor.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(
+          color: phaseColor.withOpacity(0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: phaseColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            phase.shortName,
+            style: TextStyle(
+              fontSize: 9,
+              color: phaseColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -287,6 +337,12 @@ class TaskBar extends StatefulWidget {
   final Function(DragUpdateDetails)? onDragUpdate;
   final Function(DragEndDetails)? onDragEnd;
 
+  /// Phase information for color coding (if available)
+  final Phase? phase;
+
+  /// Whether to use phase-based coloring
+  final bool usePhaseColor;
+
   const TaskBar({
     super.key,
     required this.task,
@@ -296,6 +352,8 @@ class TaskBar extends StatefulWidget {
     this.onTap,
     this.onDragUpdate,
     this.onDragEnd,
+    this.phase,
+    this.usePhaseColor = true,
   });
 
   @override
@@ -339,10 +397,20 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
     _hoverController.reverse();
   }
 
+  /// Get the display color for this task bar
+  Color _getTaskBarColor() {
+    // Use phase color if phase is provided and usePhaseColor is enabled
+    if (widget.usePhaseColor && widget.phase != null) {
+      return PhaseColors.getColorForOrder(widget.phase!.order);
+    }
+    // Fallback to category color
+    return AppColors.getCategoryColor(widget.task.category);
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColor = AppColors.getTaskStatusColor(widget.task.status);
-    final categoryColor = AppColors.getCategoryColor(widget.task.category);
+    final barColor = _getTaskBarColor();
 
     // For milestones, render a diamond
     if (widget.task.isMilestone) {
@@ -370,8 +438,8 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        categoryColor.withOpacity(0.9),
-                        categoryColor.withOpacity(0.75),
+                        barColor.withOpacity(0.9),
+                        barColor.withOpacity(0.75),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -380,12 +448,12 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                     border: Border.all(
                       color: widget.isSelected
                           ? AppColors.primary
-                          : categoryColor.withOpacity(0.3 + _glowAnimation.value * 0.5),
+                          : barColor.withOpacity(0.3 + _glowAnimation.value * 0.5),
                       width: widget.isSelected ? 2.5 : 1 + _glowAnimation.value,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: categoryColor.withOpacity(0.15 + _glowAnimation.value * 0.25),
+                        color: barColor.withOpacity(0.15 + _glowAnimation.value * 0.25),
                         blurRadius: 4 + _glowAnimation.value * 8,
                         spreadRadius: _glowAnimation.value * 2,
                         offset: Offset(0, 2 + _glowAnimation.value * 2),
@@ -674,6 +742,123 @@ class TaskBarTooltip extends StatelessWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Phase legend widget to display phase color coding
+class PhaseLegend extends StatelessWidget {
+  final List<Phase> phases;
+  final bool compact;
+
+  const PhaseLegend({
+    super.key,
+    required this.phases,
+    this.compact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (phases.isEmpty) return const SizedBox.shrink();
+
+    if (compact) {
+      return _buildCompactLegend();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'フェーズ凡例',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 12,
+            runSpacing: 6,
+            children: phases.map((phase) => _buildLegendItem(phase)).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactLegend() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: phases.map((phase) => _buildCompactItem(phase)).toList(),
+    );
+  }
+
+  Widget _buildLegendItem(Phase phase) {
+    final color = PhaseColors.getColorForOrder(phase.order);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          phase.name,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactItem(Phase phase) {
+    final color = PhaseColors.getColorForOrder(phase.order);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            phase.shortName,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
         ],
       ),
     );

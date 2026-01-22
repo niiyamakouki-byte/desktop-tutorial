@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
 import '../../../data/models/dependency_model.dart';
+import '../../../data/models/phase_model.dart';
 import '../../../data/services/dependency_service.dart';
 import 'gantt_constants.dart';
 import 'task_row.dart';
@@ -36,6 +37,12 @@ class TimelinePanel extends StatefulWidget {
   final Function(String fromTaskId, String toTaskId, DependencyType type, int lagDays)? onDependencyCreated;
   final bool enableDependencyCreation;
 
+  /// Map of phaseId -> Phase for color coding tasks by phase
+  final Map<String, Phase> phaseMap;
+
+  /// Whether to use phase-based coloring for task bars
+  final bool usePhaseColors;
+
   const TimelinePanel({
     super.key,
     required this.tasks,
@@ -57,6 +64,8 @@ class TimelinePanel extends StatefulWidget {
     this.delayImpactMap,
     this.onDependencyCreated,
     this.enableDependencyCreation = true,
+    this.phaseMap = const {},
+    this.usePhaseColors = true,
   });
 
   @override
@@ -220,13 +229,15 @@ class _TimelinePanelState extends State<TimelinePanel> {
                 dayWidth: widget.dayWidth,
               ),
             ),
-            // Task bar
+            // Task bar with phase color support
             TaskBar(
               task: task,
               left: leftPosition,
               width: taskWidth,
               isSelected: isSelected,
               onTap: () => widget.onTaskTap?.call(task),
+              phase: task.phaseId != null ? widget.phaseMap[task.phaseId] : null,
+              usePhaseColor: widget.usePhaseColors,
             ),
           ],
         ),
@@ -256,6 +267,10 @@ class TimelineBody extends StatelessWidget {
   final bool showCriticalPath;
   final Map<String, int>? delayImpactMap;
 
+  // Phase-related properties
+  final Map<String, Phase> phaseMap;
+  final bool usePhaseColors;
+
   const TimelineBody({
     super.key,
     required this.tasks,
@@ -274,6 +289,8 @@ class TimelineBody extends StatelessWidget {
     this.criticalPathIds = const {},
     this.showCriticalPath = true,
     this.delayImpactMap,
+    this.phaseMap = const {},
+    this.usePhaseColors = true,
   });
 
   @override
@@ -347,6 +364,8 @@ class TimelineBody extends StatelessWidget {
                           width: taskWidth,
                           isSelected: task.id == selectedTaskId,
                           onTap: () => onTaskTap?.call(task),
+                          phase: task.phaseId != null ? phaseMap[task.phaseId] : null,
+                          usePhaseColor: usePhaseColors,
                         ),
                       ],
                     ),

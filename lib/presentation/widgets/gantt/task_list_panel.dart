@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
+import '../../../data/models/phase_model.dart';
 import 'gantt_constants.dart';
 import 'task_row.dart';
 
@@ -16,6 +17,9 @@ class TaskListPanel extends StatelessWidget {
   final Function(Task task)? onTaskDoubleTap;
   final Function(Task task)? onExpandToggle;
 
+  /// Map of phaseId -> Phase for displaying phase badges
+  final Map<String, Phase> phaseMap;
+
   const TaskListPanel({
     super.key,
     required this.tasks,
@@ -26,6 +30,7 @@ class TaskListPanel extends StatelessWidget {
     this.onTaskTap,
     this.onTaskDoubleTap,
     this.onExpandToggle,
+    this.phaseMap = const {},
   });
 
   @override
@@ -114,6 +119,7 @@ class TaskListPanel extends StatelessWidget {
           onTap: () => onTaskTap?.call(task),
           onDoubleTap: () => onTaskDoubleTap?.call(task),
           onExpandToggle: () => onExpandToggle?.call(task),
+          phase: task.phaseId != null ? phaseMap[task.phaseId] : null,
         );
       },
     );

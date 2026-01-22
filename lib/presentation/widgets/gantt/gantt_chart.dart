@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
 import '../../../data/models/dependency_model.dart';
+import '../../../data/models/phase_model.dart';
 import '../../../data/services/weather_service.dart';
 import '../../../data/services/dependency_service.dart';
 import '../common/context_menu.dart';
@@ -111,6 +112,12 @@ class GanttChart extends StatefulWidget {
   /// Callback when rain cancellation is applied (tasks need to be rescheduled)
   final Function(RainCancelResult result)? onRainCancel;
 
+  /// List of phases for phase-based color coding
+  final List<Phase> phases;
+
+  /// Whether to use phase-based coloring
+  final bool usePhaseColors;
+
   const GanttChart({
     super.key,
     required this.tasks,
@@ -143,6 +150,8 @@ class GanttChart extends StatefulWidget {
     this.onDependencyCreated,
     this.onDependencyDeleted,
     this.onRainCancel,
+    this.phases = const [],
+    this.usePhaseColors = true,
   });
 
   @override
@@ -460,6 +469,11 @@ class _GanttChartState extends State<GanttChart> {
     return _viewMode.dayWidth * _zoomLevel;
   }
 
+  /// Build phaseMap from phases list for quick lookup
+  Map<String, Phase> get _phaseMap {
+    return {for (var phase in widget.phases) phase.id: phase};
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.tasks.isEmpty) {
@@ -500,6 +514,7 @@ class _GanttChartState extends State<GanttChart> {
                       onTaskTap: _handleTaskTap,
                       onTaskDoubleTap: _handleTaskDoubleTap,
                       onExpandToggle: _handleExpandToggle,
+                      phaseMap: _phaseMap,
                     ),
 
                     // Resizable divider
@@ -849,6 +864,9 @@ class _GanttChartState extends State<GanttChart> {
           delayImpactMap: widget.delayImpactMap,
           onDependencyCreated: widget.onDependencyCreated,
           enableDependencyCreation: widget.showDependencies,
+          // Phase-related parameters
+          phaseMap: _phaseMap,
+          usePhaseColors: widget.usePhaseColors,
         ),
 
         // Dependency creation layer (drag & drop)
