@@ -41,10 +41,8 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     });
 
     try {
-      // Simulate loading delay
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Mock projects data
       final mockProjects = [
         Project(
           id: 'p1',
@@ -159,7 +157,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,8 +178,8 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateProjectDialog(),
         backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add),
-        label: const Text('新規プロジェクト'),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('新規プロジェクト', style: TextStyle(color: Colors.white)),
       ),
     );
   }
@@ -189,6 +187,16 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
@@ -211,7 +219,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                 const Text(
                   'プロジェクト管理',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
@@ -219,7 +227,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                 Text(
                   '${_projects.length}件のプロジェクト',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: AppColors.textSecondary,
                     fontSize: 14,
                   ),
                 ),
@@ -228,7 +236,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
           ),
           IconButton(
             onPressed: _loadProjects,
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
             tooltip: '更新',
           ),
         ],
@@ -238,30 +246,35 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 
   Widget _buildSearchAndFilter() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Search bar
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surfaceDark,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border.withOpacity(0.3)),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: TextField(
               onChanged: (value) => setState(() => _searchQuery = value),
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: AppColors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'プロジェクトを検索...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-                prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
+                hintStyle: TextStyle(color: AppColors.textTertiary),
+                prefixIcon: Icon(Icons.search, color: AppColors.textTertiary),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
             ),
           ),
           const SizedBox(height: 12),
-          // Filter chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -287,14 +300,14 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         label: Text(label),
         selected: isSelected,
         onSelected: (_) => setState(() => _filterStatus = status),
-        backgroundColor: AppColors.surfaceDark,
-        selectedColor: AppColors.primary.withOpacity(0.3),
+        backgroundColor: Colors.white,
+        selectedColor: AppColors.primary.withOpacity(0.15),
         labelStyle: TextStyle(
-          color: isSelected ? AppColors.primary : Colors.white70,
+          color: isSelected ? AppColors.primary : AppColors.textSecondary,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
         side: BorderSide(
-          color: isSelected ? AppColors.primary : AppColors.border.withOpacity(0.3),
+          color: isSelected ? AppColors.primary : AppColors.border,
         ),
       ),
     );
@@ -307,7 +320,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     final totalBudget = _projects.fold<double>(0, (sum, p) => sum + p.budget);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
           Expanded(child: _SummaryCard(
@@ -360,7 +373,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
           SizedBox(height: 16),
           Text(
             'プロジェクトを読み込み中...',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -376,7 +389,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
           const SizedBox(height: 16),
           Text(
             _error ?? 'エラーが発生しました',
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -399,11 +412,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.folder_open, color: Colors.white.withOpacity(0.3), size: 64),
+            Icon(Icons.folder_open, color: AppColors.textTertiary, size: 64),
             const SizedBox(height: 16),
             Text(
               _searchQuery.isNotEmpty ? '検索結果がありません' : 'プロジェクトがありません',
-              style: TextStyle(color: Colors.white.withOpacity(0.5)),
+              style: TextStyle(color: AppColors.textTertiary),
             ),
           ],
         ),
@@ -466,9 +479,16 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +506,7 @@ class _SummaryCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: color.withOpacity(0.7),
+              color: AppColors.textSecondary,
               fontSize: 11,
             ),
           ),
@@ -526,35 +546,35 @@ class _ProjectCardState extends State<_ProjectCard> {
           duration: const Duration(milliseconds: 200),
           transform: Matrix4.identity()..scale(_isHovered ? 1.02 : 1.0),
           decoration: BoxDecoration(
-            color: AppColors.surfaceDark,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _isHovered ? AppColors.primary : AppColors.border.withOpacity(0.3),
+              color: _isHovered ? AppColors.primary : AppColors.border,
               width: _isHovered ? 2 : 1,
             ),
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : null,
+            boxShadow: [
+              BoxShadow(
+                color: _isHovered
+                    ? AppColors.primary.withOpacity(0.15)
+                    : Colors.black.withOpacity(0.05),
+                blurRadius: _isHovered ? 20 : 10,
+                offset: Offset(0, _isHovered ? 8 : 4),
+              ),
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.2),
+                        color: statusColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: statusColor.withOpacity(0.3)),
                       ),
                       child: Text(
                         project.status.label,
@@ -569,18 +589,17 @@ class _ProjectCardState extends State<_ProjectCard> {
                     Text(
                       project.category,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
+                        color: AppColors.textTertiary,
                         fontSize: 11,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Title
                 Text(
                   project.name,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -591,14 +610,13 @@ class _ProjectCardState extends State<_ProjectCard> {
                 Text(
                   project.clientName,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const Spacer(),
-                // Progress
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -608,7 +626,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                         Text(
                           '進捗',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: AppColors.textTertiary,
                             fontSize: 11,
                           ),
                         ),
@@ -627,7 +645,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: project.progress,
-                        backgroundColor: Colors.white.withOpacity(0.1),
+                        backgroundColor: AppColors.border,
                         valueColor: AlwaysStoppedAnimation<Color>(
                           _getProgressColor(project.progress),
                         ),
@@ -637,28 +655,27 @@ class _ProjectCardState extends State<_ProjectCard> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Footer
                 Row(
                   children: [
-                    Icon(Icons.person, size: 14, color: Colors.white.withOpacity(0.5)),
+                    Icon(Icons.person, size: 14, color: AppColors.textTertiary),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         project.managerName,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: AppColors.textSecondary,
                           fontSize: 11,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(Icons.group, size: 14, color: Colors.white.withOpacity(0.5)),
+                    Icon(Icons.group, size: 14, color: AppColors.textTertiary),
                     const SizedBox(width: 4),
                     Text(
                       '${project.teamMembers.length}名',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: AppColors.textSecondary,
                         fontSize: 11,
                       ),
                     ),
@@ -725,7 +742,7 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppColors.surfaceDark,
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         width: 500,
@@ -743,7 +760,7 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
                   const Text(
                     '新規プロジェクト作成',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -751,7 +768,7 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white54),
+                    icon: Icon(Icons.close, color: AppColors.textTertiary),
                   ),
                 ],
               ),
@@ -768,16 +785,15 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
                 value: _category,
                 decoration: InputDecoration(
                   labelText: 'カテゴリ',
-                  labelStyle: const TextStyle(color: Colors.white54),
-                  prefixIcon: const Icon(Icons.category, color: Colors.white54),
+                  labelStyle: TextStyle(color: AppColors.textSecondary),
+                  prefixIcon: Icon(Icons.category, color: AppColors.textSecondary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.border.withOpacity(0.3)),
+                    borderSide: BorderSide(color: AppColors.border),
                   ),
                 ),
-                dropdownColor: AppColors.surfaceDark,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textPrimary),
                 items: ['商業施設', '住宅', '工場', '物流施設', 'インフラ', 'その他']
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
@@ -789,13 +805,14 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('キャンセル'),
+                    child: Text('キャンセル', style: TextStyle(color: AppColors.textSecondary)),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _createProject,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
                     child: _isLoading
@@ -824,15 +841,15 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white54),
-        prefixIcon: Icon(icon, color: Colors.white54),
+        labelStyle: TextStyle(color: AppColors.textSecondary),
+        prefixIcon: Icon(icon, color: AppColors.textSecondary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border.withOpacity(0.3)),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -873,7 +890,6 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
   }
 }
 
-/// Project status enum
 enum ProjectStatus {
   planning,
   inProgress,
@@ -899,7 +915,6 @@ extension ProjectStatusExtension on ProjectStatus {
   }
 }
 
-/// Project model
 class Project {
   final String id;
   final String name;
