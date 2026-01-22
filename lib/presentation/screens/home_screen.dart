@@ -308,6 +308,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               orderService: _orderService,
                               tasks: provider.tasks,
                               onNavigate: _handleNavigation,
+                              dependencyService: provider.dependencyService,
+                              dependencies: provider.dependencies,
                             ),
                     ),
                     // Communication Sidebar with animation

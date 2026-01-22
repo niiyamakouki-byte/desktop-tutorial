@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/material_model.dart';
 import '../models/models.dart';
+import '../models/project_health_model.dart';
 
 /// Order Management Service
 /// Handles material ordering, deadline tracking, and alerts
@@ -12,16 +13,48 @@ class OrderService extends ChangeNotifier {
   final List<Supplier> _suppliers = [];
   final List<OrderAlert> _alerts = [];
 
+  // Configurable alert thresholds
+  AlertThresholdConfig _alertConfig = const AlertThresholdConfig();
+
   // Getters
   List<ConstructionMaterial> get materials => List.unmodifiable(_materials);
   List<TaskConstructionMaterial> get taskConstructionMaterials => List.unmodifiable(_taskConstructionMaterials);
   List<PurchaseOrder> get purchaseOrders => List.unmodifiable(_purchaseOrders);
   List<Supplier> get suppliers => List.unmodifiable(_suppliers);
   List<OrderAlert> get alerts => List.unmodifiable(_alerts);
+  AlertThresholdConfig get alertConfig => _alertConfig;
 
   // Filtered getters
   List<OrderAlert> get unreadAlerts => _alerts.where((a) => !a.isRead && !a.isDismissed).toList();
   List<OrderAlert> get criticalAlerts => _alerts.where((a) => a.severity == AlertSeverity.critical && !a.isDismissed).toList();
+  List<OrderAlert> get highPriorityAlerts => _alerts.where((a) =>
+    (a.severity == AlertSeverity.critical || a.severity == AlertSeverity.high) && !a.isDismissed
+  ).toList();
+
+  /// Update alert threshold configuration
+  void updateAlertConfig(AlertThresholdConfig config) {
+    _alertConfig = config;
+    notifyListeners();
+  }
+
+  /// Calculate order deadline with configurable buffer
+  DateTime? calculateOrderDeadlineWithConfig(DateTime taskStartDate, int materialLeadTime) {
+    return taskStartDate.subtract(
+      Duration(days: materialLeadTime + _alertConfig.bufferDays),
+    );
+  }
+
+  /// Get alert severity based on configurable thresholds
+  AlertSeverity getAlertSeverityFromConfig(int daysUntilDeadline) {
+    if (daysUntilDeadline < 0) {
+      return AlertSeverity.critical;
+    } else if (daysUntilDeadline <= _alertConfig.highThresholdDays) {
+      return AlertSeverity.high;
+    } else if (daysUntilDeadline <= _alertConfig.mediumThresholdDays) {
+      return AlertSeverity.medium;
+    }
+    return AlertSeverity.low;
+  }
 
   List<PurchaseOrder> get pendingOrders => _purchaseOrders.where((o) =>
     o.status != OrderStatus.delivered && o.status != OrderStatus.cancelled
@@ -88,7 +121,7 @@ class OrderService extends ChangeNotifier {
     return minDays;
   }
 
-  /// Generate alerts for all tasks
+  /// Generate alerts for all tasks with configurable thresholds
   void generateAlerts(List<Task> tasks) {
     _alerts.clear();
 
@@ -98,11 +131,19 @@ class OrderService extends ChangeNotifier {
       for (final tm in materials) {
         if (tm.orderStatus != OrderStatus.notOrdered) continue;
 
-        final daysUntil = tm.daysUntilOrderDeadline(task.startDate);
-        if (daysUntil == null) continue;
+        // Use configurable buffer in deadline calculation
+        final deadline = tm.material != null
+            ? calculateOrderDeadlineWithConfig(task.startDate, tm.material!.leadTimeDays)
+            : tm.calculateOrderDeadline(task.startDate);
+
+        if (deadline == null) continue;
+        final daysUntil = deadline.difference(DateTime.now()).inDays;
+
+        // Use configurable thresholds
+        final severity = getAlertSeverityFromConfig(daysUntil);
 
         if (daysUntil < 0) {
-          // Overdue
+          // Overdue - Critical
           _alerts.add(OrderAlert(
             id: 'alert_${tm.id}_overdue',
             type: AlertType.orderOverdue,
@@ -113,8 +154,8 @@ class OrderService extends ChangeNotifier {
             materialId: tm.materialId,
             createdAt: DateTime.now(),
           ));
-        } else if (daysUntil <= 3) {
-          // Urgent
+        } else if (daysUntil <= _alertConfig.highThresholdDays) {
+          // Urgent - High (configurable, default 3 days)
           _alerts.add(OrderAlert(
             id: 'alert_${tm.id}_urgent',
             type: AlertType.orderDeadline,
@@ -125,8 +166,8 @@ class OrderService extends ChangeNotifier {
             materialId: tm.materialId,
             createdAt: DateTime.now(),
           ));
-        } else if (daysUntil <= 7) {
-          // Warning
+        } else if (daysUntil <= _alertConfig.mediumThresholdDays) {
+          // Warning - Medium (configurable, default 7 days)
           _alerts.add(OrderAlert(
             id: 'alert_${tm.id}_warning',
             type: AlertType.orderDeadline,
@@ -141,9 +182,47 @@ class OrderService extends ChangeNotifier {
       }
     }
 
-    // Sort by severity
+    // Sort by severity (most critical first)
     _alerts.sort((a, b) => b.severity.index.compareTo(a.severity.index));
     notifyListeners();
+  }
+
+  /// Get upcoming order deadlines sorted by urgency
+  List<Map<String, dynamic>> getUpcomingOrderDeadlines(List<Task> tasks, {int limit = 10}) {
+    final deadlines = <Map<String, dynamic>>[];
+
+    for (final task in tasks) {
+      final materials = getConstructionMaterialsForTask(task.id);
+
+      for (final tm in materials) {
+        if (tm.orderStatus != OrderStatus.notOrdered) continue;
+
+        final deadline = tm.material != null
+            ? calculateOrderDeadlineWithConfig(task.startDate, tm.material!.leadTimeDays)
+            : tm.calculateOrderDeadline(task.startDate);
+
+        if (deadline == null) continue;
+        final daysUntil = deadline.difference(DateTime.now()).inDays;
+
+        deadlines.add({
+          'taskId': task.id,
+          'taskName': task.name,
+          'materialId': tm.materialId,
+          'materialName': tm.material?.name ?? '不明',
+          'deadline': deadline,
+          'daysUntil': daysUntil,
+          'severity': getAlertSeverityFromConfig(daysUntil),
+          'leadTimeDays': tm.material?.leadTimeDays ?? 0,
+          'quantity': tm.quantity,
+          'unit': tm.material?.unit ?? '',
+        });
+      }
+    }
+
+    // Sort by days until deadline (most urgent first)
+    deadlines.sort((a, b) => (a['daysUntil'] as int).compareTo(b['daysUntil'] as int));
+
+    return deadlines.take(limit).toList();
   }
 
   /// Create a purchase order

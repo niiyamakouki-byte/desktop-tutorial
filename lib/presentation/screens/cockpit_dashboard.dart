@@ -6,9 +6,14 @@ import '../../core/constants/app_constants.dart';
 import '../../data/models/models.dart';
 import '../../data/models/material_model.dart';
 import '../../data/models/project_flow_model.dart';
+import '../../data/models/project_health_model.dart';
+import '../../data/models/dependency_model.dart';
 import '../../data/services/order_service.dart';
 import '../../data/services/template_service.dart';
+import '../../data/services/project_health_service.dart';
+import '../../data/services/dependency_service.dart';
 import '../widgets/common/glass_container.dart';
+import '../widgets/dashboard/dashboard.dart';
 
 /// Main Cockpit Dashboard - Inspired by Construction DX Cockpit
 /// Combines KPIs, AI Insights, Timeline, and Quick Actions
@@ -18,6 +23,8 @@ class CockpitDashboard extends StatefulWidget {
   final OrderService? orderService;
   final ProjectFlow? projectFlow;
   final Function(String view)? onNavigate;
+  final DependencyService? dependencyService;
+  final List<TaskDependency> dependencies;
 
   const CockpitDashboard({
     super.key,
@@ -26,6 +33,8 @@ class CockpitDashboard extends StatefulWidget {
     this.orderService,
     this.projectFlow,
     this.onNavigate,
+    this.dependencyService,
+    this.dependencies = const [],
   });
 
   @override
@@ -39,11 +48,52 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
   String _currentInsight = '';
   final List<ActivityLog> _activityLogs = [];
 
+  // Project health service
+  late ProjectHealthService _healthService;
+  ProjectHealthScore? _healthScore;
+  CriticalPathProgress? _criticalPathProgress;
+  DelayCostBreakdown? _delayCost;
+
   @override
   void initState() {
     super.initState();
+    _healthService = ProjectHealthService();
     _generateInsight();
     _generateMockActivityLogs();
+    _calculateProjectHealth();
+  }
+
+  @override
+  void didUpdateWidget(CockpitDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tasks != widget.tasks ||
+        oldWidget.dependencies != widget.dependencies) {
+      _calculateProjectHealth();
+    }
+  }
+
+  void _calculateProjectHealth() {
+    if (widget.tasks.isEmpty) return;
+
+    setState(() {
+      _healthScore = _healthService.calculateHealthScore(
+        tasks: widget.tasks,
+        dependencies: widget.dependencies,
+        alerts: widget.orderService?.alerts,
+        orders: widget.orderService?.purchaseOrders,
+        budget: widget.project?.budget,
+      );
+
+      _criticalPathProgress = _healthService.calculateCriticalPathProgress(
+        tasks: widget.tasks,
+        dependencies: widget.dependencies,
+      );
+
+      _delayCost = _healthService.calculateProjectDelayCost(
+        tasks: widget.tasks,
+        dependencies: widget.dependencies,
+      );
+    });
   }
 
   void _generateInsight() {
@@ -138,13 +188,75 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // KPI Cards Row
-            _buildKPICards(),
+            // Health Score and KPI Row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Health Score Card (left)
+                if (_healthScore != null)
+                  SizedBox(
+                    width: 320,
+                    child: HealthScoreCard(
+                      healthScore: _healthScore!,
+                      onTap: () {
+                        _showHealthScoreDetails();
+                      },
+                    ),
+                  ),
+                if (_healthScore != null)
+                  const SizedBox(width: AppConstants.paddingM),
+                // KPI Cards (right)
+                Expanded(child: _buildKPICards()),
+              ],
+            ),
             const SizedBox(height: AppConstants.paddingL),
 
             // AI Insight Card
             _buildAIInsightCard(),
             const SizedBox(height: AppConstants.paddingL),
+
+            // Critical Path and Delay Cost Row
+            if (_criticalPathProgress != null || _delayCost != null)
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Critical Path Progress (left)
+                    if (_criticalPathProgress != null)
+                      Expanded(
+                        flex: 2,
+                        child: SizedBox(
+                          height: 300,
+                          child: CriticalPathProgressChart(
+                            progress: _criticalPathProgress!,
+                            showTaskDetails: true,
+                            onTaskTap: (taskId) {
+                              // Navigate to task or show details
+                              widget.onNavigate?.call('gantt');
+                            },
+                          ),
+                        ),
+                      ),
+                    if (_criticalPathProgress != null && _delayCost != null)
+                      const SizedBox(width: AppConstants.paddingM),
+                    // Delay Cost Card (right)
+                    if (_delayCost != null)
+                      SizedBox(
+                        width: 320,
+                        child: DelayCostCard(
+                          costBreakdown: _delayCost!,
+                          showDetails: true,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            if (_criticalPathProgress != null || _delayCost != null)
+              const SizedBox(height: AppConstants.paddingL),
+
+            // Order Alerts Section
+            if (widget.orderService?.highPriorityAlerts.isNotEmpty ?? false)
+              _buildOrderAlertsSection(),
 
             // Main Content Row
             IntrinsicHeight(
@@ -174,6 +286,215 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showHealthScoreDetails() {
+    if (_healthScore == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 500,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.health_and_safety, color: AppColors.primary),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'プロジェクト健全性詳細',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              HealthScoreGauge(
+                score: _healthScore!.overallScore,
+                status: _healthScore!.status,
+                size: 180,
+                showBreakdown: true,
+                scheduleScore: _healthScore!.scheduleScore,
+                costScore: _healthScore!.costScore,
+                resourceScore: _healthScore!.resourceScore,
+                riskScore: _healthScore!.riskScore,
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildDetailRow('遅延タスク数', '${_healthScore!.delayedTaskCount}件'),
+                    const SizedBox(height: 8),
+                    _buildDetailRow('合計遅延日数', '${_healthScore!.totalDelayDays}日'),
+                    const SizedBox(height: 8),
+                    _buildDetailRow('推定遅延コスト', _formatCost(_healthScore!.estimatedDelayCost)),
+                    const SizedBox(height: 8),
+                    _buildDetailRow('発注待ち', '${_healthScore!.pendingOrderCount}件'),
+                    const SizedBox(height: 8),
+                    _buildDetailRow('緊急アラート', '${_healthScore!.criticalAlertCount}件'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _healthScore!.status.description,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatCost(double cost) {
+    if (cost >= 1000000) {
+      return '¥${(cost / 10000).toStringAsFixed(0)}万';
+    } else if (cost >= 1000) {
+      return '¥${(cost / 1000).toStringAsFixed(0)}千';
+    }
+    return '¥${cost.toStringAsFixed(0)}';
+  }
+
+  Widget _buildOrderAlertsSection() {
+    final alerts = widget.orderService?.highPriorityAlerts ?? [];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppConstants.paddingL),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.constructionRed.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.constructionRed.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.constructionRed.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.notifications_active,
+                  color: AppColors.constructionRed,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                '発注アラート',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.constructionRed,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => widget.onNavigate?.call('orders'),
+                child: const Text('すべて表示'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...alerts.take(3).map((alert) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: alert.severity == AlertSeverity.critical
+                        ? AppColors.constructionRed
+                        : AppColors.industrialOrange,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    alert.message,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: alert.severity == AlertSeverity.critical
+                        ? AppColors.constructionRed
+                        : AppColors.industrialOrange,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    alert.severity == AlertSeverity.critical ? '緊急' : '警告',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )),
+        ],
       ),
     );
   }

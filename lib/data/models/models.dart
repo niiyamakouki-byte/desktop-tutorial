@@ -7,3 +7,4 @@ export 'attachment_model.dart';
 export 'material_model.dart';
 export 'project_flow_model.dart';
 export 'dependency_model.dart';
+export 'project_health_model.dart';
