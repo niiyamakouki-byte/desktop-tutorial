@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../data/services/project_provider.dart';
+import 'dark_mode_toggle.dart';
 
 /// Application header with project info and navigation
 class AppHeader extends StatelessWidget {
@@ -167,6 +169,9 @@ class AppHeader extends StatelessWidget {
                       },
                     ),
                     const SizedBox(width: 16),
+                    // Dark mode toggle
+                    const CompactDarkModeToggle(),
+                    const SizedBox(width: 8),
                     // Settings
                     _HeaderButton(
                       icon: Icons.settings_outlined,

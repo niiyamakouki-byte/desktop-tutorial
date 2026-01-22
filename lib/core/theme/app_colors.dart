@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Application color palette for Construction Project Manager
-/// Navy Blue based color scheme for professional construction management
+/// Navy Blue based color scheme with industrial accent colors
 class AppColors {
   AppColors._();
 
@@ -12,6 +12,14 @@ class AppColors {
   static const Color secondary = Color(0xFF2B6CB0);      // Accent Blue
   static const Color accent = Color(0xFF4299E1);         // Bright Blue accent
   static const Color primarySoft = Color(0xFF3182CE);    // Soft primary for highlights
+
+  // ============== Industrial Accent Colors ==============
+  static const Color safetyYellow = Color(0xFFEAB308);   // Safety Yellow
+  static const Color safetyYellowLight = Color(0xFFFEF9C3);
+  static const Color industrialOrange = Color(0xFFF97316); // Industrial Orange
+  static const Color industrialOrangeLight = Color(0xFFFFEDD5);
+  static const Color constructionRed = Color(0xFFDC2626); // Warning Red
+  static const Color constructionGreen = Color(0xFF16A34A); // Go/Safe Green
 
   // ============== Background Colors ==============
   static const Color background = Color(0xFFF5F7FA);
@@ -119,11 +127,32 @@ class AppColors {
 
   // ============== Dark Mode Colors ==============
   static const Color primaryDarkMode = Color(0xFF64B5F6);
-  static const Color backgroundDark = Color(0xFF121212);
-  static const Color surfaceDark = Color(0xFF1E1E1E);
-  static const Color textPrimaryDark = Color(0xFFE1E1E1);
+  static const Color backgroundDark = Color(0xFF0A0A0F);
+  static const Color surfaceDark = Color(0xFF1A1A24);
+  static const Color surfaceVariantDark = Color(0xFF252532);
+  static const Color textPrimaryDark = Color(0xFFF1F1F3);
+  static const Color textSecondaryDark = Color(0xFFA0A0B0);
+  static const Color textTertiaryDark = Color(0xFF6A6A7A);
   static const Color secondaryDark = Color(0xFF64B5F6);
   static const Color errorDark = Color(0xFFEF5350);
+  static const Color borderDark = Color(0xFF2A2A3A);
+  static const Color dividerDark = Color(0xFF1F1F2F);
+
+  // ============== Glassmorphism Colors ==============
+  static const Color glassWhite = Color(0x1AFFFFFF);
+  static const Color glassBorder = Color(0x33FFFFFF);
+  static const Color glassBorderLight = Color(0x4DFFFFFF);
+  static const Color glassOverlay = Color(0x0DFFFFFF);
+  static const Color glassDark = Color(0x33000000);
+  static const Color glassBorderDark = Color(0x1AFFFFFF);
+
+  // ============== Weather Alert Colors ==============
+  static const Color weatherSunny = Color(0xFFFBBF24);
+  static const Color weatherCloudy = Color(0xFF94A3B8);
+  static const Color weatherRainy = Color(0xFF3B82F6);
+  static const Color weatherStormy = Color(0xFF6366F1);
+  static const Color weatherAlert = Color(0xFFDC2626);
+  static const Color concreteAlert = Color(0xFFEF4444);
 
   // ============== Gradient Definitions (Navy Theme) ==============
   static const LinearGradient primaryGradient = LinearGradient(
@@ -152,6 +181,36 @@ class AppColors {
 
   static const LinearGradient stockSectionGradient = LinearGradient(
     colors: [Color(0xFFEDF2F7), Color(0xFFF7FAFC)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient industrialGradient = LinearGradient(
+    colors: [Color(0xFFF97316), Color(0xFFEA580C)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient safetyGradient = LinearGradient(
+    colors: [Color(0xFFEAB308), Color(0xFFCA8A04)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient alertGradient = LinearGradient(
+    colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient glassMorphGradient = LinearGradient(
+    colors: [Color(0x1AFFFFFF), Color(0x0DFFFFFF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient darkModeGradient = LinearGradient(
+    colors: [Color(0xFF1A1A24), Color(0xFF0A0A0F)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

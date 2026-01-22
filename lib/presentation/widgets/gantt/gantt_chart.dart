@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
+import '../../../data/services/weather_service.dart';
+import '../common/context_menu.dart';
 import 'gantt_constants.dart';
 import 'task_list_panel.dart';
 import 'timeline_panel.dart';
@@ -54,6 +57,30 @@ class GanttChart extends StatefulWidget {
   /// Whether the task list panel is resizable
   final bool resizableTaskList;
 
+  /// Enable grid snap (tasks snap to 20px increments)
+  final bool enableGridSnap;
+
+  /// Grid snap increment in pixels
+  final double gridSnapSize;
+
+  /// Enable mouse wheel zoom
+  final bool enableMouseWheelZoom;
+
+  /// Enable pinch zoom for mobile
+  final bool enablePinchZoom;
+
+  /// Callback for task deletion
+  final Function(Task task)? onTaskDelete;
+
+  /// Callback for task duplication
+  final Function(Task task)? onTaskDuplicate;
+
+  /// Callback for task color change
+  final Function(Task task, Color color)? onTaskColorChange;
+
+  /// Show weather data on timeline
+  final bool showWeather;
+
   const GanttChart({
     super.key,
     required this.tasks,
@@ -70,6 +97,14 @@ class GanttChart extends StatefulWidget {
     this.showWeekends = true,
     this.initialTaskListWidth = GanttConstants.taskListWidth,
     this.resizableTaskList = true,
+    this.enableGridSnap = true,
+    this.gridSnapSize = 20.0,
+    this.enableMouseWheelZoom = true,
+    this.enablePinchZoom = true,
+    this.onTaskDelete,
+    this.onTaskDuplicate,
+    this.onTaskColorChange,
+    this.showWeather = true,
   });
 
   @override
@@ -95,6 +130,13 @@ class _GanttChartState extends State<GanttChart> {
   // Visible tasks (accounting for collapsed parents)
   late List<Task> _visibleTasks;
 
+  // Pinch zoom state
+  double _baseZoom = 1.0;
+  double _currentScale = 1.0;
+
+  // Weather alerts
+  List<WeatherAlert> _weatherAlerts = [];
+
   @override
   void initState() {
     super.initState();
@@ -109,10 +151,150 @@ class _GanttChartState extends State<GanttChart> {
 
     _computeDateRange();
     _computeVisibleTasks();
+    _loadWeatherAlerts();
 
     // Sync vertical scrolling between task list and timeline
     _taskListScrollController.addListener(_syncVerticalScroll);
     _timelineVerticalScrollController.addListener(_syncVerticalScrollReverse);
+  }
+
+  void _loadWeatherAlerts() {
+    if (widget.showWeather) {
+      WeatherService.initializeMockData();
+      _weatherAlerts = WeatherService.getAlertsForDateRange(_startDate, _endDate);
+    }
+  }
+
+  /// Handle mouse wheel for zoom
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (!widget.enableMouseWheelZoom) return;
+
+    if (event is PointerScrollEvent) {
+      // Check if Ctrl key is pressed for zoom
+      if (HardwareKeyboard.instance.isControlPressed) {
+        final delta = event.scrollDelta.dy;
+        final newZoom = _zoomLevel + (delta > 0 ? -0.1 : 0.1);
+        _handleZoomChange(newZoom);
+      }
+    }
+  }
+
+  /// Handle pinch zoom start
+  void _handleScaleStart(ScaleStartDetails details) {
+    if (!widget.enablePinchZoom) return;
+    _baseZoom = _zoomLevel;
+  }
+
+  /// Handle pinch zoom update
+  void _handleScaleUpdate(ScaleUpdateDetails details) {
+    if (!widget.enablePinchZoom) return;
+    if (details.pointerCount >= 2) {
+      _currentScale = details.scale;
+      final newZoom = _baseZoom * _currentScale;
+      _handleZoomChange(newZoom);
+    }
+  }
+
+  /// Snap position to grid
+  double _snapToGrid(double position) {
+    if (!widget.enableGridSnap) return position;
+    return (position / widget.gridSnapSize).round() * widget.gridSnapSize;
+  }
+
+  /// Show context menu for a task
+  void _showTaskContextMenu(BuildContext context, Offset position, Task task) {
+    showContextMenu(
+      context: context,
+      position: position,
+      items: [
+        ContextMenuItem(
+          label: '編集',
+          icon: Icons.edit_outlined,
+          onTap: () => widget.onTaskDoubleTap?.call(task),
+        ),
+        ContextMenuItem(
+          label: '複製',
+          icon: Icons.copy_outlined,
+          onTap: () => widget.onTaskDuplicate?.call(task),
+        ),
+        ContextMenuItem(
+          label: '色を変更',
+          icon: Icons.palette_outlined,
+          color: AppColors.primary,
+          onTap: () => _showColorPicker(context, position, task),
+        ),
+        ContextMenuItem(
+          label: '依存関係を追加',
+          icon: Icons.link_outlined,
+          onTap: () {
+            // TODO: Show dependency picker
+          },
+        ),
+        ContextMenuItem(
+          label: '削除',
+          icon: Icons.delete_outline,
+          isDanger: true,
+          onTap: () => _confirmDelete(context, task),
+        ),
+      ],
+    );
+  }
+
+  /// Show color picker for task
+  void _showColorPicker(BuildContext context, Offset position, Task task) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => overlayEntry.remove(),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          Positioned(
+            left: position.dx,
+            top: position.dy + 40,
+            child: ColorPickerMenu(
+              selectedColor: AppColors.getCategoryColor(task.category),
+              onColorSelected: (color) {
+                widget.onTaskColorChange?.call(task, color);
+              },
+              onDismiss: () => overlayEntry.remove(),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+  }
+
+  /// Confirm task deletion
+  void _confirmDelete(BuildContext context, Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('タスクを削除'),
+        content: Text('「${task.name}」を削除してもよろしいですか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onTaskDelete?.call(task);
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -246,35 +428,44 @@ class _GanttChartState extends State<GanttChart> {
       return _buildEmptyState();
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.ganttBackground,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          // Toolbar
-          _buildToolbar(),
+    return Listener(
+      onPointerSignal: _handlePointerSignal,
+      child: GestureDetector(
+        onScaleStart: _handleScaleStart,
+        onScaleUpdate: _handleScaleUpdate,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.ganttBackground,
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              // Weather alerts (if any)
+              if (widget.showWeather && _weatherAlerts.isNotEmpty)
+                _buildWeatherAlerts(),
 
-          // Main content
-          Expanded(
-            child: Row(
-              children: [
-                // Task list panel
-                TaskListPanel(
-                  tasks: _visibleTasks,
-                  allTasks: widget.tasks,
-                  selectedTaskId: _selectedTaskId,
-                  scrollController: _taskListScrollController,
-                  width: _taskListWidth,
-                  onTaskTap: _handleTaskTap,
-                  onTaskDoubleTap: _handleTaskDoubleTap,
-                  onExpandToggle: _handleExpandToggle,
-                ),
+              // Toolbar
+              _buildToolbar(),
 
-                // Resizable divider
-                if (widget.resizableTaskList)
+              // Main content
+              Expanded(
+                child: Row(
+                  children: [
+                    // Task list panel
+                    TaskListPanel(
+                      tasks: _visibleTasks,
+                      allTasks: widget.tasks,
+                      selectedTaskId: _selectedTaskId,
+                      scrollController: _taskListScrollController,
+                      width: _taskListWidth,
+                      onTaskTap: _handleTaskTap,
+                      onTaskDoubleTap: _handleTaskDoubleTap,
+                      onExpandToggle: _handleExpandToggle,
+                    ),
+
+                    // Resizable divider
+                    if (widget.resizableTaskList)
                   PanelDivider(
                     initialWidth: _taskListWidth,
                     onWidthChanged: _handleTaskListWidthChange,
@@ -290,6 +481,102 @@ class _GanttChartState extends State<GanttChart> {
 
           // Summary footer
           _buildFooter(),
+        ],
+      ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeatherAlerts() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.safetyYellow.withOpacity(0.1),
+            AppColors.industrialOrange.withOpacity(0.05),
+          ],
+        ),
+        border: const Border(
+          bottom: BorderSide(color: AppColors.border),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.industrialOrange.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.industrialOrange,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.industrialOrange,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'AI 推奨',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${_weatherAlerts.length}件の天気アラート',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _weatherAlerts.first.message,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              // Show all alerts
+            },
+            icon: const Icon(Icons.schedule, size: 16),
+            label: const Text('日程変更を推奨'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.industrialOrange,
+              textStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
     );
