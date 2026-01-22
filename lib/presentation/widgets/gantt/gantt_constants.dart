@@ -68,6 +68,12 @@ class GanttConstants {
   /// Width of resizer handle
   static const double resizerWidth = 8.0;
 
+  /// Size of dependency connector dots
+  static const double connectorSize = 14.0;
+
+  /// Connector hover expansion factor
+  static const double connectorHoverScale = 1.5;
+
   // ============== Z-Index Layers ==============
   static const int gridLayer = 0;
   static const int weekendLayer = 1;
