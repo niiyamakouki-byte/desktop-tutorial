@@ -4,10 +4,14 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/services/project_provider.dart';
 import '../../data/services/order_service.dart';
+import '../../data/services/template_service.dart';
+import '../../data/models/material_model.dart';
 import '../widgets/gantt/gantt_chart.dart';
 import '../widgets/chat/communication_sidebar.dart';
 import '../widgets/common/app_header.dart';
 import '../widgets/modal/task_edit_modal.dart';
+import '../widgets/templates/template_panel.dart';
+import '../widgets/order/order_dashboard.dart';
 import 'cockpit_dashboard.dart';
 
 /// View mode enum for main screen
@@ -62,6 +66,127 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       _viewMode = mode;
     });
+  }
+
+  void _handleNavigation(String view) {
+    switch (view) {
+      case 'gantt':
+        _setViewMode(HomeViewMode.gantt);
+        break;
+      case 'cockpit':
+        _setViewMode(HomeViewMode.cockpit);
+        break;
+      case 'orders':
+        _showOrdersDialog();
+        break;
+      case 'templates':
+        _showTemplatesDialog();
+        break;
+    }
+  }
+
+  void _showOrdersDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.8,
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(AppConstants.paddingM),
+                decoration: const BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.inventory_2_outlined, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    const Text(
+                      '発注管理',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Expanded(
+                child: OrderDashboard(
+                  alerts: _orderService.alerts,
+                  pendingMaterials: _orderService.taskConstructionMaterials
+                      .where((m) => m.orderStatus == OrderStatus.notOrdered)
+                      .toList(),
+                  recentOrders: _orderService.purchaseOrders,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTemplatesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.7,
+          height: MediaQuery.of(context).size.height * 0.8,
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(AppConstants.paddingM),
+                decoration: const BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.description_outlined, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'テンプレート・プロンプト',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              const Expanded(
+                child: TemplatePanel(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _toggleSidebar(bool isOpen) {
@@ -165,9 +290,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           : CockpitDashboard(
                               orderService: _orderService,
                               tasks: provider.tasks,
-                              onNavigate: (view) {
-                                if (view == 'gantt') _setViewMode(HomeViewMode.gantt);
-                              },
+                              onNavigate: _handleNavigation,
                             ),
                     ),
                     // Communication Sidebar with animation
