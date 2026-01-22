@@ -22,3 +22,6 @@ export 'delay_report_generator.dart';
 
 // History services
 export 'change_history_service.dart';
+
+// AI services
+export 'ai_action_service.dart';

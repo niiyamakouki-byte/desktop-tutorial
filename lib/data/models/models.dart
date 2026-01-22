@@ -17,3 +17,6 @@ export 'change_event_model.dart';
 export 'subscription_model.dart';
 export 'row_level_security_model.dart';
 export 'task_change_history_model.dart';
+export 'ai_action_model.dart';
+export 'vendor_model.dart';
+export 'financial_model.dart';
