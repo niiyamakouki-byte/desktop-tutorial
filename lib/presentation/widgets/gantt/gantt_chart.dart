@@ -184,6 +184,10 @@ class _GanttChartState extends State<GanttChart> {
   // Weather alerts
   List<WeatherAlert> _weatherAlerts = [];
 
+  // クイックフィルター状態
+  Set<QuickFilterType> _activeFilters = {};
+  Map<QuickFilterType, int> _filterCounts = {};
+
   @override
   void initState() {
     super.initState();
@@ -198,6 +202,7 @@ class _GanttChartState extends State<GanttChart> {
 
     _computeDateRange();
     _computeVisibleTasks();
+    _computeFilterCounts();
     _loadWeatherAlerts();
 
     // Sync vertical scrolling between task list and timeline
@@ -426,7 +431,34 @@ class _GanttChartState extends State<GanttChart> {
   }
 
   void _computeVisibleTasks() {
-    _visibleTasks = widget.tasks.getVisibleTasks();
+    var tasks = widget.tasks.getVisibleTasks();
+    // クイックフィルターを適用
+    if (_activeFilters.isNotEmpty) {
+      tasks = TaskFilterUtils.applyFilters(tasks, _activeFilters);
+    }
+    _visibleTasks = tasks;
+  }
+
+  void _computeFilterCounts() {
+    _filterCounts = TaskFilterUtils.calculateFilterCounts(widget.tasks);
+  }
+
+  void _handleFilterToggle(QuickFilterType filter) {
+    setState(() {
+      if (_activeFilters.contains(filter)) {
+        _activeFilters.remove(filter);
+      } else {
+        _activeFilters.add(filter);
+      }
+      _computeVisibleTasks();
+    });
+  }
+
+  void _handleClearFilters() {
+    setState(() {
+      _activeFilters.clear();
+      _computeVisibleTasks();
+    });
   }
 
   void _handleTaskTap(Task task) {
@@ -504,17 +536,37 @@ class _GanttChartState extends State<GanttChart> {
               Expanded(
                 child: Row(
                   children: [
-                    // Task list panel
-                    TaskListPanel(
-                      tasks: _visibleTasks,
-                      allTasks: widget.tasks,
-                      selectedTaskId: _selectedTaskId,
-                      scrollController: _taskListScrollController,
+                    // Task list panel with filter bar
+                    SizedBox(
                       width: _taskListWidth,
-                      onTaskTap: _handleTaskTap,
-                      onTaskDoubleTap: _handleTaskDoubleTap,
-                      onExpandToggle: _handleExpandToggle,
-                      phaseMap: _phaseMap,
+                      child: Column(
+                        children: [
+                          // クイックフィルターバー
+                          QuickFilterBar(
+                            activeFilters: _activeFilters,
+                            onFilterToggle: _handleFilterToggle,
+                            onClearAll: _handleClearFilters,
+                            todayCount: _filterCounts[QuickFilterType.today] ?? 0,
+                            delayedCount: _filterCounts[QuickFilterType.delayed] ?? 0,
+                            blockedCount: _filterCounts[QuickFilterType.blocked] ?? 0,
+                            mineCount: _filterCounts[QuickFilterType.mine] ?? 0,
+                          ),
+                          // Task list
+                          Expanded(
+                            child: TaskListPanel(
+                              tasks: _visibleTasks,
+                              allTasks: widget.tasks,
+                              selectedTaskId: _selectedTaskId,
+                              scrollController: _taskListScrollController,
+                              width: _taskListWidth,
+                              onTaskTap: _handleTaskTap,
+                              onTaskDoubleTap: _handleTaskDoubleTap,
+                              onExpandToggle: _handleExpandToggle,
+                              phaseMap: _phaseMap,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     // Resizable divider
