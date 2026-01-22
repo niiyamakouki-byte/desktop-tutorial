@@ -212,7 +212,7 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
-                color: categoryColor.withValues(alpha: 0.15),
+                color: categoryColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(3),
               ),
               child: Text(
@@ -256,7 +256,7 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: badgeColor.withValues(alpha: 0.12),
+        color: badgeColor.withOpacity(0.12),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -330,7 +330,7 @@ class _TaskBarState extends State<TaskBar> {
             width: widget.width.clamp(GanttConstants.minTaskBarWidth, double.infinity),
             height: GanttConstants.taskBarHeight,
             decoration: BoxDecoration(
-              color: categoryColor.withValues(alpha: GanttConstants.taskBarOpacity),
+              color: categoryColor.withOpacity(GanttConstants.taskBarOpacity),
               borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
               border: Border.all(
                 color: widget.isSelected
@@ -341,7 +341,7 @@ class _TaskBarState extends State<TaskBar> {
               boxShadow: _isHovered || widget.isSelected
                   ? [
                       BoxShadow(
-                        color: categoryColor.withValues(alpha: 0.3),
+                        color: categoryColor.withOpacity(0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -360,7 +360,7 @@ class _TaskBarState extends State<TaskBar> {
                     child: Container(
                       width: widget.width * widget.task.progress,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: GanttConstants.progressOpacity),
+                        color: Colors.white.withOpacity(GanttConstants.progressOpacity),
                       ),
                     ),
                   ),
@@ -396,7 +396,7 @@ class _TaskBarState extends State<TaskBar> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: Colors.white.withOpacity(0.9),
                           ),
                         ),
                       ),
@@ -437,7 +437,7 @@ class _TaskBarState extends State<TaskBar> {
                 boxShadow: _isHovered || widget.isSelected
                     ? [
                         BoxShadow(
-                          color: color.withValues(alpha: 0.4),
+                          color: color.withOpacity(0.4),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -502,7 +502,7 @@ class TaskBarTooltip extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.2),
+                  color: statusColor.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -519,7 +519,7 @@ class TaskBarTooltip extends StatelessWidget {
                 '優先度: $priorityLabel',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withOpacity(0.7),
                 ),
               ),
             ],
@@ -539,7 +539,7 @@ class TaskBarTooltip extends StatelessWidget {
                 '${GanttConstants.formatFullDate(task.startDate)} - ${GanttConstants.formatFullDate(task.endDate)}',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withOpacity(0.7),
                 ),
               ),
             ],
@@ -551,7 +551,7 @@ class TaskBarTooltip extends StatelessWidget {
             '期間: ${task.durationDays}日',
             style: TextStyle(
               fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: Colors.white.withOpacity(0.7),
             ),
           ),
           const SizedBox(height: 8),
@@ -567,7 +567,7 @@ class TaskBarTooltip extends StatelessWidget {
                     '進捗',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
                   Text(
@@ -608,7 +608,7 @@ class TaskBarTooltip extends StatelessWidget {
                   task.assignees.map((a) => a.name).join(', '),
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Colors.white.withOpacity(0.7),
                   ),
                 ),
               ],

@@ -76,7 +76,7 @@ class _DocumentCardState extends State<DocumentCard> {
       width: 56,
       height: double.infinity,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppConstants.radiusM - 1),
           bottomLeft: Radius.circular(AppConstants.radiusM - 1),
@@ -294,7 +294,7 @@ class CompactDocumentCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppConstants.radiusS),
               ),
               child: Icon(

@@ -355,10 +355,10 @@ class _GanttChartState extends State<GanttChart> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.3),
+              color: AppColors.primary.withOpacity(0.3),
             ),
           ),
           child: Row(

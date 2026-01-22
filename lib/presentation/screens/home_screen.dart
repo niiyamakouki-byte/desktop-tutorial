@@ -6,6 +6,7 @@ import '../../data/services/project_provider.dart';
 import '../widgets/gantt/gantt_chart.dart';
 import '../widgets/chat/communication_sidebar.dart';
 import '../widgets/common/app_header.dart';
+import '../widgets/modal/task_edit_modal.dart';
 
 /// Main home screen with Gantt chart and communication sidebar
 class HomeScreen extends StatefulWidget {
@@ -34,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // Initialize data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProjectProvider>().initialize();
+      // Start with sidebar open
+      _sidebarController.forward();
     });
   }
 
@@ -49,6 +52,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } else {
       _sidebarController.reverse();
     }
+  }
+
+  void _showTaskEditModal(BuildContext context, task) {
+    final provider = context.read<ProjectProvider>();
+    TaskEditModal.show(
+      context: context,
+      task: task,
+      projectId: provider.currentProject?.id ?? 'default',
+      availableUsers: provider.users,
+    ).then((updatedTask) {
+      if (updatedTask != null) {
+        provider.updateTask(updatedTask);
+      }
+    });
   }
 
   @override
@@ -116,30 +133,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Expanded(
                       child: GanttChart(
                         tasks: provider.tasks,
-                        onTaskTap: (task) => provider.selectTask(task),
-                        onTaskExpand: (taskId) =>
-                            provider.toggleTaskExpansion(taskId),
-                        onTaskUpdate: (task) => provider.updateTask(task),
-                        projectStartDate: provider.projectStartDate,
-                        projectEndDate: provider.projectEndDate,
+                        selectedTaskId: provider.selectedTask?.id,
+                        onTaskSelected: (task) => provider.selectTask(task),
+                        onTaskDoubleTap: (task) => _showTaskEditModal(context, task),
+                        onTaskExpandToggle: (task, isExpanded) =>
+                            provider.toggleTaskExpansion(task.id),
+                        timelineStartDate: provider.projectStartDate,
+                        timelineEndDate: provider.projectEndDate,
                       ),
                     ),
                     // Communication Sidebar with animation
                     AnimatedBuilder(
                       animation: _sidebarAnimation,
                       builder: (context, child) {
+                        final sidebarWidth = AppConstants.sidebarWidth * _sidebarAnimation.value;
+                        if (sidebarWidth < 1) return const SizedBox.shrink();
+
                         return SizedBox(
-                          width: AppConstants.sidebarWidth *
-                              _sidebarAnimation.value,
-                          child: _sidebarAnimation.value > 0.1
-                              ? ClipRect(
-                                  child: OverflowBox(
-                                    alignment: Alignment.centerLeft,
-                                    maxWidth: AppConstants.sidebarWidth,
-                                    child: const CommunicationSidebar(),
-                                  ),
-                                )
-                              : null,
+                          width: sidebarWidth,
+                          child: ClipRect(
+                            child: OverflowBox(
+                              alignment: Alignment.centerLeft,
+                              maxWidth: AppConstants.sidebarWidth,
+                              child: provider.currentProject != null && provider.currentUser != null
+                                  ? CommunicationSidebar(
+                                      isOpen: provider.isSidebarOpen,
+                                      project: provider.currentProject!,
+                                      currentUser: provider.currentUser!,
+                                      messages: provider.messages,
+                                      documents: provider.pinnedAttachments,
+                                      onClose: () {
+                                        provider.toggleSidebar();
+                                        _toggleSidebar(false);
+                                      },
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ),
                         );
                       },
                     ),

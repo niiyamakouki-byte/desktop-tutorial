@@ -93,7 +93,7 @@ class SidebarHeader extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(project.status).withValues(alpha: 0.2),
+                  color: _getStatusColor(project.status).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(AppConstants.radiusS),
                 ),
                 child: Text(
@@ -132,7 +132,7 @@ class SidebarHeader extends StatelessWidget {
                 child: Text(
                   project.location,
                   style: TextStyle(
-                    color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+                    color: AppColors.textOnPrimary.withOpacity(0.7),
                     fontSize: 12,
                   ),
                   maxLines: 1,
@@ -171,7 +171,7 @@ class SidebarHeader extends StatelessWidget {
                       Text(
                         '${project.members.length}名のメンバー',
                         style: TextStyle(
-                          color: AppColors.textOnPrimary.withValues(alpha: 0.9),
+                          color: AppColors.textOnPrimary.withOpacity(0.9),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -190,7 +190,7 @@ class SidebarHeader extends StatelessWidget {
                           Text(
                             '$onlineCount名がオンライン',
                             style: TextStyle(
-                              color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                              color: AppColors.textOnPrimary.withOpacity(0.6),
                               fontSize: 11,
                             ),
                           ),
@@ -286,7 +286,7 @@ class CompactSidebarHeader extends StatelessWidget {
                       Text(
                         '${project.members.length}名',
                         style: TextStyle(
-                          color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+                          color: AppColors.textOnPrimary.withOpacity(0.7),
                           fontSize: 12,
                         ),
                       ),

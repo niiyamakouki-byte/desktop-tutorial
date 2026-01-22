@@ -122,7 +122,7 @@ class _DocumentSectionState extends State<DocumentSection>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppConstants.radiusS),
               ),
               child: const Icon(

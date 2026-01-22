@@ -88,7 +88,7 @@ class TaskListPanel extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.ganttHeaderText.withValues(alpha: 0.8),
+                color: AppColors.ganttHeaderText.withOpacity(0.8),
               ),
               textAlign: TextAlign.center,
             ),
@@ -181,7 +181,7 @@ class TaskListHeader extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.ganttHeaderText.withValues(alpha: 0.8),
+                color: AppColors.ganttHeaderText.withOpacity(0.8),
               ),
               textAlign: TextAlign.center,
             ),
@@ -207,7 +207,7 @@ class TaskListHeader extends StatelessWidget {
           child: Icon(
             icon,
             size: 18,
-            color: AppColors.ganttHeaderText.withValues(alpha: 0.7),
+            color: AppColors.ganttHeaderText.withOpacity(0.7),
           ),
         ),
       ),
@@ -256,7 +256,7 @@ class _PanelDividerState extends State<PanelDivider> {
           duration: GanttConstants.hoverDuration,
           width: GanttConstants.resizerWidth,
           color: _isDragging || _isHovered
-              ? AppColors.primary.withValues(alpha: 0.3)
+              ? AppColors.primary.withOpacity(0.3)
               : Colors.transparent,
           child: Center(
             child: AnimatedContainer(
@@ -267,7 +267,7 @@ class _PanelDividerState extends State<PanelDivider> {
                 color: _isDragging
                     ? AppColors.primary
                     : (_isHovered
-                        ? AppColors.primary.withValues(alpha: 0.5)
+                        ? AppColors.primary.withOpacity(0.5)
                         : AppColors.border),
                 borderRadius: BorderRadius.circular(1),
               ),
@@ -298,7 +298,7 @@ class EmptyTaskList extends StatelessWidget {
           Icon(
             Icons.assignment_outlined,
             size: 48,
-            color: AppColors.textTertiary.withValues(alpha: 0.5),
+            color: AppColors.textTertiary.withOpacity(0.5),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -407,7 +407,7 @@ class TaskListSummary extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

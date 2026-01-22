@@ -140,7 +140,7 @@ class _CommunicationSidebarState extends State<CommunicationSidebar>
               GestureDetector(
                 onTap: widget.onClose,
                 child: Container(
-                  color: Colors.black.withValues(alpha: 0.3 * _fadeAnimation.value),
+                  color: Colors.black.withOpacity(0.3 * _fadeAnimation.value),
                 ),
               ),
             // Sidebar

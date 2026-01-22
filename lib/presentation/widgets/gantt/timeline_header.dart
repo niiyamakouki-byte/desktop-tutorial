@@ -44,7 +44,7 @@ class TimelineHeader extends StatelessWidget {
           // Divider
           Container(
             height: 1,
-            color: AppColors.ganttHeaderBg.withValues(alpha: 0.5),
+            color: AppColors.ganttHeaderBg.withOpacity(0.5),
           ),
           // Day row
           Expanded(
@@ -70,7 +70,7 @@ class TimelineHeader extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                 right: BorderSide(
-                  color: AppColors.ganttHeaderText.withValues(alpha: 0.2),
+                  color: AppColors.ganttHeaderText.withOpacity(0.2),
                   width: 1,
                 ),
               ),
@@ -107,13 +107,13 @@ class TimelineHeader extends StatelessWidget {
             width: dayWidth,
             decoration: BoxDecoration(
               color: isToday
-                  ? AppColors.primary.withValues(alpha: 0.3)
+                  ? AppColors.primary.withOpacity(0.3)
                   : (isWeekend
-                      ? AppColors.ganttHeaderBg.withValues(alpha: 0.7)
+                      ? AppColors.ganttHeaderBg.withOpacity(0.7)
                       : null),
               border: Border(
                 right: BorderSide(
-                  color: AppColors.ganttHeaderText.withValues(alpha: 0.1),
+                  color: AppColors.ganttHeaderText.withOpacity(0.1),
                   width: 1,
                 ),
               ),
@@ -129,7 +129,7 @@ class TimelineHeader extends StatelessWidget {
                     color: isToday
                         ? Colors.white
                         : (isWeekend
-                            ? AppColors.ganttHeaderText.withValues(alpha: 0.6)
+                            ? AppColors.ganttHeaderText.withOpacity(0.6)
                             : AppColors.ganttHeaderText),
                   ),
                 ),
@@ -143,7 +143,7 @@ class TimelineHeader extends StatelessWidget {
                         ? (date.weekday == DateTime.sunday
                             ? Colors.red.shade300
                             : Colors.blue.shade300)
-                        : AppColors.ganttHeaderText.withValues(alpha: 0.6),
+                        : AppColors.ganttHeaderText.withOpacity(0.6),
                   ),
                 ),
               ],
@@ -246,7 +246,7 @@ class WeekHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   right: BorderSide(
-                    color: AppColors.ganttHeaderText.withValues(alpha: 0.2),
+                    color: AppColors.ganttHeaderText.withOpacity(0.2),
                     width: 1,
                   ),
                 ),
@@ -267,7 +267,7 @@ class WeekHeader extends StatelessWidget {
                     '${week.month}/${week.day}~',
                     style: TextStyle(
                       fontSize: 10,
-                      color: AppColors.ganttHeaderText.withValues(alpha: 0.7),
+                      color: AppColors.ganttHeaderText.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -341,12 +341,12 @@ class CompactDayHeader extends StatelessWidget {
               width: dayWidth,
               decoration: BoxDecoration(
                 color: isToday
-                    ? AppColors.primary.withValues(alpha: 0.3)
+                    ? AppColors.primary.withOpacity(0.3)
                     : null,
                 border: Border(
                   left: isFirstOfMonth
                       ? BorderSide(
-                          color: AppColors.ganttHeaderText.withValues(alpha: 0.4),
+                          color: AppColors.ganttHeaderText.withOpacity(0.4),
                           width: 1,
                         )
                       : BorderSide.none,
@@ -364,7 +364,7 @@ class CompactDayHeader extends StatelessWidget {
                         ? (date.weekday == DateTime.sunday
                             ? Colors.red.shade300
                             : Colors.blue.shade300)
-                        : AppColors.ganttHeaderText.withValues(alpha: 0.8),
+                        : AppColors.ganttHeaderText.withOpacity(0.8),
                   ),
                 ),
               ),

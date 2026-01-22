@@ -365,7 +365,7 @@ class _VerticalGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.ganttGridLine.withValues(alpha: 0.3)
+      ..color = AppColors.ganttGridLine.withOpacity(0.3)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
 
@@ -380,7 +380,7 @@ class _VerticalGridPainter extends CustomPainter {
         paint.color = AppColors.ganttGridLine;
         paint.strokeWidth = 1;
       } else {
-        paint.color = AppColors.ganttGridLine.withValues(alpha: 0.3);
+        paint.color = AppColors.ganttGridLine.withOpacity(0.3);
         paint.strokeWidth = 0.5;
       }
 
@@ -423,7 +423,7 @@ class _TodayColumnPainter extends CustomPainter {
     // Draw today column highlight
     final rect = Rect.fromLTWH(x, 0, dayWidth, size.height);
     final paint = Paint()
-      ..color = AppColors.ganttToday.withValues(alpha: 0.3)
+      ..color = AppColors.ganttToday.withOpacity(0.3)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(rect, paint);

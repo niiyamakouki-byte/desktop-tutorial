@@ -395,19 +395,3 @@ class _StatusOptionTileState extends State<_StatusOptionTile> {
 }
 
 /// Animated builder helper widget for status selector
-class AnimatedBuilder extends AnimatedWidget {
-  final Widget Function(BuildContext context, Widget? child) builder;
-  final Widget? child;
-
-  const AnimatedBuilder({
-    super.key,
-    required Animation<double> animation,
-    required this.builder,
-    this.child,
-  }) : super(listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    return builder(context, child);
-  }
-}
