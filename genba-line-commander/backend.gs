@@ -62,6 +62,18 @@ function doPost(e) {
       return jsonResponse(createSuccess({ users: users, count: users.length }));
     }
 
+    // 特定日のスケジュール取得
+    if (data.action === 'getScheduleByDate') {
+      const tasks = getScheduleByDate(data.projectId, data.date);
+      return jsonResponse(createSuccess({ tasks: tasks, count: tasks.length }));
+    }
+
+    // 今後のスケジュール取得
+    if (data.action === 'getUpcomingSchedule') {
+      const tasks = getUpcomingSchedule(data.projectId, data.days || 7);
+      return jsonResponse(createSuccess({ tasks: tasks, count: tasks.length }));
+    }
+
     return jsonResponse(createError('Unknown action', 400));
 
   } catch (error) {
@@ -253,6 +265,16 @@ function createRainCancelMessage(payload) {
   const address = payload.address || '';
   const note = payload.note || '';
 
+  // 影響を受けるタスクを取得
+  let affectedTasks = [];
+  if (payload.projectId && payload.date) {
+    try {
+      affectedTasks = getScheduleByDate(payload.projectId, payload.date);
+    } catch (e) {
+      console.log('Could not fetch affected tasks:', e);
+    }
+  }
+
   const bodyContents = [
     {
       type: 'text',
@@ -292,6 +314,25 @@ function createRainCancelMessage(payload) {
       ]
     }
   ];
+
+  // 影響を受けるタスクがあれば表示
+  if (affectedTasks.length > 0) {
+    const taskList = affectedTasks.slice(0, 3).map(task => `・${task.taskName}`).join('\n');
+    const moreText = affectedTasks.length > 3 ? `\n他${affectedTasks.length - 3}件` : '';
+
+    bodyContents.push({
+      type: 'box',
+      layout: 'vertical',
+      margin: 'lg',
+      backgroundColor: color.secondary,
+      cornerRadius: 'md',
+      paddingAll: 'md',
+      contents: [
+        { type: 'text', text: '⚠️ 中止となる作業', color: color.text, size: 'xs', weight: 'bold' },
+        { type: 'text', text: taskList + moreText, wrap: true, color: COLORS.GRAY, size: 'sm', margin: 'sm' }
+      ]
+    });
+  }
 
   // 備考があれば追加
   if (note) {

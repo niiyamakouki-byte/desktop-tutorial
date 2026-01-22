@@ -27,6 +27,7 @@ const CONFIG = {
     USERS: 'Users',           // 職人マスタ
     PROJECTS: 'Projects',     // 現場マスタ
     USER_PROJECTS: 'UserProjects',  // 職人-現場紐付け
+    SCHEDULE: 'Schedule',     // 工程スケジュール
     LOGS: 'NotificationLogs'  // 送信ログ
   },
 
@@ -43,24 +44,24 @@ const CONFIG = {
 // ============================================
 
 const COLORS = {
-  // 通知タイプ別カラー
+  // 通知タイプ別カラー（Gemini提案の鮮やかな配色）
   RAIN_CANCEL: {
-    primary: '#E53935',      // 赤（警告）
+    primary: '#FF4444',      // 赤（警告）- より鮮やか
     secondary: '#FFCDD2',
-    text: '#B71C1C',
-    icon: '☔️'
+    text: '#CC0000',
+    icon: '🌧️'
   },
   SCHEDULE_CHANGE: {
-    primary: '#FFA000',      // 黄（注意）
+    primary: '#FFB300',      // 黄（注意）- アンバー
     secondary: '#FFE082',
     text: '#E65100',
     icon: '📅'
   },
   BLUEPRINT_UPDATE: {
-    primary: '#1976D2',      // 青（情報）
+    primary: '#2196F3',      // 青（情報）- Material Blue
     secondary: '#BBDEFB',
     text: '#0D47A1',
-    icon: '📐'
+    icon: '📄'
   },
 
   // 共通カラー
@@ -141,6 +142,16 @@ function initializeSpreadsheet() {
     userProjectsSheet = ss.insertSheet(CONFIG.SHEETS.USER_PROJECTS);
     userProjectsSheet.appendRow(['userId', 'projectId', 'role', 'assignedAt']);
     userProjectsSheet.getRange(1, 1, 1, 4).setFontWeight('bold');
+  }
+
+  // Schedule シート（工程管理）
+  let scheduleSheet = ss.getSheetByName(CONFIG.SHEETS.SCHEDULE);
+  if (!scheduleSheet) {
+    scheduleSheet = ss.insertSheet(CONFIG.SHEETS.SCHEDULE);
+    scheduleSheet.appendRow(['scheduleId', 'projectId', 'taskName', 'date', 'status', 'note']);
+    scheduleSheet.getRange(1, 1, 1, 6).setFontWeight('bold');
+    // サンプルデータ
+    scheduleSheet.appendRow(['S001', 'P001', 'モルタル造形', '2025-01-25', 'scheduled', '']);
   }
 
   // NotificationLogs シート

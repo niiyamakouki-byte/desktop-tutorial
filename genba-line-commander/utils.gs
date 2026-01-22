@@ -181,6 +181,93 @@ function findProjectById(projectId) {
 }
 
 // ============================================
+// 📅 スケジュール管理
+// ============================================
+
+/**
+ * プロジェクトの特定日のタスクを取得
+ * @param {string} projectId - プロジェクトID
+ * @param {string} date - 日付（YYYY-MM-DD形式）
+ * @returns {Object[]} タスク配列
+ */
+function getScheduleByDate(projectId, date) {
+  const schedules = getSheetData(CONFIG.SHEETS.SCHEDULE);
+  const targetDate = new Date(date).toDateString();
+
+  return schedules.filter(s => {
+    const scheduleDate = new Date(s.date).toDateString();
+    return s.projectId === projectId && scheduleDate === targetDate && s.status !== 'cancelled';
+  });
+}
+
+/**
+ * プロジェクトの日付範囲のタスクを取得
+ * @param {string} projectId - プロジェクトID
+ * @param {string} startDate - 開始日
+ * @param {string} endDate - 終了日
+ * @returns {Object[]} タスク配列
+ */
+function getScheduleByDateRange(projectId, startDate, endDate) {
+  const schedules = getSheetData(CONFIG.SHEETS.SCHEDULE);
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  return schedules.filter(s => {
+    const scheduleDate = new Date(s.date);
+    return s.projectId === projectId &&
+           scheduleDate >= start &&
+           scheduleDate <= end &&
+           s.status !== 'cancelled';
+  });
+}
+
+/**
+ * 今後の予定タスクを取得
+ * @param {string} projectId - プロジェクトID
+ * @param {number} days - 何日先まで（デフォルト7日）
+ * @returns {Object[]} タスク配列
+ */
+function getUpcomingSchedule(projectId, days = 7) {
+  const schedules = getSheetData(CONFIG.SHEETS.SCHEDULE);
+  const today = new Date();
+  const futureDate = new Date();
+  futureDate.setDate(today.getDate() + days);
+
+  return schedules.filter(s => {
+    const scheduleDate = new Date(s.date);
+    return s.projectId === projectId &&
+           scheduleDate >= today &&
+           scheduleDate <= futureDate &&
+           s.status === 'scheduled';
+  }).sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+/**
+ * タスクのステータスを更新
+ * @param {string} scheduleId - スケジュールID
+ * @param {string} newStatus - 新しいステータス (scheduled/cancelled/completed)
+ * @returns {boolean} 成功/失敗
+ */
+function updateScheduleStatus(scheduleId, newStatus) {
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(CONFIG.SHEETS.SCHEDULE);
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === scheduleId) {
+        sheet.getRange(i + 1, 5).setValue(newStatus); // status column
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('Update schedule status error:', error);
+    return false;
+  }
+}
+
+// ============================================
 // 📝 ログ管理
 // ============================================
 
