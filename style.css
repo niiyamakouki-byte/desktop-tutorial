@@ -1,0 +1,429 @@
+/* 建設DXコックピット v1.0 - スタイルシート */
+
+* {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+}
+
+body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      overflow: hidden;
+      height: 100vh;
+}
+
+/* ヘッダー */
+.header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: #16213e;
+      border-bottom: 2px solid #0f3460;
+}
+
+.header h1 {
+      font-size: 1.4rem;
+      color: #fff;
+}
+
+.header-actions {
+      display: flex;
+      gap: 10px;
+}
+
+.header-actions button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: bold;
+      transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.header-actions button:active {
+      transform: scale(0.95);
+}
+
+.rain-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+}
+
+.rain-btn:hover {
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.add-btn {
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      color: white;
+}
+
+.save-btn {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: white;
+}
+
+/* アラートパネル */
+.alert-panel {
+      background: #2d132c;
+      border-left: 4px solid #ff6b6b;
+      padding: 12px 20px;
+      max-height: 120px;
+      overflow-y: auto;
+}
+
+.alert-panel h3 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: #ff6b6b;
+}
+
+.alert-panel ul {
+      list-style: none;
+      font-size: 0.85rem;
+}
+
+.alert-panel li {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.alert-panel li.critical {
+      color: #ff6b6b;
+}
+
+.alert-panel li.warning {
+      color: #feca57;
+}
+
+.alert-panel li.info {
+      color: #54a0ff;
+}
+
+/* キャンバス */
+.canvas {
+      position: relative;
+      height: calc(100vh - 180px);
+      overflow: auto;
+      background: 
+          radial-gradient(circle at 10% 20%, rgba(90, 92, 106, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(90, 92, 106, 0.1) 0%, transparent 20%),
+                linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.connections-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+}
+
+.connections-svg path {
+      fill: none;
+      stroke: #4ecdc4;
+      stroke-width: 2;
+      stroke-dasharray: 5, 3;
+}
+
+#nodesContainer {
+      position: relative;
+      min-height: 100%;
+      min-width: 100%;
+      z-index: 2;
+}
+
+/* ノード */
+.node {
+      position: absolute;
+      width: 200px;
+      background: linear-gradient(145deg, #2d3436, #1e272e);
+      border: 2px solid #4ecdc4;
+      border-radius: 12px;
+      padding: 12px;
+      cursor: grab;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      user-select: none;
+}
+
+.node:active {
+      cursor: grabbing;
+}
+
+.node:hover {
+      box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+}
+
+.node.alert-critical {
+      border-color: #ff6b6b;
+      animation: pulse-red 1s infinite;
+}
+
+.node.alert-warning {
+      border-color: #feca57;
+}
+
+.node.selected {
+      border-color: #fff;
+      box-shadow: 0 0 20px rgba(255,255,255,0.5);
+}
+
+@keyframes pulse-red {
+      0%, 100% { box-shadow: 0 0 5px #ff6b6b; }
+      50% { box-shadow: 0 0 20px #ff6b6b; }
+}
+
+.node-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+}
+
+.node-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      color: #fff;
+}
+
+.node-date {
+      font-size: 0.75rem;
+      color: #a0a0a0;
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+}
+
+.node-progress {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      margin: 8px 0;
+      overflow: hidden;
+}
+
+.node-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4ecdc4, #44bd32);
+      border-radius: 3px;
+      transition: width 0.3s;
+}
+
+.node-materials {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 6px;
+}
+
+.node-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+}
+
+.node-actions button {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: background 0.2s;
+}
+
+.btn-connect {
+      background: #4ecdc4;
+      color: #1a1a2e;
+}
+
+.btn-edit {
+      background: #feca57;
+      color: #1a1a2e;
+}
+
+/* モーダル */
+.modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+}
+
+.modal.hidden {
+      display: none;
+}
+
+.modal-content {
+      background: #16213e;
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+}
+
+.modal-content h2 {
+      margin-bottom: 16px;
+      color: #4ecdc4;
+}
+
+.modal-content label {
+      display: block;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="date"],
+.modal-content input[type="number"],
+.modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 0.9rem;
+}
+
+.modal-content textarea {
+      height: 80px;
+      resize: vertical;
+}
+
+.checklist {
+      background: rgba(255,255,255,0.05);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 12px 0;
+}
+
+.checklist h4 {
+      margin-bottom: 8px;
+      color: #4ecdc4;
+      font-size: 0.85rem;
+}
+
+.checklist label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
+}
+
+.checklist input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #4ecdc4;
+}
+
+.modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+}
+
+.modal-actions button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+}
+
+.btn-primary {
+      background: #4ecdc4;
+      color: #1a1a2e;
+}
+
+.btn-danger {
+      background: #ff6b6b;
+      color: white;
+}
+
+.btn-secondary {
+      background: #555;
+      color: white;
+}
+
+/* 接続モード表示 */
+.connection-mode {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4ecdc4;
+      color: #1a1a2e;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+}
+
+.connection-mode.hidden {
+      display: none;
+}
+
+.btn-small {
+      padding: 6px 12px;
+      background: #1a1a2e;
+      color: #4ecdc4;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+}
+
+/* スクロールバー */
+::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+}
+
+::-webkit-scrollbar-track {
+      background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+      background: #4ecdc4;
+      border-radius: 4px;
+}
+
+/* レスポンシブ */
+@media (max-width: 600px) {
+      .header {
+                flex-direction: column;
+                gap: 10px;
+      }
+
+    .header h1 {
+              font-size: 1.1rem;
+    }
+
+    .header-actions {
+              width: 100%;
+              justify-content: center;
+    }
+
+    .node {
+              width: 160px;
+    }
+}
