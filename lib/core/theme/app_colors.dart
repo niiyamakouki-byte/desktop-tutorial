@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 
 /// Application color palette for Construction Project Manager
-/// Blue/Navy based color scheme for professional construction management
+/// Navy Blue based color scheme for professional construction management
 class AppColors {
   AppColors._();
 
-  // ============== Primary Colors ==============
-  static const Color primary = Color(0xFF1565C0);        // Primary blue
-  static const Color primaryDark = Color(0xFF0D47A1);    // Darker blue
-  static const Color primaryLight = Color(0xFF42A5F5);   // Lighter blue
-  static const Color secondary = Color(0xFF0277BD);      // Accent blue
-  static const Color accent = Color(0xFF00B8D4);         // Cyan accent
+  // ============== Primary Colors (Navy Blue Theme) ==============
+  static const Color primary = Color(0xFF1A365D);        // Deep Navy Blue
+  static const Color primaryDark = Color(0xFF0F2342);    // Darker Navy
+  static const Color primaryLight = Color(0xFF2C5282);   // Lighter Navy
+  static const Color secondary = Color(0xFF2B6CB0);      // Accent Blue
+  static const Color accent = Color(0xFF4299E1);         // Bright Blue accent
+  static const Color primarySoft = Color(0xFF3182CE);    // Soft primary for highlights
 
   // ============== Background Colors ==============
   static const Color background = Color(0xFFF5F7FA);
@@ -40,16 +41,18 @@ class AppColors {
   static const Color info = Color(0xFF2196F3);
   static const Color infoLight = Color(0xFFE3F2FD);
 
-  // ============== Gantt Chart Colors ==============
-  static const Color ganttBackground = Color(0xFFFFFFFF);
-  static const Color ganttGridLine = Color(0xFFE8ECF1);
-  static const Color ganttWeekend = Color(0xFFF5F7FA);
-  static const Color ganttToday = Color(0xFFE3F2FD);
-  static const Color ganttTodayLine = Color(0xFF1565C0);
-  static const Color ganttHeaderBg = Color(0xFF1A2A4A);
+  // ============== Gantt Chart Colors (Navy Theme) ==============
+  static const Color ganttBackground = Color(0xFFFAFBFC);
+  static const Color ganttGridLine = Color(0xFFE2E8F0);
+  static const Color ganttWeekend = Color(0xFFF1F5F9);
+  static const Color ganttToday = Color(0xFFEBF8FF);
+  static const Color ganttTodayLine = Color(0xFF1A365D);
+  static const Color ganttHeaderBg = Color(0xFF1A365D);
   static const Color ganttHeaderText = Color(0xFFFFFFFF);
-  static const Color ganttRowHover = Color(0xFFF0F7FF);
-  static const Color ganttRowSelected = Color(0xFFE3EFFD);
+  static const Color ganttRowHover = Color(0xFFEBF8FF);
+  static const Color ganttRowSelected = Color(0xFFBEE3F8);
+  static const Color ganttDependencyLine = Color(0xFF4A5568);
+  static const Color ganttDependencyHighlight = Color(0xFF2B6CB0);
 
   // ============== Task Status Colors ==============
   static const Color taskNotStarted = Color(0xFF9E9E9E);
@@ -73,17 +76,18 @@ class AppColors {
   static const Color categoryInspection = Color(0xFFEF5350);
   static const Color categoryGeneral = Color(0xFF78909C);
 
-  // ============== Chat Colors ==============
-  static const Color chatBackground = Color(0xFFF8FAFC);
-  static const Color chatBubbleSent = Color(0xFF1565C0);
+  // ============== Chat Colors (Navy Theme) ==============
+  static const Color chatBackground = Color(0xFFF7FAFC);
+  static const Color chatBubbleSent = Color(0xFF1A365D);
   static const Color chatBubbleReceived = Color(0xFFFFFFFF);
   static const Color chatTextSent = Color(0xFFFFFFFF);
-  static const Color chatTextReceived = Color(0xFF1A2138);
-  static const Color chatTimestamp = Color(0xFF8F9BB3);
+  static const Color chatTextReceived = Color(0xFF1A202C);
+  static const Color chatTimestamp = Color(0xFF718096);
   static const Color chatInputBg = Color(0xFFFFFFFF);
-  static const Color chatUnread = Color(0xFFE53935);
-  static const Color chatOnline = Color(0xFF4CAF50);
-  static const Color chatOffline = Color(0xFF9E9E9E);
+  static const Color chatUnread = Color(0xFFE53E3E);
+  static const Color chatOnline = Color(0xFF38A169);
+  static const Color chatOffline = Color(0xFFA0AEC0);
+  static const Color chatReadIndicator = Color(0xFF4299E1);
 
   // ============== File Types Colors ==============
   static const Color filePdf = Color(0xFFE53935);
@@ -93,11 +97,13 @@ class AppColors {
   static const Color fileCad = Color(0xFFFF9800);
   static const Color fileOther = Color(0xFF607D8B);
 
-  // ============== Sidebar Colors ==============
+  // ============== Sidebar Colors (Navy Theme) ==============
   static const Color sidebarBackground = Color(0xFFFFFFFF);
-  static const Color sidebarHeader = Color(0xFF1A2A4A);
-  static const Color sidebarDivider = Color(0xFFE4E9F2);
-  static const Color sidebarDocSection = Color(0xFFF5F7FA);
+  static const Color sidebarHeader = Color(0xFF1A365D);
+  static const Color sidebarDivider = Color(0xFFE2E8F0);
+  static const Color sidebarDocSection = Color(0xFFF7FAFC);
+  static const Color sidebarStockBg = Color(0xFFEDF2F7);
+  static const Color sidebarFlowBg = Color(0xFFF7FAFC);
 
   // ============== Shadow Colors ==============
   static const Color shadow = Color(0x1A000000);
@@ -119,21 +125,33 @@ class AppColors {
   static const Color secondaryDark = Color(0xFF64B5F6);
   static const Color errorDark = Color(0xFFEF5350);
 
-  // ============== Gradient Definitions ==============
+  // ============== Gradient Definitions (Navy Theme) ==============
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, primaryDark],
+    colors: [Color(0xFF2C5282), Color(0xFF1A365D)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient headerGradient = LinearGradient(
-    colors: [Color(0xFF1A2A4A), Color(0xFF0D1B2A)],
+    colors: [Color(0xFF1A365D), Color(0xFF0F2342)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient sidebarGradient = LinearGradient(
-    colors: [Color(0xFF1A2A4A), Color(0xFF152238)],
+    colors: [Color(0xFF1A365D), Color(0xFF2D3748)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient progressGradient = LinearGradient(
+    colors: [Color(0xFF4299E1), Color(0xFF2B6CB0)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
+  static const LinearGradient stockSectionGradient = LinearGradient(
+    colors: [Color(0xFFEDF2F7), Color(0xFFF7FAFC)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

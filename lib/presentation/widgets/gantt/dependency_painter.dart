@@ -73,17 +73,20 @@ class DependencyPainter extends CustomPainter {
         hoveredTaskId == fromTask.id ||
         hoveredTaskId == toTask.id;
 
-    // Set up paint
+    // Set up paint with enhanced styling
     final paint = Paint()
       ..color = isHighlighted
-          ? AppColors.primary
-          : AppColors.textTertiary.withOpacity(0.6)
-      ..strokeWidth = isHighlighted
-          ? GanttConstants.dependencyStrokeWidth * 1.5
-          : GanttConstants.dependencyStrokeWidth
+          ? AppColors.ganttDependencyHighlight
+          : AppColors.ganttDependencyLine.withOpacity(0.7)
+      ..strokeWidth = isHighlighted ? 3.0 : 2.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
+
+    // Add dashed effect for non-highlighted arrows
+    if (!isHighlighted) {
+      paint.strokeWidth = 1.5;
+    }
 
     // Create path for the arrow
     final path = Path();

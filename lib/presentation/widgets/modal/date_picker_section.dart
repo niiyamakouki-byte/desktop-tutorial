@@ -185,7 +185,7 @@ class _DatePickerSectionState extends State<DatePickerSection> {
   }
 }
 
-/// Date field button widget
+/// Date field button widget with modern calendar card design
 class _DateField extends StatelessWidget {
   final String label;
   final DateTime date;
@@ -201,53 +201,122 @@ class _DateField extends StatelessWidget {
     required this.onTap,
   });
 
+  static const _weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+
   @override
   Widget build(BuildContext context) {
+    final weekDay = _weekDays[date.weekday % 7];
+    final isWeekend = date.weekday == DateTime.sunday || date.weekday == DateTime.saturday;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: AppConstants.animationFast,
-        padding: const EdgeInsets.all(AppConstants.paddingM),
         decoration: BoxDecoration(
-          color: enabled ? AppColors.inputBackground : AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          color: enabled ? AppColors.surface : AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppConstants.radiusL),
           border: Border.all(
             color: isActive ? AppColors.primary : AppColors.border,
             width: isActive ? 2 : 1,
           ),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: isActive ? AppColors.primary : AppColors.textTertiary,
-                fontWeight: FontWeight.w500,
+            // Top label bar
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConstants.paddingM,
+                vertical: AppConstants.paddingS,
               ),
-            ),
-            const SizedBox(height: AppConstants.paddingXS),
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 16,
-                  color: isActive ? AppColors.primary : AppColors.iconDefault,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? AppColors.primary
+                    : AppColors.surfaceVariant,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppConstants.radiusL - 1),
                 ),
-                const SizedBox(width: AppConstants.paddingS),
-                Expanded(
-                  child: Text(
-                    '${date.month}/${date.day}',
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    label == '開始日' ? Icons.play_arrow_rounded : Icons.stop_rounded,
+                    size: 14,
+                    color: isActive ? Colors.white : AppColors.iconDefault,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 11,
+                      color: isActive ? Colors.white : AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
-                      color:
-                          enabled ? AppColors.textPrimary : AppColors.textTertiary,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+            ),
+            // Calendar date display
+            Padding(
+              padding: const EdgeInsets.all(AppConstants.paddingM),
+              child: Column(
+                children: [
+                  // Month
+                  Text(
+                    '${date.year}年${date.month}月',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Day number
+                  Text(
+                    '${date.day}',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: isActive ? AppColors.primary : AppColors.textPrimary,
+                    ),
+                  ),
+                  // Weekday
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isWeekend
+                          ? (date.weekday == DateTime.sunday
+                              ? AppColors.error.withOpacity(0.1)
+                              : AppColors.primary.withOpacity(0.1))
+                          : AppColors.surfaceVariant,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '($weekDay)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isWeekend
+                            ? (date.weekday == DateTime.sunday
+                                ? AppColors.error
+                                : AppColors.primary)
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

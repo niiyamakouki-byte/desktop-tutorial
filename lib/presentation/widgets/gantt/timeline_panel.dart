@@ -144,7 +144,8 @@ class _TimelinePanelState extends State<TimelinePanel> {
       onExit: (_) {
         setState(() => _localHoveredTaskId = null);
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
         height: GanttConstants.rowHeight,
         width: totalWidth,
         decoration: BoxDecoration(
@@ -156,7 +157,19 @@ class _TimelinePanelState extends State<TimelinePanel> {
               color: AppColors.ganttGridLine,
               width: 1,
             ),
+            left: isSelected
+                ? BorderSide(color: AppColors.primary, width: 3)
+                : BorderSide.none,
           ),
+          boxShadow: isHovered && !isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Stack(
           children: [

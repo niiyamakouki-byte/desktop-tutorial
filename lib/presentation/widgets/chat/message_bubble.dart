@@ -413,28 +413,54 @@ class MessageBubble extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.done_all,
-            color: AppColors.primary,
-            size: 14,
-          ),
-          if (message.readBy.isNotEmpty) ...[
-            const SizedBox(width: 2),
-            Text(
-              '${message.readBy.length}',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: 10,
-              ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: AppColors.chatReadIndicator.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(4),
             ),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.done_all,
+                  color: AppColors.chatReadIndicator,
+                  size: 12,
+                ),
+                if (message.readBy.isNotEmpty) ...[
+                  const SizedBox(width: 2),
+                  Text(
+                    '既読 ${message.readBy.length}',
+                    style: const TextStyle(
+                      color: AppColors.chatReadIndicator,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       );
     }
-    return const Icon(
-      Icons.done,
-      color: AppColors.chatTimestamp,
-      size: 14,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(
+          Icons.done,
+          color: AppColors.chatTimestamp,
+          size: 12,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          '送信済み',
+          style: TextStyle(
+            color: AppColors.chatTimestamp,
+            fontSize: 9,
+          ),
+        ),
+      ],
     );
   }
 }

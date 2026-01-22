@@ -120,15 +120,25 @@ class _DocumentSectionState extends State<DocumentSection>
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppConstants.radiusS),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withOpacity(0.15),
+                    AppColors.primary.withOpacity(0.08),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.2),
+                ),
               ),
               child: const Icon(
-                Icons.push_pin,
+                Icons.folder_special_rounded,
                 color: AppColors.primary,
-                size: AppConstants.iconSizeS,
+                size: AppConstants.iconSizeM,
               ),
             ),
             const SizedBox(width: AppConstants.paddingM),
@@ -137,19 +147,44 @@ class _DocumentSectionState extends State<DocumentSection>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '最新ドキュメント',
+                    'Latest Documents',
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
                     ),
                   ),
-                  Text(
-                    '$count件のピン留めファイル',
-                    style: const TextStyle(
-                      color: AppColors.textTertiary,
-                      fontSize: 11,
-                    ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '$count件',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'ピン留め',
+                        style: TextStyle(
+                          color: AppColors.textTertiary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -157,9 +192,17 @@ class _DocumentSectionState extends State<DocumentSection>
             AnimatedRotation(
               turns: _isExpanded ? 0 : -0.25,
               duration: AppConstants.animationFast,
-              child: const Icon(
-                Icons.keyboard_arrow_down,
-                color: AppColors.iconDefault,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.iconDefault,
+                  size: 20,
+                ),
               ),
             ),
           ],

@@ -86,18 +86,37 @@ class _ProgressSliderState extends State<ProgressSlider>
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Label row
+        // Label row with modern percentage display
         if (widget.label != null) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                widget.label!,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: progressColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      progressPercent >= 100
+                          ? Icons.check_circle_rounded
+                          : Icons.trending_up_rounded,
+                      color: progressColor,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.paddingS),
+                  Text(
+                    widget.label!,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
               ),
               AnimatedBuilder(
                 animation: _scaleAnimation,
@@ -109,26 +128,47 @@ class _ProgressSliderState extends State<ProgressSlider>
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppConstants.paddingS,
-                    vertical: AppConstants.paddingXS,
+                    horizontal: AppConstants.paddingM,
+                    vertical: AppConstants.paddingS,
                   ),
                   decoration: BoxDecoration(
-                    color: progressColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(AppConstants.radiusS),
-                  ),
-                  child: Text(
-                    '$progressPercent%',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: progressColor,
+                    gradient: LinearGradient(
+                      colors: [
+                        progressColor.withOpacity(0.15),
+                        progressColor.withOpacity(0.08),
+                      ],
                     ),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    border: Border.all(
+                      color: progressColor.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$progressPercent',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: progressColor,
+                        ),
+                      ),
+                      Text(
+                        '%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: progressColor.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppConstants.paddingS),
+          const SizedBox(height: AppConstants.paddingM),
         ],
 
         // Slider track
@@ -271,48 +311,82 @@ class _ProgressSliderState extends State<ProgressSlider>
           },
         ),
 
-        // Progress milestones
-        const SizedBox(height: AppConstants.paddingXS),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildMilestone(0, progressPercent),
-            _buildMilestone(25, progressPercent),
-            _buildMilestone(50, progressPercent),
-            _buildMilestone(75, progressPercent),
-            _buildMilestone(100, progressPercent),
-          ],
+        // Modern progress milestones with icons
+        const SizedBox(height: AppConstants.paddingM),
+        Container(
+          padding: const EdgeInsets.all(AppConstants.paddingM),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceVariant.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildMilestone(0, progressPercent, '開始', Icons.play_arrow_rounded),
+              _buildMilestone(25, progressPercent, '25%', Icons.looks_one_rounded),
+              _buildMilestone(50, progressPercent, '半分', Icons.hourglass_top_rounded),
+              _buildMilestone(75, progressPercent, '75%', Icons.looks_3_rounded),
+              _buildMilestone(100, progressPercent, '完了', Icons.flag_rounded),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildMilestone(int value, int currentProgress) {
+  Widget _buildMilestone(int value, int currentProgress, String label, IconData icon) {
     final isActive = currentProgress >= value;
     final isPassed = currentProgress > value;
+    final progressColor = _getProgressColor(widget.value);
 
-    return Column(
-      children: [
-        Container(
-          width: 4,
-          height: 4,
-          decoration: BoxDecoration(
-            color: isActive ? _getProgressColor(widget.value) : AppColors.border,
-            shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: widget.enabled ? () => widget.onChanged(value / 100.0) : null,
+      child: Column(
+        children: [
+          AnimatedContainer(
+            duration: AppConstants.animationFast,
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? progressColor.withOpacity(isPassed ? 1.0 : 0.15)
+                  : AppColors.surface,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isActive ? progressColor : AppColors.border,
+                width: isActive && isPassed ? 0 : 2,
+              ),
+              boxShadow: isPassed
+                  ? [
+                      BoxShadow(
+                        color: progressColor.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Icon(
+              icon,
+              size: 16,
+              color: isPassed
+                  ? Colors.white
+                  : isActive
+                      ? progressColor
+                      : AppColors.textTertiary,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          '$value',
-          style: TextStyle(
-            fontSize: 10,
-            color: isPassed
-                ? _getProgressColor(widget.value)
-                : AppColors.textTertiary,
-            fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              color: isActive ? progressColor : AppColors.textTertiary,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

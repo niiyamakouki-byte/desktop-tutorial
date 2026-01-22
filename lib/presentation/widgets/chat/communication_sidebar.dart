@@ -164,46 +164,108 @@ class _CommunicationSidebarState extends State<CommunicationSidebar>
         boxShadow: [
           BoxShadow(
             color: AppColors.shadowDark,
-            blurRadius: 20,
-            offset: const Offset(-4, 0),
+            blurRadius: 24,
+            spreadRadius: 2,
+            offset: const Offset(-8, 0),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Header section
+          // Header section with gradient
           SidebarHeader(
             project: widget.project,
             onClose: widget.onClose,
             onSettingsTap: widget.onSettingsTap,
             onMembersTap: widget.onMembersTap,
           ),
-          // Document section (Stock)
-          DocumentSection(
-            documents: widget.documents,
-            onViewAll: widget.onViewAllDocuments,
-            onDocumentTap: widget.onDocumentTap,
-            onDocumentDownload: widget.onDocumentDownload,
-            onDocumentUnpin: widget.onDocumentUnpin,
+          // STOCK Section (Chatwork style) - Latest Documents pinned at top
+          Container(
+            decoration: const BoxDecoration(
+              gradient: AppColors.stockSectionGradient,
+              border: Border(
+                bottom: BorderSide(color: AppColors.sidebarDivider, width: 1),
+              ),
+            ),
+            child: Column(
+              children: [
+                _buildStockHeader(),
+                DocumentSection(
+                  documents: widget.documents,
+                  onViewAll: widget.onViewAllDocuments,
+                  onDocumentTap: widget.onDocumentTap,
+                  onDocumentDownload: widget.onDocumentDownload,
+                  onDocumentUnpin: widget.onDocumentUnpin,
+                  maxVisibleDocuments: 4,
+                ),
+              ],
+            ),
           ),
-          // Chat section (Flow)
+          // FLOW Section (Slack style) - Chat timeline
           Expanded(
-            child: ChatSection(
-              messages: widget.messages,
-              currentUser: widget.currentUser,
-              typingUsers: widget.typingUsers,
-              replyingTo: widget.replyingTo,
-              onSendMessage: widget.onSendMessage,
-              onTyping: widget.onTyping,
-              onAttachmentTap: widget.onAttachmentTap,
-              onMessageTap: widget.onMessageTap,
-              onMessageLongPress: widget.onMessageLongPress,
-              onReply: widget.onReply,
-              onCancelReply: widget.onCancelReply,
-              onAttachmentOpen: widget.onAttachmentOpen,
-              onLoadMore: widget.onLoadMoreMessages,
-              isLoadingMore: widget.isLoadingMoreMessages,
-              hasMoreMessages: widget.hasMoreMessages,
+            child: Container(
+              color: AppColors.sidebarFlowBg,
+              child: ChatSection(
+                messages: widget.messages,
+                currentUser: widget.currentUser,
+                typingUsers: widget.typingUsers,
+                replyingTo: widget.replyingTo,
+                onSendMessage: widget.onSendMessage,
+                onTyping: widget.onTyping,
+                onAttachmentTap: widget.onAttachmentTap,
+                onMessageTap: widget.onMessageTap,
+                onMessageLongPress: widget.onMessageLongPress,
+                onReply: widget.onReply,
+                onCancelReply: widget.onCancelReply,
+                onAttachmentOpen: widget.onAttachmentOpen,
+                onLoadMore: widget.onLoadMoreMessages,
+                isLoadingMore: widget.isLoadingMoreMessages,
+                hasMoreMessages: widget.hasMoreMessages,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStockHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.paddingL,
+        vertical: AppConstants.paddingS,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Icon(
+              Icons.inventory_2_outlined,
+              color: AppColors.primary,
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: AppConstants.paddingS),
+          const Expanded(
+            child: Text(
+              'Stock',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Text(
+            'ピン留めファイル',
+            style: TextStyle(
+              color: AppColors.textTertiary,
+              fontSize: 10,
             ),
           ),
         ],

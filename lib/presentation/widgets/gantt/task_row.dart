@@ -302,8 +302,42 @@ class TaskBar extends StatefulWidget {
   State<TaskBar> createState() => _TaskBarState();
 }
 
-class _TaskBarState extends State<TaskBar> {
+class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
   bool _isHovered = false;
+  late AnimationController _hoverController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _glowAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _hoverController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
+      CurvedAnimation(parent: _hoverController, curve: Curves.easeOut),
+    );
+    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _hoverController, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _hoverController.dispose();
+    super.dispose();
+  }
+
+  void _onHoverStart() {
+    setState(() => _isHovered = true);
+    _hoverController.forward();
+  }
+
+  void _onHoverEnd() {
+    setState(() => _isHovered = false);
+    _hoverController.reverse();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -319,36 +353,52 @@ class _TaskBarState extends State<TaskBar> {
       left: widget.left,
       top: (GanttConstants.rowHeight - GanttConstants.taskBarHeight) / 2,
       child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
+        onEnter: (_) => _onHoverStart(),
+        onExit: (_) => _onHoverEnd(),
         child: GestureDetector(
           onTap: widget.onTap,
           onPanUpdate: widget.onDragUpdate,
           onPanEnd: widget.onDragEnd,
-          child: AnimatedContainer(
-            duration: GanttConstants.hoverDuration,
-            width: widget.width.clamp(GanttConstants.minTaskBarWidth, double.infinity),
-            height: GanttConstants.taskBarHeight,
-            decoration: BoxDecoration(
-              color: categoryColor.withOpacity(GanttConstants.taskBarOpacity),
-              borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
-              border: Border.all(
-                color: widget.isSelected
-                    ? AppColors.primary
-                    : (_isHovered ? categoryColor : Colors.transparent),
-                width: widget.isSelected ? 2 : 1,
-              ),
-              boxShadow: _isHovered || widget.isSelected
-                  ? [
+          child: AnimatedBuilder(
+            animation: _hoverController,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: widget.isSelected ? 1.03 : _scaleAnimation.value,
+                child: Container(
+                  width: widget.width.clamp(GanttConstants.minTaskBarWidth, double.infinity),
+                  height: GanttConstants.taskBarHeight,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        categoryColor.withOpacity(0.9),
+                        categoryColor.withOpacity(0.75),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
+                    border: Border.all(
+                      color: widget.isSelected
+                          ? AppColors.primary
+                          : categoryColor.withOpacity(0.3 + _glowAnimation.value * 0.5),
+                      width: widget.isSelected ? 2.5 : 1 + _glowAnimation.value,
+                    ),
+                    boxShadow: [
                       BoxShadow(
-                        color: categoryColor.withOpacity(0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        color: categoryColor.withOpacity(0.15 + _glowAnimation.value * 0.25),
+                        blurRadius: 4 + _glowAnimation.value * 8,
+                        spreadRadius: _glowAnimation.value * 2,
+                        offset: Offset(0, 2 + _glowAnimation.value * 2),
                       ),
-                    ]
-                  : null,
-            ),
-            child: ClipRRect(
+                      if (widget.isSelected)
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.3),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                    ],
+                  ),
+                  child: ClipRRect(
               borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
               child: Stack(
                 children: [
@@ -391,19 +441,29 @@ class _TaskBarState extends State<TaskBar> {
                       top: 0,
                       bottom: 0,
                       child: Center(
-                        child: Text(
-                          '${(widget.task.progress * 100).round()}%',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withOpacity(0.9),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            '${(widget.task.progress * 100).round()}%',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                ],
+                  ],
+                ),
               ),
             ),
+          );
+        },
           ),
         ),
       ),

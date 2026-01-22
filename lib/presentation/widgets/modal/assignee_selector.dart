@@ -374,8 +374,8 @@ class _AssigneeSelectorState extends State<AssigneeSelector> {
   }
 }
 
-/// Selected user chip with remove option
-class _SelectedUserChip extends StatelessWidget {
+/// Selected user chip with remove option - modern card style
+class _SelectedUserChip extends StatefulWidget {
   final User user;
   final VoidCallback? onRemove;
 
@@ -385,52 +385,118 @@ class _SelectedUserChip extends StatelessWidget {
   });
 
   @override
+  State<_SelectedUserChip> createState() => _SelectedUserChipState();
+}
+
+class _SelectedUserChipState extends State<_SelectedUserChip> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.paddingS,
-        vertical: AppConstants.paddingXS,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppConstants.radiusRound),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.3),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: AppConstants.animationFast,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.paddingS,
+          vertical: AppConstants.paddingS,
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _UserAvatar(user: user, size: 24),
-          const SizedBox(width: AppConstants.paddingS),
-          Text(
-            user.name,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
-            ),
+        decoration: BoxDecoration(
+          color: _isHovered
+              ? AppColors.primary.withOpacity(0.15)
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(_isHovered ? 0.5 : 0.3),
           ),
-          if (onRemove != null) ...[
-            const SizedBox(width: AppConstants.paddingXS),
-            GestureDetector(
-              onTap: onRemove,
-              child: Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: AppColors.textTertiary.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.close,
-                  size: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: _isHovered ? 8 : 4,
+              offset: const Offset(0, 2),
             ),
           ],
-        ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Avatar with online indicator
+            Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: _UserAvatar(user: widget.user, size: 28),
+                ),
+                if (widget.user.isOnline)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: AppColors.chatOnline,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.surface, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: AppConstants.paddingS),
+            // User info
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.user.name,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  UserRole.getLabel(widget.user.role),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+            if (widget.onRemove != null) ...[
+              const SizedBox(width: AppConstants.paddingS),
+              GestureDetector(
+                onTap: widget.onRemove,
+                child: AnimatedContainer(
+                  duration: AppConstants.animationFast,
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: _isHovered
+                        ? AppColors.error.withOpacity(0.15)
+                        : AppColors.surfaceVariant,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 14,
+                    color: _isHovered ? AppColors.error : AppColors.textTertiary,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

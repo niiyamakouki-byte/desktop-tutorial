@@ -122,27 +122,50 @@ class _ChatSectionState extends State<ChatSection> {
         horizontal: AppConstants.paddingL,
         vertical: AppConstants.paddingM,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border(
+        border: const Border(
           bottom: BorderSide(
             color: AppColors.border,
             width: 1,
           ),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          // Flow indicator (Slack style)
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppConstants.radiusS),
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(6),
             ),
-            child: const Icon(
-              Icons.chat_bubble_outline,
-              color: AppColors.primary,
-              size: AppConstants.iconSizeM,
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.forum_rounded,
+                  color: Colors.white,
+                  size: 14,
+                ),
+                SizedBox(width: 4),
+                Text(
+                  'Flow',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: AppConstants.paddingM),
@@ -154,16 +177,26 @@ class _ChatSectionState extends State<ChatSection> {
                   'プロジェクトチャット',
                   style: TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                Text(
-                  '${widget.messages.length}件のメッセージ',
-                  style: const TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 12,
-                  ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      color: AppColors.textTertiary,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${widget.messages.length}件',
+                      style: const TextStyle(
+                        color: AppColors.textTertiary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -171,32 +204,62 @@ class _ChatSectionState extends State<ChatSection> {
           if (unreadCount > 0)
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
+                horizontal: 10,
+                vertical: 5,
               ),
               decoration: BoxDecoration(
                 color: AppColors.chatUnread,
                 borderRadius: BorderRadius.circular(AppConstants.radiusRound),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.chatUnread.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: Text(
-                '$unreadCount件の未読',
-                style: const TextStyle(
-                  color: AppColors.textOnPrimary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.mark_email_unread,
+                    color: Colors.white,
+                    size: 12,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$unreadCount',
+                    style: const TextStyle(
+                      color: AppColors.textOnPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
           const SizedBox(width: AppConstants.paddingS),
-          IconButton(
-            onPressed: () {
-              // Search functionality
-            },
-            icon: const Icon(
-              Icons.search,
-              color: AppColors.iconDefault,
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(8),
             ),
-            tooltip: 'メッセージを検索',
+            child: IconButton(
+              onPressed: () {
+                // Search functionality
+              },
+              icon: const Icon(
+                Icons.search,
+                color: AppColors.iconDefault,
+                size: 20,
+              ),
+              tooltip: 'メッセージを検索',
+              constraints: const BoxConstraints(
+                minWidth: 36,
+                minHeight: 36,
+              ),
+              padding: EdgeInsets.zero,
+            ),
           ),
         ],
       ),
