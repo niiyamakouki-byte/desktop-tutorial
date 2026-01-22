@@ -229,9 +229,14 @@ No,品番,品名,数量,単位,単価,金額,納期,備考
         (t) => t.id == tm.taskId,
         orElse: () => Task(
           id: tm.taskId,
+          projectId: 'unknown',
           name: '不明',
           startDate: DateTime.now(),
           endDate: DateTime.now(),
+          status: 'unknown',
+          category: 'other',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         ),
       );
 

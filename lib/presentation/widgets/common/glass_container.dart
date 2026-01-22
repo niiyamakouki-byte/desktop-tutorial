@@ -236,7 +236,7 @@ class IndustrialAlert extends StatelessWidget {
   final String title;
   final String message;
   final IconData icon;
-  final AlertType type;
+  final GlassAlertType type;
   final VoidCallback? onDismiss;
   final VoidCallback? onAction;
   final String? actionText;
@@ -246,7 +246,7 @@ class IndustrialAlert extends StatelessWidget {
     required this.title,
     required this.message,
     this.icon = Icons.warning_amber_rounded,
-    this.type = AlertType.warning,
+    this.type = GlassAlertType.warning,
     this.onDismiss,
     this.onAction,
     this.actionText,
@@ -254,30 +254,30 @@ class IndustrialAlert extends StatelessWidget {
 
   Color get _backgroundColor {
     switch (type) {
-      case AlertType.warning:
+      case GlassAlertType.warning:
         return AppColors.safetyYellowLight;
-      case AlertType.danger:
+      case GlassAlertType.danger:
         return AppColors.industrialOrangeLight;
-      case AlertType.critical:
+      case GlassAlertType.critical:
         return AppColors.errorLight;
-      case AlertType.info:
+      case GlassAlertType.info:
         return AppColors.infoLight;
-      case AlertType.success:
+      case GlassAlertType.success:
         return AppColors.successLight;
     }
   }
 
   Color get _accentColor {
     switch (type) {
-      case AlertType.warning:
+      case GlassAlertType.warning:
         return AppColors.safetyYellow;
-      case AlertType.danger:
+      case GlassAlertType.danger:
         return AppColors.industrialOrange;
-      case AlertType.critical:
+      case GlassAlertType.critical:
         return AppColors.constructionRed;
-      case AlertType.info:
+      case GlassAlertType.info:
         return AppColors.info;
-      case AlertType.success:
+      case GlassAlertType.success:
         return AppColors.constructionGreen;
     }
   }
@@ -350,7 +350,7 @@ class IndustrialAlert extends StatelessWidget {
             if (onAction != null) ...[
               GlassButton(
                 onTap: onAction,
-                isWarning: type == AlertType.warning || type == AlertType.danger,
+                isWarning: type == GlassAlertType.warning || type == GlassAlertType.danger,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Text(
                   actionText ?? '対応',
@@ -378,4 +378,4 @@ class IndustrialAlert extends StatelessWidget {
   }
 }
 
-enum AlertType { warning, danger, critical, info, success }
+enum GlassAlertType { warning, danger, critical, info, success }

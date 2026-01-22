@@ -35,7 +35,7 @@ class ThemeProvider extends ChangeNotifier {
       foregroundColor: AppColors.textOnPrimary,
       elevation: 0,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.surface,
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -109,7 +109,7 @@ class ThemeProvider extends ChangeNotifier {
       foregroundColor: AppColors.textPrimaryDark,
       elevation: 0,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AppColors.surfaceDark,
       elevation: 4,
       shape: RoundedRectangleBorder(
