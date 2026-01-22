@@ -293,9 +293,9 @@ class NearMissReport {
 
 /// ヒヤリハット重要度
 enum NearMissSeverity {
-  high('high', '高', Colors.red),
-  medium('medium', '中', Colors.orange),
-  low('low', '低', Colors.yellow);
+  high('high', '高', SafetyColors.red),
+  medium('medium', '中', SafetyColors.orange),
+  low('low', '低', SafetyColors.yellow);
 
   final String value;
   final String displayName;
@@ -311,8 +311,8 @@ enum NearMissSeverity {
   }
 }
 
-/// Colors placeholder for enum
-class Colors {
+/// Safety colors placeholder for enum
+class SafetyColors {
   static const red = 0xFFE53935;
   static const orange = 0xFFFF9800;
   static const yellow = 0xFFFFC107;
