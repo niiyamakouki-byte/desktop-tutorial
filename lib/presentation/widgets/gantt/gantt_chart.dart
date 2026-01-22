@@ -17,6 +17,7 @@ import 'enhanced_dependency_painter.dart';
 import 'dependency_connector.dart';
 import 'dependency_dialog.dart';
 import 'task_row.dart';
+import 'rain_cancel_dialog.dart';
 
 /// Main Gantt Chart widget that combines task list and timeline panels
 class GanttChart extends StatefulWidget {
@@ -107,6 +108,9 @@ class GanttChart extends StatefulWidget {
   /// Callback when dependency is deleted
   final Function(String dependencyId)? onDependencyDeleted;
 
+  /// Callback when rain cancellation is applied (tasks need to be rescheduled)
+  final Function(RainCancelResult result)? onRainCancel;
+
   const GanttChart({
     super.key,
     required this.tasks,
@@ -138,6 +142,7 @@ class GanttChart extends StatefulWidget {
     this.delayImpactMap,
     this.onDependencyCreated,
     this.onDependencyDeleted,
+    this.onRainCancel,
   });
 
   @override
@@ -654,6 +659,11 @@ class _GanttChartState extends State<GanttChart> {
 
           const SizedBox(width: 12),
 
+          // Rain cancellation button
+          _buildRainCancelButton(),
+
+          const SizedBox(width: 8),
+
           // Today button
           _buildTodayButton(),
 
@@ -664,6 +674,64 @@ class _GanttChartState extends State<GanttChart> {
         ],
       ),
     );
+  }
+
+  Widget _buildRainCancelButton() {
+    return Tooltip(
+      message: '雨天中止 - 日程スライド',
+      child: InkWell(
+        onTap: _handleRainCancelTap,
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.blue[700]!.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: Colors.blue[700]!.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '☔',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '雨天中止',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.blue[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleRainCancelTap() async {
+    final result = await RainCancelDialog.show(
+      context: context,
+      tasks: widget.tasks,
+      dependencies: widget.dependencies,
+      initialDate: DateTime.now(),
+    );
+
+    if (result != null && mounted) {
+      // Callback to parent to actually update the tasks
+      widget.onRainCancel?.call(result);
+
+      // Show summary dialog
+      await RainCancelSummaryDialog.show(
+        context: context,
+        result: result,
+      );
+    }
   }
 
   Widget _buildTodayButton() {

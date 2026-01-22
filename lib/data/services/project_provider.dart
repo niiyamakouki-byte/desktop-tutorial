@@ -4,6 +4,7 @@ import '../models/dependency_model.dart';
 import 'mock_data_service.dart';
 import 'dependency_service.dart';
 import 'schedule_calculator.dart';
+import '../../presentation/widgets/gantt/rain_cancel_dialog.dart';
 
 /// Provider for project state management
 class ProjectProvider extends ChangeNotifier {
@@ -353,6 +354,24 @@ class ProjectProvider extends ChangeNotifier {
   /// Initialize mock dependencies for demo
   void initializeMockDependencies() {
     _dependencyService.initializeMockDependencies(_tasks);
+    notifyListeners();
+  }
+
+  /// Apply rain cancellation - slide affected tasks
+  void applyRainCancellation(RainCancelResult result) {
+    for (final slideInfo in result.affectedTasks) {
+      final index = _tasks.indexWhere((t) => t.id == slideInfo.task.id);
+      if (index >= 0) {
+        _tasks[index] = _tasks[index].copyWith(
+          startDate: slideInfo.newStart,
+          endDate: slideInfo.newEnd,
+          updatedAt: DateTime.now(),
+        );
+      }
+    }
+
+    // Recalculate schedule after moving tasks
+    _recalculateSchedule();
     notifyListeners();
   }
 }

@@ -8,6 +8,7 @@ import '../../data/services/template_service.dart';
 import '../../data/models/material_model.dart';
 import '../../data/models/dependency_model.dart';
 import '../widgets/gantt/gantt_chart.dart';
+import '../widgets/gantt/rain_cancel_dialog.dart';
 import '../widgets/chat/communication_sidebar.dart';
 import '../widgets/common/app_header.dart';
 import '../widgets/modal/task_edit_modal.dart';
@@ -311,6 +312,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               },
                               onDependencyDeleted: (depId) {
                                 provider.removeDependency(depId);
+                              },
+                              onRainCancel: (result) {
+                                // Update tasks with new dates from rain cancellation
+                                provider.applyRainCancellation(result);
                               },
                             )
                           : CockpitDashboard(
