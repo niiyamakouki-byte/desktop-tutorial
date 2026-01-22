@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>現場LINE Commander</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    /* カスタムスタイル */
+    .tab-active {
+      border-bottom: 3px solid #1976D2;
+      color: #1976D2;
+      font-weight: 600;
+    }
+
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #1976D2;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .toast {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ファイルドロップエリア */
+    .drop-zone {
+      transition: all 0.3s ease;
+    }
+
+    .drop-zone.dragover {
+      background-color: #E3F2FD;
+      border-color: #1976D2;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-lg mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🏗️</span>
+          <div>
+            <h1 class="text-lg font-bold">現場LINE Commander</h1>
+            <p class="text-xs text-blue-200">一斉通知システム</p>
+          </div>
+        </div>
+        <div id="userInfo" class="text-right text-sm hidden">
+          <p class="text-blue-200">ログイン中</p>
+          <p id="userName" class="font-semibold"></p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="max-w-lg mx-auto px-4 py-6">
+
+    <!-- タブナビゲーション -->
+    <div class="bg-white rounded-lg shadow-sm mb-6">
+      <nav class="flex border-b">
+        <button onclick="switchTab('rain')" id="tab-rain"
+                class="flex-1 py-3 text-center text-sm transition-colors tab-active">
+          <span class="block text-xl mb-1">☔️</span>
+          雨天中止
+        </button>
+        <button onclick="switchTab('schedule')" id="tab-schedule"
+                class="flex-1 py-3 text-center text-sm text-gray-500 transition-colors hover:text-gray-700">
+          <span class="block text-xl mb-1">📅</span>
+          工程変更
+        </button>
+        <button onclick="switchTab('blueprint')" id="tab-blueprint"
+                class="flex-1 py-3 text-center text-sm text-gray-500 transition-colors hover:text-gray-700">
+          <span class="block text-xl mb-1">📐</span>
+          図面更新
+        </button>
+      </nav>
+    </div>
+
+    <!-- 共通：現場選択 -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">
+        📍 通知先の現場
+      </label>
+      <select id="projectSelect"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="all">全現場に送信</option>
+        <!-- JSで動的に追加 -->
+      </select>
+      <p id="userCount" class="text-xs text-gray-500 mt-2"></p>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 雨天中止フォーム -->
+    <!-- ============================================ -->
+    <div id="form-rain" class="form-section">
+      <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+        <div class="flex items-center gap-2 mb-4 text-red-600">
+          <span class="text-2xl">☔️</span>
+          <h2 class="font-bold">雨天中止通知</h2>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">中止日</label>
+            <input type="date" id="rain-date"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">現場住所（任意）</label>
+            <input type="text" id="rain-address" placeholder="東京都渋谷区..."
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+            <p class="text-xs text-gray-500 mt-1">📍 入力すると通知にマップリンクが追加されます</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">備考（任意）</label>
+            <textarea id="rain-note" rows="2" placeholder="追加の連絡事項があれば入力..."
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="sendRainNotification()"
+              class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2">
+        <span>☔️</span>
+        <span>雨天中止を送信</span>
+      </button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 工程変更フォーム -->
+    <!-- ============================================ -->
+    <div id="form-schedule" class="form-section hidden">
+      <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+        <div class="flex items-center gap-2 mb-4 text-amber-600">
+          <span class="text-2xl">📅</span>
+          <h2 class="font-bold">工程変更通知</h2>
+        </div>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">旧日程</label>
+              <input type="date" id="schedule-old-date"
+                     class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">新日程</label>
+              <input type="date" id="schedule-new-date"
+                     class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">現場住所（任意）</label>
+            <input type="text" id="schedule-address" placeholder="東京都渋谷区..."
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+            <p class="text-xs text-gray-500 mt-1">📍 入力すると通知にマップリンクが追加されます</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">備考（任意）</label>
+            <textarea id="schedule-note" rows="2" placeholder="変更理由などを入力..."
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="sendScheduleNotification()"
+              class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2">
+        <span>📅</span>
+        <span>工程変更を送信</span>
+      </button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- 図面更新フォーム -->
+    <!-- ============================================ -->
+    <div id="form-blueprint" class="form-section hidden">
+      <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+        <div class="flex items-center gap-2 mb-4 text-blue-600">
+          <span class="text-2xl">📐</span>
+          <h2 class="font-bold">図面更新通知</h2>
+        </div>
+
+        <div class="space-y-4">
+          <!-- ファイルアップロード -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">図面ファイル</label>
+            <div id="dropZone"
+                 class="drop-zone border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
+              <input type="file" id="blueprint-file" accept=".pdf,.jpg,.jpeg,.png,.dwg" class="hidden">
+              <div id="uploadPlaceholder">
+                <span class="text-4xl block mb-2">📎</span>
+                <p class="text-gray-600">タップしてファイルを選択</p>
+                <p class="text-xs text-gray-400 mt-1">PDF, 画像, CAD形式に対応</p>
+              </div>
+              <div id="filePreview" class="hidden">
+                <span class="text-4xl block mb-2">📄</span>
+                <p id="fileName" class="text-gray-700 font-medium truncate"></p>
+                <p id="fileSize" class="text-xs text-gray-500"></p>
+                <button onclick="clearFile(event)" class="text-red-500 text-sm mt-2 hover:underline">ファイルを削除</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">現場住所（任意）</label>
+            <input type="text" id="blueprint-address" placeholder="東京都渋谷区..."
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <p class="text-xs text-gray-500 mt-1">📍 入力すると通知にマップリンクが追加されます</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">備考（任意）</label>
+            <textarea id="blueprint-note" rows="2" placeholder="図面の説明などを入力..."
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="sendBlueprintNotification()"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2">
+        <span>📐</span>
+        <span>図面更新を送信</span>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ローディングオーバーレイ -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 flex flex-col items-center gap-4">
+      <div class="loader"></div>
+      <p id="loadingText" class="text-gray-700">送信中...</p>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="fixed top-4 left-4 right-4 max-w-lg mx-auto z-50 hidden">
+    <div class="toast bg-white rounded-lg shadow-xl p-4 flex items-center gap-3">
+      <span id="toastIcon" class="text-2xl"></span>
+      <div class="flex-1">
+        <p id="toastTitle" class="font-bold"></p>
+        <p id="toastMessage" class="text-sm text-gray-600"></p>
+      </div>
+      <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">✕</button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // 初期化
+    // ============================================
+
+    const LIFF_ID = '<?= liffId ?>';
+    let projects = <?= projects ?>;
+    let selectedFile = null;
+
+    // LIFF初期化
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          document.getElementById('userName').textContent = profile.displayName;
+          document.getElementById('userInfo').classList.remove('hidden');
+        }
+
+        // プロジェクト選択肢を追加
+        populateProjects();
+
+        // 日付のデフォルト値を明日に設定
+        setDefaultDates();
+
+        // ファイル選択イベント
+        setupFileUpload();
+
+      } catch (error) {
+        console.error('LIFF init error:', error);
+        showToast('error', 'エラー', 'アプリの初期化に失敗しました');
+      }
+    });
+
+    // ============================================
+    // タブ切り替え
+    // ============================================
+
+    function switchTab(tab) {
+      // すべてのタブを非アクティブに
+      document.querySelectorAll('nav button').forEach(btn => {
+        btn.classList.remove('tab-active');
+        btn.classList.add('text-gray-500');
+      });
+
+      // すべてのフォームを非表示
+      document.querySelectorAll('.form-section').forEach(form => {
+        form.classList.add('hidden');
+      });
+
+      // 選択したタブをアクティブに
+      document.getElementById(`tab-${tab}`).classList.add('tab-active');
+      document.getElementById(`tab-${tab}`).classList.remove('text-gray-500');
+
+      // 選択したフォームを表示
+      document.getElementById(`form-${tab}`).classList.remove('hidden');
+    }
+
+    // ============================================
+    // プロジェクト選択
+    // ============================================
+
+    function populateProjects() {
+      const select = document.getElementById('projectSelect');
+
+      projects.forEach(project => {
+        const option = document.createElement('option');
+        option.value = project.projectId;
+        option.textContent = project.projectName;
+        option.dataset.address = project.address || '';
+        select.appendChild(option);
+      });
+
+      select.addEventListener('change', onProjectChange);
+      updateUserCount();
+    }
+
+    function onProjectChange() {
+      const select = document.getElementById('projectSelect');
+      const selectedOption = select.options[select.selectedIndex];
+      const address = selectedOption.dataset.address || '';
+
+      // 住所を自動入力
+      document.getElementById('rain-address').value = address;
+      document.getElementById('schedule-address').value = address;
+      document.getElementById('blueprint-address').value = address;
+
+      updateUserCount();
+    }
+
+    async function updateUserCount() {
+      const projectId = document.getElementById('projectSelect').value;
+
+      if (projectId === 'all') {
+        document.getElementById('userCount').textContent = '全ての登録ユーザーに送信されます';
+        return;
+      }
+
+      try {
+        const result = await callGAS('getProjectUsers', { projectId });
+        if (result.success) {
+          document.getElementById('userCount').textContent =
+            `この現場には ${result.data.count}人 が登録されています`;
+        }
+      } catch (error) {
+        console.error('Error fetching user count:', error);
+      }
+    }
+
+    // ============================================
+    // 日付設定
+    // ============================================
+
+    function setDefaultDates() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+      document.getElementById('rain-date').value = tomorrowStr;
+      document.getElementById('schedule-old-date').value = tomorrowStr;
+
+      const dayAfter = new Date();
+      dayAfter.setDate(dayAfter.getDate() + 2);
+      document.getElementById('schedule-new-date').value = dayAfter.toISOString().split('T')[0];
+    }
+
+    // ============================================
+    // ファイルアップロード
+    // ============================================
+
+    function setupFileUpload() {
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('blueprint-file');
+
+      // クリックでファイル選択
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      // ファイル選択時
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      // ドラッグ&ドロップ
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function handleFile(file) {
+      // サイズチェック（10MB制限）
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('error', 'エラー', 'ファイルサイズは10MB以下にしてください');
+        return;
+      }
+
+      selectedFile = file;
+
+      // プレビュー表示
+      document.getElementById('uploadPlaceholder').classList.add('hidden');
+      document.getElementById('filePreview').classList.remove('hidden');
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    }
+
+    function clearFile(event) {
+      event.stopPropagation();
+      selectedFile = null;
+      document.getElementById('blueprint-file').value = '';
+      document.getElementById('uploadPlaceholder').classList.remove('hidden');
+      document.getElementById('filePreview').classList.add('hidden');
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      const k = 1024;
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + units[i];
+    }
+
+    // ============================================
+    // 通知送信
+    // ============================================
+
+    async function sendRainNotification() {
+      const projectId = document.getElementById('projectSelect').value;
+      const projectName = document.getElementById('projectSelect').selectedOptions[0].textContent;
+      const date = document.getElementById('rain-date').value;
+      const address = document.getElementById('rain-address').value;
+      const note = document.getElementById('rain-note').value;
+
+      if (!date) {
+        showToast('error', '入力エラー', '日付を選択してください');
+        return;
+      }
+
+      showLoading('雨天中止通知を送信中...');
+
+      try {
+        const result = await callGAS('sendNotification', {
+          type: 'rain_cancel',
+          payload: {
+            projectId,
+            projectName,
+            date,
+            address,
+            note
+          }
+        });
+
+        hideLoading();
+
+        if (result.success) {
+          showToast('success', '送信完了', result.message);
+          clearForm('rain');
+        } else {
+          showToast('error', '送信失敗', result.error?.message || '不明なエラー');
+        }
+      } catch (error) {
+        hideLoading();
+        showToast('error', 'エラー', error.message);
+      }
+    }
+
+    async function sendScheduleNotification() {
+      const projectId = document.getElementById('projectSelect').value;
+      const projectName = document.getElementById('projectSelect').selectedOptions[0].textContent;
+      const oldDate = document.getElementById('schedule-old-date').value;
+      const newDate = document.getElementById('schedule-new-date').value;
+      const address = document.getElementById('schedule-address').value;
+      const note = document.getElementById('schedule-note').value;
+
+      if (!oldDate || !newDate) {
+        showToast('error', '入力エラー', '日程を入力してください');
+        return;
+      }
+
+      showLoading('工程変更通知を送信中...');
+
+      try {
+        const result = await callGAS('sendNotification', {
+          type: 'schedule_change',
+          payload: {
+            projectId,
+            projectName,
+            oldDate,
+            newDate,
+            address,
+            note
+          }
+        });
+
+        hideLoading();
+
+        if (result.success) {
+          showToast('success', '送信完了', result.message);
+          clearForm('schedule');
+        } else {
+          showToast('error', '送信失敗', result.error?.message || '不明なエラー');
+        }
+      } catch (error) {
+        hideLoading();
+        showToast('error', 'エラー', error.message);
+      }
+    }
+
+    async function sendBlueprintNotification() {
+      const projectId = document.getElementById('projectSelect').value;
+      const projectName = document.getElementById('projectSelect').selectedOptions[0].textContent;
+      const address = document.getElementById('blueprint-address').value;
+      const note = document.getElementById('blueprint-note').value;
+
+      if (!selectedFile) {
+        showToast('error', '入力エラー', '図面ファイルを選択してください');
+        return;
+      }
+
+      showLoading('図面をアップロード中...');
+
+      try {
+        // ファイルをBase64に変換
+        const base64Data = await fileToBase64(selectedFile);
+
+        // アップロード
+        const uploadResult = await callGAS('uploadFile', {
+          fileName: selectedFile.name,
+          base64Data: base64Data,
+          mimeType: selectedFile.type || 'application/octet-stream'
+        });
+
+        if (!uploadResult.success) {
+          hideLoading();
+          showToast('error', 'アップロード失敗', uploadResult.error?.message || '不明なエラー');
+          return;
+        }
+
+        showLoading('図面更新通知を送信中...');
+
+        // 通知送信
+        const result = await callGAS('sendNotification', {
+          type: 'blueprint_update',
+          payload: {
+            projectId,
+            projectName,
+            fileName: selectedFile.name,
+            fileUrl: uploadResult.data.viewUrl,
+            address,
+            note
+          }
+        });
+
+        hideLoading();
+
+        if (result.success) {
+          showToast('success', '送信完了', result.message);
+          clearForm('blueprint');
+          clearFile(new Event('click'));
+        } else {
+          showToast('error', '送信失敗', result.error?.message || '不明なエラー');
+        }
+      } catch (error) {
+        hideLoading();
+        showToast('error', 'エラー', error.message);
+      }
+    }
+
+    // ============================================
+    // ユーティリティ
+    // ============================================
+
+    function callGAS(action, data) {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .doPost({
+            postData: {
+              contents: JSON.stringify({ action, ...data })
+            }
+          });
+      }).then(response => {
+        // ContentServiceからのレスポンスを解析
+        if (typeof response === 'string') {
+          return JSON.parse(response);
+        }
+        return response;
+      });
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function clearForm(formType) {
+      switch (formType) {
+        case 'rain':
+          document.getElementById('rain-note').value = '';
+          break;
+        case 'schedule':
+          document.getElementById('schedule-note').value = '';
+          break;
+        case 'blueprint':
+          document.getElementById('blueprint-note').value = '';
+          break;
+      }
+    }
+
+    // ============================================
+    // UI フィードバック
+    // ============================================
+
+    function showLoading(text) {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    function showToast(type, title, message) {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toastIcon');
+      const titleEl = document.getElementById('toastTitle');
+      const messageEl = document.getElementById('toastMessage');
+
+      const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+      };
+
+      const colors = {
+        success: 'border-l-4 border-green-500',
+        error: 'border-l-4 border-red-500',
+        warning: 'border-l-4 border-amber-500',
+        info: 'border-l-4 border-blue-500'
+      };
+
+      icon.textContent = icons[type] || icons.info;
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+
+      toast.querySelector('.toast').className = `toast bg-white rounded-lg shadow-xl p-4 flex items-center gap-3 ${colors[type] || colors.info}`;
+      toast.classList.remove('hidden');
+
+      // 5秒後に自動で閉じる
+      setTimeout(hideToast, 5000);
+    }
+
+    function hideToast() {
+      document.getElementById('toast').classList.add('hidden');
+    }
+  </script>
+
+</body>
+</html>
