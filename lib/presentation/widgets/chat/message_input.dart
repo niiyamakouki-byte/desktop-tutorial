@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
 import 'user_avatar.dart';
+import 'voice_input_button.dart';
 
 /// Message input field with attachment button and send functionality
 /// Supports text input, file attachments, and reply-to functionality
@@ -290,11 +292,30 @@ class _MessageInputState extends State<MessageInput> {
         children: [
           _buildAttachmentButton(),
           const SizedBox(width: AppConstants.paddingS),
+          // Voice input button (Web only)
+          if (kIsWeb) ...[
+            _buildVoiceButton(),
+            const SizedBox(width: AppConstants.paddingS),
+          ],
           Expanded(child: _buildTextField()),
           const SizedBox(width: AppConstants.paddingS),
           _buildSendButton(),
         ],
       ),
+    );
+  }
+
+  Widget _buildVoiceButton() {
+    return CompactVoiceButton(
+      enabled: widget.enabled,
+      onResult: (text) {
+        // Append voice text to existing input
+        final currentText = _textController.text;
+        final newText = currentText.isEmpty ? text : '$currentText $text';
+        _textController.text = newText;
+        _textController.selection = TextSelection.collapsed(offset: newText.length);
+        _focusNode.requestFocus();
+      },
     );
   }
 

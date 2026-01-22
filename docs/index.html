@@ -13,8 +13,194 @@
   <title>建設プロジェクト管理</title>
   <link rel="manifest" href="manifest.json">
   <script>
-    const serviceWorkerVersion = "1605857867";
+    const serviceWorkerVersion = "1055625039";
   </script>
+
+  <!-- Voice Input Service (Web Speech API) -->
+  <script>
+    window.VoiceInput = {
+      recognition: null,
+      isListening: false,
+      isSupported: false,
+      onResult: null,
+      onError: null,
+      onStateChange: null,
+
+      init: function() {
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          this.recognition = new SpeechRecognition();
+          this.recognition.continuous = false;
+          this.recognition.interimResults = true;
+          this.recognition.lang = 'ja-JP';
+          this.recognition.maxAlternatives = 1;
+          this.isSupported = true;
+
+          var self = this;
+
+          this.recognition.onresult = function(event) {
+            var transcript = '';
+            var isFinal = false;
+            for (var i = event.resultIndex; i < event.results.length; i++) {
+              transcript += event.results[i][0].transcript;
+              if (event.results[i].isFinal) {
+                isFinal = true;
+              }
+            }
+            if (self.onResult) {
+              self.onResult(transcript, isFinal);
+            }
+          };
+
+          this.recognition.onerror = function(event) {
+            self.isListening = false;
+            var errorMessage = '';
+            switch (event.error) {
+              case 'not-allowed':
+                errorMessage = 'マイクの使用が許可されていません。ブラウザの設定を確認してください。';
+                break;
+              case 'no-speech':
+                errorMessage = '音声が検出されませんでした。もう一度お試しください。';
+                break;
+              case 'audio-capture':
+                errorMessage = 'マイクが見つかりません。';
+                break;
+              case 'network':
+                errorMessage = 'ネットワークエラーが発生しました。';
+                break;
+              default:
+                errorMessage = '音声認識エラー: ' + event.error;
+            }
+            if (self.onError) {
+              self.onError(errorMessage);
+            }
+            if (self.onStateChange) {
+              self.onStateChange('error');
+            }
+          };
+
+          this.recognition.onend = function() {
+            self.isListening = false;
+            if (self.onStateChange) {
+              self.onStateChange('idle');
+            }
+          };
+
+          this.recognition.onstart = function() {
+            self.isListening = true;
+            window._pendingVoiceState = 'listening';
+            if (self.onStateChange) {
+              self.onStateChange('listening');
+            }
+          };
+
+          // Override callbacks to also set window properties for Dart polling
+          var origOnResult = this.recognition.onresult;
+          this.recognition.onresult = function(event) {
+            var transcript = '';
+            var isFinal = false;
+            for (var i = event.resultIndex; i < event.results.length; i++) {
+              transcript += event.results[i][0].transcript;
+              if (event.results[i].isFinal) {
+                isFinal = true;
+              }
+            }
+            window._pendingVoiceResult = { transcript: transcript, isFinal: isFinal };
+            if (self.onResult) {
+              self.onResult(transcript, isFinal);
+            }
+          };
+
+          var origOnError = this.recognition.onerror;
+          this.recognition.onerror = function(event) {
+            self.isListening = false;
+            var errorMessage = '';
+            switch (event.error) {
+              case 'not-allowed':
+                errorMessage = 'マイクの使用が許可されていません';
+                break;
+              case 'no-speech':
+                errorMessage = '音声が検出されませんでした';
+                break;
+              case 'audio-capture':
+                errorMessage = 'マイクが見つかりません';
+                break;
+              case 'network':
+                errorMessage = 'ネットワークエラー';
+                break;
+              default:
+                errorMessage = '音声認識エラー: ' + event.error;
+            }
+            window._pendingVoiceError = errorMessage;
+            window._pendingVoiceState = 'error';
+            if (self.onError) {
+              self.onError(errorMessage);
+            }
+          };
+
+          var origOnEnd = this.recognition.onend;
+          this.recognition.onend = function() {
+            self.isListening = false;
+            window._pendingVoiceState = 'idle';
+            if (self.onStateChange) {
+              self.onStateChange('idle');
+            }
+          };
+
+          console.log('Voice Input initialized successfully');
+          return true;
+        } else {
+          this.isSupported = false;
+          console.log('Web Speech API not supported');
+          return false;
+        }
+      },
+
+      start: function() {
+        if (!this.isSupported || !this.recognition) {
+          if (this.onError) {
+            this.onError('このブラウザは音声入力に対応していません');
+          }
+          return false;
+        }
+        if (this.isListening) {
+          return true;
+        }
+        try {
+          this.recognition.start();
+          return true;
+        } catch (e) {
+          if (this.onError) {
+            this.onError('音声入力を開始できませんでした: ' + e.message);
+          }
+          return false;
+        }
+      },
+
+      stop: function() {
+        if (this.recognition && this.isListening) {
+          try {
+            this.recognition.stop();
+          } catch (e) {
+            // Ignore
+          }
+        }
+        this.isListening = false;
+      },
+
+      setCallbacks: function(onResult, onError, onStateChange) {
+        this.onResult = onResult;
+        this.onError = onError;
+        this.onStateChange = onStateChange;
+      }
+    };
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+      window.VoiceInput.init();
+    });
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </head>
 <body>
