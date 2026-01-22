@@ -25,3 +25,9 @@ export 'change_history_service.dart';
 
 // AI services
 export 'ai_action_service.dart';
+
+// Financial services
+export 'cashflow_service.dart';
+
+// Task management services
+export 'task_cascade_service.dart';

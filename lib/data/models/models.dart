@@ -20,3 +20,4 @@ export 'task_change_history_model.dart';
 export 'ai_action_model.dart';
 export 'vendor_model.dart';
 export 'financial_model.dart';
+export 'cashflow_model.dart';
