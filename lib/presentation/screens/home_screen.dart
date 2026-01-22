@@ -3,10 +3,15 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/services/project_provider.dart';
+import '../../data/services/order_service.dart';
 import '../widgets/gantt/gantt_chart.dart';
 import '../widgets/chat/communication_sidebar.dart';
 import '../widgets/common/app_header.dart';
 import '../widgets/modal/task_edit_modal.dart';
+import 'cockpit_dashboard.dart';
+
+/// View mode enum for main screen
+enum HomeViewMode { gantt, cockpit }
 
 /// Main home screen with Gantt chart and communication sidebar
 class HomeScreen extends StatefulWidget {
@@ -19,6 +24,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _sidebarController;
   late Animation<double> _sidebarAnimation;
+  HomeViewMode _viewMode = HomeViewMode.gantt;
+  late OrderService _orderService;
 
   @override
   void initState() {
@@ -32,6 +39,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
 
+    // Initialize OrderService
+    _orderService = OrderService();
+    _orderService.initialize();
+
     // Initialize data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProjectProvider>().initialize();
@@ -43,7 +54,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _sidebarController.dispose();
+    _orderService.dispose();
     super.dispose();
+  }
+
+  void _setViewMode(HomeViewMode mode) {
+    setState(() {
+      _viewMode = mode;
+    });
   }
 
   void _toggleSidebar(bool isOpen) {
@@ -125,22 +143,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: [
               // App Header
               const AppHeader(),
+              // View Mode Tabs
+              _buildViewTabs(),
               // Main Content Area
               Expanded(
                 child: Row(
                   children: [
-                    // Gantt Chart Area (expands to fill available space)
+                    // Main content based on view mode
                     Expanded(
-                      child: GanttChart(
-                        tasks: provider.tasks,
-                        selectedTaskId: provider.selectedTask?.id,
-                        onTaskSelected: (task) => provider.selectTask(task),
-                        onTaskDoubleTap: (task) => _showTaskEditModal(context, task),
-                        onTaskExpandToggle: (task, isExpanded) =>
-                            provider.toggleTaskExpansion(task.id),
-                        timelineStartDate: provider.projectStartDate,
-                        timelineEndDate: provider.projectEndDate,
-                      ),
+                      child: _viewMode == HomeViewMode.gantt
+                          ? GanttChart(
+                              tasks: provider.tasks,
+                              selectedTaskId: provider.selectedTask?.id,
+                              onTaskSelected: (task) => provider.selectTask(task),
+                              onTaskDoubleTap: (task) => _showTaskEditModal(context, task),
+                              onTaskExpandToggle: (task, isExpanded) =>
+                                  provider.toggleTaskExpansion(task.id),
+                              timelineStartDate: provider.projectStartDate,
+                              timelineEndDate: provider.projectEndDate,
+                            )
+                          : CockpitDashboard(
+                              orderService: _orderService,
+                              tasks: provider.tasks,
+                              onNavigate: (view) {
+                                if (view == 'gantt') _setViewMode(HomeViewMode.gantt);
+                              },
+                            ),
                     ),
                     // Communication Sidebar with animation
                     AnimatedBuilder(
@@ -236,6 +264,109 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildViewTabs() {
+    return Container(
+      height: 40,
+      color: AppColors.surfaceVariant,
+      child: Row(
+        children: [
+          const SizedBox(width: AppConstants.paddingM),
+          _ViewTab(
+            icon: Icons.view_timeline_outlined,
+            label: '工程表',
+            isSelected: _viewMode == HomeViewMode.gantt,
+            onTap: () => _setViewMode(HomeViewMode.gantt),
+          ),
+          const SizedBox(width: 4),
+          _ViewTab(
+            icon: Icons.dashboard_outlined,
+            label: 'コックピット',
+            isSelected: _viewMode == HomeViewMode.cockpit,
+            onTap: () => _setViewMode(HomeViewMode.cockpit),
+            badge: _orderService.criticalAlerts.isNotEmpty
+                ? _orderService.criticalAlerts.length
+                : null,
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+}
+
+class _ViewTab extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final int? badge;
+
+  const _ViewTab({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: isSelected
+                ? Border.all(color: AppColors.primary.withOpacity(0.3))
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                ),
+              ),
+              if (badge != null) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.constructionRed,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$badge',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
