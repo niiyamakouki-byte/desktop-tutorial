@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>建設DXコックピット v1.0</title>
+      <link rel="stylesheet" href="style.css">
+  </head>
+<body>
+      <!-- ヘッダー -->
+      <header class="header">
+                <h1>🏗️ 建設DXコックピット</h1>
+              <div class="header-actions">
+                          <button id="rainBtn" class="rain-btn">☔ 雨天中止</button>button>
+                          <button id="addNodeBtn" class="add-btn">+ 工程追加</button>button>
+                          <button id="saveBtn" class="save-btn">💾 保存</button>button>
+              </div>div>
+      </header>header>
+
+    <!-- アラートパネル -->
+    <div id="alertPanel" class="alert-panel">
+            <h3>⚠️ アラート</h3>
+            <ul id="alertList"></ul>ul>
+    </div>div>
+
+    <!-- メインキャンバス -->
+    <div id="canvas" class="canvas">
+            <svg id="connectionsSvg" class="connections-svg"></svg>svg>
+            <div id="nodesContainer"></div>div>
+    </div>div>
+
+    <!-- ノード編集モーダル -->
+    <div id="nodeModal" class="modal hidden">
+            <div class="modal-content">
+                        <h2 id="modalTitle">工程編集</h2>
+                        <form id="nodeForm">
+                                        <label>工程名
+                                                            <input type="text" id="nodeName" required>
+                                        </label>
+                                        <label>予定日
+                                                            <input type="date" id="nodeDate" required>
+                                        </label>
+                                        <label>リードタイム（日）
+                                                            <input type="number" id="nodeLeadTime" value="7" min="0">
+                                        </label>
+                                        <label>必要材料
+                                                            <textarea id="nodeMaterials" placeholder="材料名を改行で区切る"></textarea>
+                                        </label>
+                                        <div class="checklist">
+                                                            <h4>チェックリスト</h4>
+                                                            <label><input type="checkbox" id="checkSpec"> 仕様確定</label>
+                                                            <label><input type="checkbox" id="checkDrawing"> 図面受領</label>
+                                                            <label><input type="checkbox" id="checkOrder"> 材料発注済</label>
+                                                            <label><input type="checkbox" id="checkDelivery"> 材料着荷</label>
+                                        </div>div>
+                                        <div class="modal-actions">
+                                                            <button type="submit" class="btn-primary">保存</button>button>
+                                                            <button type="button" id="deleteNodeBtn" class="btn-danger">削除</button>button>
+                                                            <button type="button" id="closeModalBtn" class="btn-secondary">閉じる</button>button>
+                                        </div>div>
+                        </form>form>
+            </div>div>
+    </div>div>
+
+    <!-- 接続モード表示 -->
+    <div id="connectionMode" class="connection-mode hidden">
+            🔗 接続モード: ノードをクリックして接続先を選択
+            <button id="cancelConnection" class="btn-small">キャンセル</button>button>
+    </div>div>
+
+    <script src="app.js"></script>
+</body>
+</html>html></label></label></h3></h1>
+</body></title>
+  </head>
