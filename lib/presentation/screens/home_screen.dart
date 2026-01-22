@@ -6,6 +6,7 @@ import '../../data/services/project_provider.dart';
 import '../../data/services/order_service.dart';
 import '../../data/services/template_service.dart';
 import '../../data/models/material_model.dart';
+import '../../data/models/dependency_model.dart';
 import '../widgets/gantt/gantt_chart.dart';
 import '../widgets/chat/communication_sidebar.dart';
 import '../widgets/common/app_header.dart';
@@ -286,6 +287,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   provider.toggleTaskExpansion(task.id),
                               timelineStartDate: provider.projectStartDate,
                               timelineEndDate: provider.projectEndDate,
+                              // Dependency features (CPM auto-scheduling)
+                              dependencies: provider.dependencies,
+                              dependencyService: provider.dependencyService,
+                              criticalPathIds: provider.criticalPathIds,
+                              showCriticalPath: provider.showCriticalPath,
+                              onDependencyCreated: (fromId, toId, type, lag) {
+                                provider.addDependency(
+                                  fromTaskId: fromId,
+                                  toTaskId: toId,
+                                  type: type,
+                                  lagDays: lag,
+                                );
+                              },
+                              onDependencyDeleted: (depId) {
+                                provider.removeDependency(depId);
+                              },
                             )
                           : CockpitDashboard(
                               orderService: _orderService,

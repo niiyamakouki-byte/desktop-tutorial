@@ -5,12 +5,17 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
+import '../../../data/models/dependency_model.dart';
 import '../../../data/services/weather_service.dart';
+import '../../../data/services/dependency_service.dart';
 import '../common/context_menu.dart';
 import 'gantt_constants.dart';
 import 'task_list_panel.dart';
 import 'timeline_panel.dart';
 import 'dependency_painter.dart';
+import 'enhanced_dependency_painter.dart';
+import 'dependency_connector.dart';
+import 'dependency_dialog.dart';
 import 'task_row.dart';
 
 /// Main Gantt Chart widget that combines task list and timeline panels
@@ -81,6 +86,27 @@ class GanttChart extends StatefulWidget {
   /// Show weather data on timeline
   final bool showWeather;
 
+  /// Dependencies list (new system)
+  final List<TaskDependency> dependencies;
+
+  /// Dependency service for cycle detection
+  final DependencyService? dependencyService;
+
+  /// Critical path task IDs
+  final Set<String> criticalPathIds;
+
+  /// Show critical path highlighting
+  final bool showCriticalPath;
+
+  /// Delay impact map (taskId -> delay days)
+  final Map<String, int>? delayImpactMap;
+
+  /// Callback when dependency is created
+  final Function(String fromTaskId, String toTaskId, DependencyType type, int lagDays)? onDependencyCreated;
+
+  /// Callback when dependency is deleted
+  final Function(String dependencyId)? onDependencyDeleted;
+
   const GanttChart({
     super.key,
     required this.tasks,
@@ -105,6 +131,13 @@ class GanttChart extends StatefulWidget {
     this.onTaskDuplicate,
     this.onTaskColorChange,
     this.showWeather = true,
+    this.dependencies = const [],
+    this.dependencyService,
+    this.criticalPathIds = const {},
+    this.showCriticalPath = true,
+    this.delayImpactMap,
+    this.onDependencyCreated,
+    this.onDependencyDeleted,
   });
 
   @override
@@ -721,22 +754,49 @@ class _GanttChartState extends State<GanttChart> {
       taskIndexMap[_visibleTasks[i].id] = i;
     }
 
-    return TimelinePanel(
-      tasks: _visibleTasks,
-      startDate: _startDate,
-      endDate: _endDate,
-      selectedTaskId: _selectedTaskId,
-      hoveredTaskId: _hoveredTaskId,
-      dayWidth: _effectiveDayWidth,
-      horizontalScrollController: _timelineHorizontalScrollController,
-      verticalScrollController: _timelineVerticalScrollController,
-      viewMode: _viewMode,
-      onTaskTap: _handleTaskTap,
-      onTaskHover: (task) {
-        setState(() {
-          _hoveredTaskId = task.id;
-        });
-      },
+    return Stack(
+      children: [
+        // Main timeline panel
+        TimelinePanel(
+          tasks: _visibleTasks,
+          startDate: _startDate,
+          endDate: _endDate,
+          selectedTaskId: _selectedTaskId,
+          hoveredTaskId: _hoveredTaskId,
+          dayWidth: _effectiveDayWidth,
+          horizontalScrollController: _timelineHorizontalScrollController,
+          verticalScrollController: _timelineVerticalScrollController,
+          viewMode: _viewMode,
+          onTaskTap: _handleTaskTap,
+          onTaskHover: (task) {
+            setState(() {
+              _hoveredTaskId = task.id;
+            });
+          },
+          // Dependency-related parameters
+          dependencies: widget.dependencies,
+          dependencyService: widget.dependencyService,
+          criticalPathIds: widget.criticalPathIds,
+          showCriticalPath: widget.showCriticalPath,
+          delayImpactMap: widget.delayImpactMap,
+          onDependencyCreated: widget.onDependencyCreated,
+          enableDependencyCreation: widget.showDependencies,
+        ),
+
+        // Dependency creation layer (drag & drop)
+        if (widget.showDependencies)
+          Positioned.fill(
+            child: DependencyCreationLayer(
+              tasks: _visibleTasks,
+              taskIndexMap: taskIndexMap,
+              startDate: _startDate,
+              dayWidth: _effectiveDayWidth,
+              rowHeight: GanttConstants.rowHeight,
+              dependencyService: widget.dependencyService,
+              onDependencyCreated: widget.onDependencyCreated,
+            ),
+          ),
+      ],
     );
   }
 

@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
+import '../models/dependency_model.dart';
 import 'mock_data_service.dart';
+import 'dependency_service.dart';
+import 'schedule_calculator.dart';
 
 /// Provider for project state management
 class ProjectProvider extends ChangeNotifier {
   final MockDataService _dataService = MockDataService();
+  final DependencyService _dependencyService = DependencyService();
 
   Project? _currentProject;
   List<Task> _tasks = [];
@@ -17,6 +21,8 @@ class ProjectProvider extends ChangeNotifier {
   bool _isSidebarOpen = true;
   bool _isLoading = false;
   String? _error;
+  bool _autoScheduleEnabled = true;
+  bool _showCriticalPath = true;
 
   // Getters
   Project? get currentProject => _currentProject;
@@ -29,6 +35,14 @@ class ProjectProvider extends ChangeNotifier {
   bool get isSidebarOpen => _isSidebarOpen;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  bool get autoScheduleEnabled => _autoScheduleEnabled;
+  bool get showCriticalPath => _showCriticalPath;
+
+  // Dependency service getters
+  DependencyService get dependencyService => _dependencyService;
+  List<TaskDependency> get dependencies => _dependencyService.dependencies;
+  Set<String> get criticalPathIds => Set.from(_dependencyService.criticalPathIds);
+  Map<String, ScheduleResult> get scheduleResults => _dependencyService.scheduleResults;
 
   // Get visible tasks (respecting expanded state)
   List<Task> get visibleTasks {
@@ -185,5 +199,160 @@ class ProjectProvider extends ChangeNotifier {
         .map((id) => getTaskById(id))
         .whereType<Task>()
         .toList();
+  }
+
+  // ============== Dependency Management ==============
+
+  /// Add a new dependency between tasks
+  bool addDependency({
+    required String fromTaskId,
+    required String toTaskId,
+    DependencyType type = DependencyType.fs,
+    int lagDays = 0,
+  }) {
+    final success = _dependencyService.addDependency(
+      fromTaskId: fromTaskId,
+      toTaskId: toTaskId,
+      type: type,
+      lagDays: lagDays,
+    );
+
+    if (success) {
+      // Update task's dependsOn list for backward compatibility
+      final index = _tasks.indexWhere((t) => t.id == toTaskId);
+      if (index >= 0 && !_tasks[index].dependsOn.contains(fromTaskId)) {
+        final newDependsOn = List<String>.from(_tasks[index].dependsOn)
+          ..add(fromTaskId);
+        _tasks[index] = _tasks[index].copyWith(dependsOn: newDependsOn);
+      }
+
+      // Recalculate schedule
+      _recalculateSchedule();
+      notifyListeners();
+    }
+
+    return success;
+  }
+
+  /// Remove a dependency
+  void removeDependency(String dependencyId) {
+    final dep = _dependencyService.dependencies.firstWhere(
+      (d) => d.id == dependencyId,
+      orElse: () => TaskDependency(id: '', fromTaskId: '', toTaskId: ''),
+    );
+
+    if (dep.id.isNotEmpty) {
+      // Update task's dependsOn list
+      final index = _tasks.indexWhere((t) => t.id == dep.toTaskId);
+      if (index >= 0) {
+        final newDependsOn = List<String>.from(_tasks[index].dependsOn)
+          ..remove(dep.fromTaskId);
+        _tasks[index] = _tasks[index].copyWith(dependsOn: newDependsOn);
+      }
+
+      _dependencyService.removeDependency(dependencyId);
+      _recalculateSchedule();
+      notifyListeners();
+    }
+  }
+
+  /// Update dependency type
+  void updateDependencyType(String dependencyId, DependencyType type) {
+    _dependencyService.updateDependencyType(dependencyId, type);
+    _recalculateSchedule();
+    notifyListeners();
+  }
+
+  /// Update dependency lag
+  void updateDependencyLag(String dependencyId, int lagDays) {
+    _dependencyService.updateDependencyLag(dependencyId, lagDays);
+    _recalculateSchedule();
+    notifyListeners();
+  }
+
+  /// Check if task is on critical path
+  bool isOnCriticalPath(String taskId) {
+    return _dependencyService.isOnCriticalPath(taskId);
+  }
+
+  /// Get total float for a task
+  int getTaskFloat(String taskId) {
+    return _dependencyService.getTotalFloat(taskId);
+  }
+
+  /// Toggle auto-scheduling
+  void toggleAutoSchedule() {
+    _autoScheduleEnabled = !_autoScheduleEnabled;
+    if (_autoScheduleEnabled) {
+      _applyAutoSchedule();
+    }
+    notifyListeners();
+  }
+
+  /// Toggle critical path display
+  void toggleCriticalPath() {
+    _showCriticalPath = !_showCriticalPath;
+    notifyListeners();
+  }
+
+  /// Apply auto-scheduling to adjust task dates
+  void applyAutoSchedule() {
+    if (!_autoScheduleEnabled) return;
+    _applyAutoSchedule();
+  }
+
+  void _applyAutoSchedule() {
+    final adjustedTasks = _dependencyService.autoAdjustTasks(_tasks);
+
+    // Update tasks with adjusted dates
+    for (int i = 0; i < _tasks.length; i++) {
+      final adjusted = adjustedTasks.firstWhere(
+        (t) => t.id == _tasks[i].id,
+        orElse: () => _tasks[i],
+      );
+      if (adjusted.startDate != _tasks[i].startDate ||
+          adjusted.endDate != _tasks[i].endDate) {
+        _tasks[i] = _tasks[i].copyWith(
+          startDate: adjusted.startDate,
+          endDate: adjusted.endDate,
+        );
+      }
+    }
+
+    notifyListeners();
+  }
+
+  /// Recalculate schedule and critical path
+  void _recalculateSchedule() {
+    _dependencyService.recalculateSchedule(_tasks);
+  }
+
+  /// Calculate delay impact for a task
+  DelayImpact? calculateDelayImpact(String taskId, int delayDays) {
+    final task = getTaskById(taskId);
+    if (task == null) return null;
+
+    return ScheduleCalculator.calculateDelayImpact(
+      delayedTask: task,
+      delayDays: delayDays,
+      tasks: _tasks,
+      dependencies: _dependencyService.dependencies,
+    );
+  }
+
+  /// Get all downstream tasks affected by a task
+  Set<String> getDownstreamTasks(String taskId) {
+    return _dependencyService.getDownstreamTaskIds(taskId);
+  }
+
+  /// Get all upstream tasks that a task depends on
+  Set<String> getUpstreamTasks(String taskId) {
+    return _dependencyService.getUpstreamTaskIds(taskId);
+  }
+
+  /// Initialize mock dependencies for demo
+  void initializeMockDependencies() {
+    _dependencyService.initializeMockDependencies(_tasks);
+    notifyListeners();
   }
 }

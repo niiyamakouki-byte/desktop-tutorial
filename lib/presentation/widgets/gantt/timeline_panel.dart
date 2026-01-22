@@ -3,10 +3,14 @@ import 'package:flutter/gestures.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
+import '../../../data/models/dependency_model.dart';
+import '../../../data/services/dependency_service.dart';
 import 'gantt_constants.dart';
 import 'task_row.dart';
 import 'timeline_header.dart';
 import 'dependency_painter.dart';
+import 'enhanced_dependency_painter.dart';
+import 'dependency_connector.dart';
 
 /// Right panel showing the timeline grid and task bars
 class TimelinePanel extends StatefulWidget {
@@ -23,6 +27,15 @@ class TimelinePanel extends StatefulWidget {
   final Function(Task task)? onTaskHover;
   final Function(Task task, DateTime newStart, DateTime newEnd)? onTaskDateChange;
 
+  // New dependency-related properties
+  final List<TaskDependency> dependencies;
+  final DependencyService? dependencyService;
+  final Set<String> criticalPathIds;
+  final bool showCriticalPath;
+  final Map<String, int>? delayImpactMap;
+  final Function(String fromTaskId, String toTaskId, DependencyType type, int lagDays)? onDependencyCreated;
+  final bool enableDependencyCreation;
+
   const TimelinePanel({
     super.key,
     required this.tasks,
@@ -37,6 +50,13 @@ class TimelinePanel extends StatefulWidget {
     this.onTaskTap,
     this.onTaskHover,
     this.onTaskDateChange,
+    this.dependencies = const [],
+    this.dependencyService,
+    this.criticalPathIds = const {},
+    this.showCriticalPath = true,
+    this.delayImpactMap,
+    this.onDependencyCreated,
+    this.enableDependencyCreation = true,
   });
 
   @override
@@ -230,6 +250,12 @@ class TimelineBody extends StatelessWidget {
   final bool showTodayLine;
   final bool showWeekends;
 
+  // Dependency-related properties
+  final List<TaskDependency> dependencies;
+  final Set<String> criticalPathIds;
+  final bool showCriticalPath;
+  final Map<String, int>? delayImpactMap;
+
   const TimelineBody({
     super.key,
     required this.tasks,
@@ -244,6 +270,10 @@ class TimelineBody extends StatelessWidget {
     this.showDependencies = true,
     this.showTodayLine = true,
     this.showWeekends = true,
+    this.dependencies = const [],
+    this.criticalPathIds = const {},
+    this.showCriticalPath = true,
+    this.delayImpactMap,
   });
 
   @override
@@ -325,19 +355,67 @@ class TimelineBody extends StatelessWidget {
               ),
             ),
 
-            // Layer 4: Dependency arrows
-            if (showDependencies)
+            // Layer 4: Critical path highlight (if enabled)
+            if (showCriticalPath && criticalPathIds.isNotEmpty)
               Positioned.fill(
                 child: IgnorePointer(
                   child: CustomPaint(
-                    painter: DependencyPainter(
+                    painter: CriticalPathOverlay(
                       tasks: tasks,
+                      criticalPathIds: criticalPathIds,
                       taskIndexMap: taskIndexMap,
                       startDate: startDate,
                       dayWidth: dayWidth,
                       rowHeight: GanttConstants.rowHeight,
-                      selectedTaskId: selectedTaskId,
-                      hoveredTaskId: hoveredTaskId,
+                    ),
+                  ),
+                ),
+              ),
+
+            // Layer 5: Dependency arrows (enhanced)
+            if (showDependencies)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: dependencies.isNotEmpty
+                        ? EnhancedDependencyPainter(
+                            tasks: tasks,
+                            dependencies: dependencies,
+                            taskIndexMap: taskIndexMap,
+                            startDate: startDate,
+                            dayWidth: dayWidth,
+                            rowHeight: GanttConstants.rowHeight,
+                            selectedTaskId: selectedTaskId,
+                            hoveredTaskId: hoveredTaskId,
+                            criticalPathIds: criticalPathIds,
+                            delayImpactedTaskIds: delayImpactMap?.keys.toSet(),
+                            showTypeLabels: true,
+                          )
+                        : DependencyPainter(
+                            tasks: tasks,
+                            taskIndexMap: taskIndexMap,
+                            startDate: startDate,
+                            dayWidth: dayWidth,
+                            rowHeight: GanttConstants.rowHeight,
+                            selectedTaskId: selectedTaskId,
+                            hoveredTaskId: hoveredTaskId,
+                          ),
+                  ),
+                ),
+              ),
+
+            // Layer 6: Delay impact overlay
+            if (delayImpactMap != null && delayImpactMap!.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: DelayImpactOverlay(
+                      tasks: tasks,
+                      taskDelayMap: delayImpactMap!,
+                      taskIndexMap: taskIndexMap,
+                      startDate: startDate,
+                      dayWidth: dayWidth,
+                      rowHeight: GanttConstants.rowHeight,
                     ),
                   ),
                 ),

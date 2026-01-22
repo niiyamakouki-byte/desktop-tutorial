@@ -334,18 +334,26 @@ class DependencyDragPainter extends CustomPainter {
 /// Widget that wraps the timeline to handle dependency creation
 class DependencyCreationLayer extends StatefulWidget {
   final List<Task> tasks;
-  final Map<String, Rect> taskBounds;
+  final Map<String, int>? taskIndexMap;
+  final Map<String, Rect>? taskBounds;
+  final DateTime? startDate;
+  final double? dayWidth;
+  final double? rowHeight;
   final DependencyService? dependencyService;
   final Function(String fromTaskId, String toTaskId, DependencyType type, int lagDays)? onDependencyCreated;
-  final Widget child;
+  final Widget? child;
 
   const DependencyCreationLayer({
     super.key,
     required this.tasks,
-    required this.taskBounds,
+    this.taskIndexMap,
+    this.taskBounds,
+    this.startDate,
+    this.dayWidth,
+    this.rowHeight,
     this.dependencyService,
     this.onDependencyCreated,
-    required this.child,
+    this.child,
   });
 
   @override
@@ -355,6 +363,31 @@ class DependencyCreationLayer extends StatefulWidget {
 class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
   DependencyDragState? _dragState;
   String? _hoveredTaskId;
+
+  /// Compute task bounds from parameters if not provided directly
+  Map<String, Rect> _computeTaskBounds() {
+    if (widget.taskBounds != null) return widget.taskBounds!;
+
+    final bounds = <String, Rect>{};
+    final startDate = widget.startDate ?? DateTime.now();
+    final dayWidth = widget.dayWidth ?? GanttConstants.dayWidth;
+    final rowHeight = widget.rowHeight ?? GanttConstants.rowHeight;
+    final taskIndexMap = widget.taskIndexMap ?? {};
+
+    for (final task in widget.tasks) {
+      final index = taskIndexMap[task.id] ?? widget.tasks.indexOf(task);
+      final startOffset = task.startDate.difference(startDate).inDays;
+      final taskWidth = task.isMilestone
+          ? GanttConstants.milestoneSize
+          : task.durationDays * dayWidth;
+      final left = startOffset * dayWidth;
+      final top = index * rowHeight;
+
+      bounds[task.id] = Rect.fromLTWH(left, top, taskWidth, rowHeight);
+    }
+
+    return bounds;
+  }
 
   void _handleDragStart(Task task, ConnectorType type, Offset globalPosition) {
     final renderBox = context.findRenderObject() as RenderBox;
@@ -375,10 +408,11 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
 
     final renderBox = context.findRenderObject() as RenderBox;
     final localPosition = renderBox.globalToLocal(globalPosition);
+    final taskBounds = _computeTaskBounds();
 
     // Check if hovering over a valid target
     String? hoveredId;
-    for (final entry in widget.taskBounds.entries) {
+    for (final entry in taskBounds.entries) {
       if (entry.key != _dragState!.fromTaskId &&
           entry.value.contains(localPosition)) {
         // Check if this would create a circular dependency
@@ -461,70 +495,126 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        widget.child,
+    final taskBounds = _computeTaskBounds();
+    final rowHeight = widget.rowHeight ?? GanttConstants.rowHeight;
+    final dayWidth = widget.dayWidth ?? GanttConstants.dayWidth;
+    final startDate = widget.startDate ?? DateTime.now();
 
-        // Dependency drag overlay
-        if (_dragState != null)
-          Positioned.fill(
-            child: CustomPaint(
-              painter: DependencyDragPainter(
-                dragState: _dragState,
-                taskBounds: widget.taskBounds,
+    return GestureDetector(
+      onPanStart: (details) {
+        // Find which task connector was touched
+        final position = details.localPosition;
+        for (final task in widget.tasks) {
+          final bounds = taskBounds[task.id];
+          if (bounds == null) continue;
+
+          // Check if near output connector (right side)
+          final outputX = bounds.right;
+          final centerY = bounds.top + bounds.height / 2;
+          final connectorRadius = GanttConstants.connectorSize * 2;
+
+          if ((position.dx - outputX).abs() < connectorRadius &&
+              (position.dy - centerY).abs() < connectorRadius) {
+            _handleDragStart(task, ConnectorType.output, details.globalPosition);
+            return;
+          }
+
+          // Check if near input connector (left side)
+          final inputX = bounds.left;
+          if ((position.dx - inputX).abs() < connectorRadius &&
+              (position.dy - centerY).abs() < connectorRadius) {
+            _handleDragStart(task, ConnectorType.input, details.globalPosition);
+            return;
+          }
+        }
+      },
+      onPanUpdate: (details) => _handleDragUpdate(details.globalPosition),
+      onPanEnd: (_) => _handleDragEnd(),
+      child: Stack(
+        children: [
+          // Child widget if provided
+          if (widget.child != null) widget.child!,
+
+          // Task connector indicators
+          ...widget.tasks.map((task) {
+            final bounds = taskBounds[task.id];
+            if (bounds == null) return const SizedBox.shrink();
+
+            final isSource = _dragState?.fromTaskId == task.id;
+            final isTarget = _dragState?.hoveredTaskId == task.id;
+
+            return TaskConnectors(
+              task: task,
+              taskBarLeft: bounds.left,
+              taskBarWidth: bounds.width,
+              rowTop: bounds.top,
+              showConnectors: _dragState != null,
+              isSourceTask: isSource,
+              isValidTarget: isTarget,
+            );
+          }),
+
+          // Dependency drag overlay
+          if (_dragState != null)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: DependencyDragPainter(
+                  dragState: _dragState,
+                  taskBounds: taskBounds,
+                ),
               ),
             ),
-          ),
 
-        // Connection hint overlay
-        if (_dragState != null)
-          Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.tooltipBackground,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _dragState!.hoveredTaskId != null
-                          ? Icons.check_circle
-                          : Icons.link,
-                      color: _dragState!.hoveredTaskId != null
-                          ? AppColors.constructionGreen
-                          : AppColors.industrialOrange,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _dragState!.hoveredTaskId != null
-                          ? '離して依存関係を作成'
-                          : 'タスクにドラッグして接続',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+          // Connection hint overlay
+          if (_dragState != null)
+            Positioned(
+              bottom: 16,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.tooltipBackground,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _dragState!.hoveredTaskId != null
+                            ? Icons.check_circle
+                            : Icons.link,
+                        color: _dragState!.hoveredTaskId != null
+                            ? AppColors.constructionGreen
+                            : AppColors.industrialOrange,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _dragState!.hoveredTaskId != null
+                            ? '離して依存関係を作成'
+                            : 'タスクにドラッグして接続',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
