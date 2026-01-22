@@ -162,3 +162,120 @@ class ConstructionDXApp {
               ? alerts.map(a => `<li class="${a.level}">${a.message}</li>`).join('')
                             : '<li class="info">現在アラートはありません</li>';
     }
+
+          // === ノード描画 ===
+          render() {
+                        const container = document.getElementById('nodesContainer');
+                        container.innerHTML = '';
+                        this.nodes.forEach(node => {
+                                          const el = this.createNodeElement(node);
+                                          container.appendChild(el);
+                        });
+                        this.renderConnections();
+                        this.checkAlerts();
+          }
+
+          createNodeElement(node) {
+                        const el = document.createElement('div');
+                        el.className = 'node';
+                        el.dataset.id = node.id;
+                        el.style.left = node.position.x + 'px';
+                        el.style.top = node.position.y + 'px';
+                        const checkCount = Object.values(node.checklist).filter(v => v).length;
+                        const progress = (checkCount / 4) * 100;
+                        el.innerHTML = '<div class="node-header"><span class="node-title">' + node.name + '</span><span class="node-date">' + node.date + '</span></div><div class="node-progress"><div class="node-progress-bar" style="width:' + progress + '%"></div></div><div class="node-materials">📦 ' + node.materials.join(', ') + '</div><div class="node-actions"><button class="btn-connect" data-action="connect">🔗 接続</button><button class="btn-edit" data-action="edit">✏️ 編集</button></div>';
+                        el.addEventListener('mousedown', (e) => { if (e.target.tagName !== 'BUTTON') this.startDrag(e, node.id); });
+                        el.querySelector('[data-action="connect"]').addEventListener('click', () => this.startConnection(node.id));
+                        el.querySelector('[data-action="edit"]').addEventListener('click', () => this.openModal(node.id));
+                        el.addEventListener('click', () => { if (this.connectionMode.active && this.connectionMode.fromId !== node.id) this.completeConnection(node.id); });
+                        return el;
+          }
+
+          startDrag(e, nodeId) {
+                        const rect = e.target.closest('.node').getBoundingClientRect();
+                        const canvas = document.getElementById('canvas');
+                        const canvasRect = canvas.getBoundingClientRect();
+                        this.dragState = { active: true, nodeId, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top, canvasLeft: canvasRect.left + canvas.scrollLeft, canvasTop: canvasRect.top + canvas.scrollTop };
+          }
+
+          handleDrag(e) {
+                        if (!this.dragState.active) return;
+                        const canvas = document.getElementById('canvas');
+                        const node = this.nodes.get(this.dragState.nodeId);
+                        node.position.x = Math.max(0, e.clientX - this.dragState.canvasLeft - this.dragState.offsetX + canvas.scrollLeft);
+                        node.position.y = Math.max(0, e.clientY - this.dragState.canvasTop - this.dragState.offsetY + canvas.scrollTop);
+                        const el = document.querySelector('[data-id="' + this.dragState.nodeId + '"]');
+                        el.style.left = node.position.x + 'px';
+                        el.style.top = node.position.y + 'px';
+                        this.renderConnections();
+          }
+
+          endDrag() { if (this.dragState.active) this.saveData(); this.dragState.active = false; }
+
+          renderConnections() {
+                        const svg = document.getElementById('connectionsSvg');
+                        svg.innerHTML = '';
+                        this.connections.forEach(conn => {
+                                          const fromNode = this.nodes.get(conn.from);
+                                          const toNode = this.nodes.get(conn.to);
+                                          if (!fromNode || !toNode) return;
+                                          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                                          const fromX = fromNode.position.x + 100, fromY = fromNode.position.y + 80;
+                                          const toX = toNode.position.x + 100, toY = toNode.position.y;
+                                          const midY = (fromY + toY) / 2;
+                                          path.setAttribute('d', 'M ' + fromX + ' ' + fromY + ' C ' + fromX + ' ' + midY + ', ' + toX + ' ' + midY + ', ' + toX + ' ' + toY);
+                                          svg.appendChild(path);
+                        });
+          }
+
+          startConnection(fromId) { this.connectionMode = { active: true, fromId }; document.getElementById('connectionMode').classList.remove('hidden'); document.querySelector('[data-id="' + fromId + '"]').classList.add('selected'); }
+          completeConnection(toId) { if (!this.connections.some(c => c.from === this.connectionMode.fromId && c.to === toId)) { this.connections.push({ from: this.connectionMode.fromId, to: toId }); this.renderConnections(); this.saveData(); } this.cancelConnection(); }
+          cancelConnection() { if (this.connectionMode.fromId) { const el = document.querySelector('[data-id="' + this.connectionMode.fromId + '"]'); if (el) el.classList.remove('selected'); } this.connectionMode = { active: false, fromId: null }; document.getElementById('connectionMode').classList.add('hidden'); }
+
+          openModal(nodeId = null) {
+                        this.currentEditId = nodeId;
+                        const modal = document.getElementById('nodeModal');
+                        const deleteBtn = document.getElementById('deleteNodeBtn');
+                        if (nodeId) {
+                                          const node = this.nodes.get(nodeId);
+                                          document.getElementById('modalTitle').textContent = '工程編集';
+                                          document.getElementById('nodeName').value = node.name;
+                                          document.getElementById('nodeDate').value = node.date;
+                                          document.getElementById('nodeLeadTime').value = node.leadTime;
+                                          document.getElementById('nodeMaterials').value = node.materials.join('\n');
+                                          document.getElementById('checkSpec').checked = node.checklist.spec;
+                                          document.getElementById('checkDrawing').checked = node.checklist.drawing;
+                                          document.getElementById('checkOrder').checked = node.checklist.order;
+                                          document.getElementById('checkDelivery').checked = node.checklist.delivery;
+                                          deleteBtn.style.display = 'block';
+                        } else {
+                                          document.getElementById('modalTitle').textContent = '新規工程追加';
+                                          document.getElementById('nodeForm').reset();
+                                          document.getElementById('nodeDate').value = new Date().toISOString().split('T')[0];
+                                          deleteBtn.style.display = 'none';
+                        }
+                        modal.classList.remove('hidden');
+          }
+
+          closeModal() { document.getElementById('nodeModal').classList.add('hidden'); this.currentEditId = null; }
+
+          handleFormSubmit(e) {
+                        e.preventDefault();
+                        const nodeData = { name: document.getElementById('nodeName').value, date: document.getElementById('nodeDate').value, leadTime: parseInt(document.getElementById('nodeLeadTime').value) || 7, materials: document.getElementById('nodeMaterials').value.split('\n').filter(m => m.trim()), checklist: { spec: document.getElementById('checkSpec').checked, drawing: document.getElementById('checkDrawing').checked, order: document.getElementById('checkOrder').checked, delivery: document.getElementById('checkDelivery').checked } };
+                        if (this.currentEditId) { Object.assign(this.nodes.get(this.currentEditId), nodeData); }
+                        else { const newNode = { id: this.nextNodeId++, ...nodeData, position: { x: 100 + Math.random() * 200, y: 100 + Math.random() * 200 } }; this.nodes.set(newNode.id, newNode); }
+                        this.saveData(); this.render(); this.closeModal();
+          }
+
+          deleteCurrentNode() {
+                        if (!this.currentEditId || !confirm('この工程を削除しますか？')) return;
+                        this.nodes.delete(this.currentEditId);
+                        this.connections = this.connections.filter(c => c.from !== this.currentEditId && c.to !== this.currentEditId);
+                        this.saveData(); this.render(); this.closeModal();
+          }
+
+          saveData() { localStorage.setItem('constructionDX_data', JSON.stringify({ nodes: Array.from(this.nodes.entries()), connections: this.connections, nextNodeId: this.nextNodeId })); }
+          loadData() { const saved = localStorage.getItem('constructionDX_data'); if (saved) { const data = JSON.parse(saved); this.nodes = new Map(data.nodes); this.connections = data.connections || []; this.nextNodeId = data.nextNodeId || 1; } }
+}
+
+document.addEventListener('DOMContentLoaded', () => { window.app = new ConstructionDXApp(); });
