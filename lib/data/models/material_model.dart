@@ -1,8 +1,8 @@
-/// Material and Order Management Models
+/// ConstructionMaterial and Order Management Models
 /// For tracking materials, orders, and delivery deadlines
 
-/// Material item representing a product/part needed for construction
-class Material {
+/// ConstructionMaterial item representing a product/part needed for construction
+class ConstructionMaterial {
   final String id;
   final String productCode;      // 品番
   final String name;             // 材料名
@@ -17,7 +17,7 @@ class Material {
   final String? catalogUrl;
   final Map<String, dynamic>? specifications;
 
-  const Material({
+  const ConstructionMaterial({
     required this.id,
     required this.productCode,
     required this.name,
@@ -33,7 +33,7 @@ class Material {
     this.specifications,
   });
 
-  Material copyWith({
+  ConstructionMaterial copyWith({
     String? id,
     String? productCode,
     String? name,
@@ -48,7 +48,7 @@ class Material {
     String? catalogUrl,
     Map<String, dynamic>? specifications,
   }) {
-    return Material(
+    return ConstructionMaterial(
       id: id ?? this.id,
       productCode: productCode ?? this.productCode,
       name: name ?? this.name,
@@ -66,18 +66,18 @@ class Material {
   }
 }
 
-/// Material requirement for a specific task
-class TaskMaterial {
+/// ConstructionMaterial requirement for a specific task
+class TaskConstructionMaterial {
   final String id;
   final String taskId;
   final String materialId;
-  final Material? material;
+  final ConstructionMaterial? material;
   final double quantity;         // 必要数量
   final String? notes;
   final OrderStatus orderStatus;
   final String? orderId;         // 関連する発注ID
 
-  const TaskMaterial({
+  const TaskConstructionMaterial({
     required this.id,
     required this.taskId,
     required this.materialId,
@@ -88,17 +88,17 @@ class TaskMaterial {
     this.orderId,
   });
 
-  TaskMaterial copyWith({
+  TaskConstructionMaterial copyWith({
     String? id,
     String? taskId,
     String? materialId,
-    Material? material,
+    ConstructionMaterial? material,
     double? quantity,
     String? notes,
     OrderStatus? orderStatus,
     String? orderId,
   }) {
-    return TaskMaterial(
+    return TaskConstructionMaterial(
       id: id ?? this.id,
       taskId: taskId ?? this.taskId,
       materialId: materialId ?? this.materialId,
@@ -243,7 +243,7 @@ class PurchaseOrder {
 class OrderItem {
   final String id;
   final String materialId;
-  final Material? material;
+  final ConstructionMaterial? material;
   final double quantity;
   final double unitPrice;
   final String? taskId;           // 紐付いているタスク

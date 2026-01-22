@@ -8,10 +8,10 @@ import '../common/glass_container.dart';
 /// Shows critical alerts, pending orders, and deadlines
 class OrderDashboard extends StatelessWidget {
   final List<OrderAlert> alerts;
-  final List<TaskMaterial> pendingMaterials;
+  final List<TaskConstructionMaterial> pendingMaterials;
   final List<PurchaseOrder> recentOrders;
   final Function(OrderAlert)? onAlertTap;
-  final Function(TaskMaterial)? onMaterialTap;
+  final Function(TaskConstructionMaterial)? onMaterialTap;
   final Function(PurchaseOrder)? onOrderTap;
   final VoidCallback? onCreateOrder;
   final VoidCallback? onViewAllAlerts;
@@ -429,7 +429,7 @@ class OrderDashboard extends StatelessWidget {
 }
 
 class _PendingMaterialCard extends StatelessWidget {
-  final TaskMaterial taskMaterial;
+  final TaskConstructionMaterial taskMaterial;
   final VoidCallback? onTap;
 
   const _PendingMaterialCard({

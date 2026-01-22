@@ -220,7 +220,7 @@ No,品番,品名,数量,単位,単価,金額,納期,備考
   }
 
   /// Generate task-material mapping CSV
-  static String getTaskMaterialCsv(List<Task> tasks, List<TaskMaterial> materials) {
+  static String getTaskMaterialCsv(List<Task> tasks, List<TaskConstructionMaterial> materials) {
     final buffer = StringBuffer();
     buffer.writeln('タスクID,タスク名,着工日,品番,品名,数量,単位,納期(日),発注期限,発注状況');
 

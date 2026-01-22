@@ -6,15 +6,15 @@ import '../models/models.dart';
 /// Handles material ordering, deadline tracking, and alerts
 class OrderService extends ChangeNotifier {
   // Mock data storage
-  final List<Material> _materials = [];
-  final List<TaskMaterial> _taskMaterials = [];
+  final List<ConstructionMaterial> _materials = [];
+  final List<TaskConstructionMaterial> _taskConstructionMaterials = [];
   final List<PurchaseOrder> _purchaseOrders = [];
   final List<Supplier> _suppliers = [];
   final List<OrderAlert> _alerts = [];
 
   // Getters
-  List<Material> get materials => List.unmodifiable(_materials);
-  List<TaskMaterial> get taskMaterials => List.unmodifiable(_taskMaterials);
+  List<ConstructionMaterial> get materials => List.unmodifiable(_materials);
+  List<TaskConstructionMaterial> get taskConstructionMaterials => List.unmodifiable(_taskConstructionMaterials);
   List<PurchaseOrder> get purchaseOrders => List.unmodifiable(_purchaseOrders);
   List<Supplier> get suppliers => List.unmodifiable(_suppliers);
   List<OrderAlert> get alerts => List.unmodifiable(_alerts);
@@ -30,25 +30,25 @@ class OrderService extends ChangeNotifier {
   /// Initialize with mock data
   void initialize() {
     _initializeMockSuppliers();
-    _initializeMockMaterials();
-    _initializeMockTaskMaterials();
+    _initializeMockConstructionMaterials();
+    _initializeMockTaskConstructionMaterials();
     notifyListeners();
   }
 
   /// Get materials needed for a specific task
-  List<TaskMaterial> getMaterialsForTask(String taskId) {
-    return _taskMaterials.where((tm) => tm.taskId == taskId).toList();
+  List<TaskConstructionMaterial> getConstructionMaterialsForTask(String taskId) {
+    return _taskConstructionMaterials.where((tm) => tm.taskId == taskId).toList();
   }
 
   /// Get all tasks that need material ordering (未発注)
-  List<TaskMaterial> getUnorderedMaterials() {
-    return _taskMaterials.where((tm) => tm.orderStatus == OrderStatus.notOrdered).toList();
+  List<TaskConstructionMaterial> getUnorderedConstructionMaterials() {
+    return _taskConstructionMaterials.where((tm) => tm.orderStatus == OrderStatus.notOrdered).toList();
   }
 
   /// Calculate order deadline for a task's materials
   /// Returns the earliest deadline among all materials for the task
   DateTime? getOrderDeadlineForTask(String taskId, DateTime taskStartDate) {
-    final materials = getMaterialsForTask(taskId);
+    final materials = getConstructionMaterialsForTask(taskId);
     if (materials.isEmpty) return null;
 
     DateTime? earliestDeadline;
@@ -64,15 +64,15 @@ class OrderService extends ChangeNotifier {
   }
 
   /// Check if any materials for a task are overdue
-  bool hasOverdueMaterials(String taskId, DateTime taskStartDate) {
-    final materials = getMaterialsForTask(taskId);
+  bool hasOverdueConstructionMaterials(String taskId, DateTime taskStartDate) {
+    final materials = getConstructionMaterialsForTask(taskId);
     return materials.any((tm) => tm.isOrderOverdue(taskStartDate));
   }
 
   /// Get days until order deadline for a task
   /// Returns the minimum days (most urgent)
   int? getDaysUntilDeadline(String taskId, DateTime taskStartDate) {
-    final materials = getMaterialsForTask(taskId);
+    final materials = getConstructionMaterialsForTask(taskId);
     if (materials.isEmpty) return null;
 
     int? minDays;
@@ -93,7 +93,7 @@ class OrderService extends ChangeNotifier {
     _alerts.clear();
 
     for (final task in tasks) {
-      final materials = getMaterialsForTask(task.id);
+      final materials = getConstructionMaterialsForTask(task.id);
 
       for (final tm in materials) {
         if (tm.orderStatus != OrderStatus.notOrdered) continue;
@@ -182,11 +182,11 @@ class OrderService extends ChangeNotifier {
     // Update task material statuses
     for (final item in items) {
       if (item.taskId != null) {
-        final index = _taskMaterials.indexWhere(
+        final index = _taskConstructionMaterials.indexWhere(
           (tm) => tm.taskId == item.taskId && tm.materialId == item.materialId,
         );
         if (index >= 0) {
-          _taskMaterials[index] = _taskMaterials[index].copyWith(
+          _taskConstructionMaterials[index] = _taskConstructionMaterials[index].copyWith(
             orderStatus: OrderStatus.ordered,
             orderId: order.id,
           );
@@ -209,11 +209,11 @@ class OrderService extends ChangeNotifier {
 
       // Update task material statuses
       for (final item in _purchaseOrders[index].items) {
-        final tmIndex = _taskMaterials.indexWhere(
+        final tmIndex = _taskConstructionMaterials.indexWhere(
           (tm) => tm.orderId == orderId && tm.materialId == item.materialId,
         );
         if (tmIndex >= 0) {
-          _taskMaterials[tmIndex] = _taskMaterials[tmIndex].copyWith(
+          _taskConstructionMaterials[tmIndex] = _taskConstructionMaterials[tmIndex].copyWith(
             orderStatus: status,
           );
         }
@@ -266,7 +266,7 @@ class OrderService extends ChangeNotifier {
   }
 
   /// Add material to task
-  void addMaterialToTask({
+  void addConstructionMaterialToTask({
     required String taskId,
     required String materialId,
     required double quantity,
@@ -274,10 +274,10 @@ class OrderService extends ChangeNotifier {
   }) {
     final material = _materials.firstWhere(
       (m) => m.id == materialId,
-      orElse: () => Material(id: materialId, productCode: '', name: '不明'),
+      orElse: () => ConstructionMaterial(id: materialId, productCode: '', name: '不明'),
     );
 
-    final taskMaterial = TaskMaterial(
+    final taskConstructionMaterial = TaskConstructionMaterial(
       id: 'tm_${DateTime.now().millisecondsSinceEpoch}',
       taskId: taskId,
       materialId: materialId,
@@ -287,13 +287,13 @@ class OrderService extends ChangeNotifier {
       orderStatus: OrderStatus.notOrdered,
     );
 
-    _taskMaterials.add(taskMaterial);
+    _taskConstructionMaterials.add(taskConstructionMaterial);
     notifyListeners();
   }
 
   /// Generate order list for export (to send to supplier)
   String generateOrderListCsv(String supplierId) {
-    final items = _taskMaterials
+    final items = _taskConstructionMaterials
         .where((tm) => tm.orderStatus == OrderStatus.notOrdered && tm.material?.supplier == supplierId)
         .toList();
 
@@ -343,9 +343,9 @@ class OrderService extends ChangeNotifier {
     ]);
   }
 
-  void _initializeMockMaterials() {
+  void _initializeMockConstructionMaterials() {
     _materials.addAll([
-      const Material(
+      const ConstructionMaterial(
         id: 'mat_1',
         productCode: 'VVF2.0-2C',
         name: 'VVFケーブル 2.0mm 2芯',
@@ -356,7 +356,7 @@ class OrderService extends ChangeNotifier {
         leadTimeDays: 3,
         category: 'electrical',
       ),
-      const Material(
+      const ConstructionMaterial(
         id: 'mat_2',
         productCode: 'WN1001',
         name: 'フルカラー埋込スイッチ',
@@ -367,7 +367,7 @@ class OrderService extends ChangeNotifier {
         leadTimeDays: 3,
         category: 'electrical',
       ),
-      const Material(
+      const ConstructionMaterial(
         id: 'mat_3',
         productCode: 'VP-50A',
         name: '塩ビ管 VP50',
@@ -378,7 +378,7 @@ class OrderService extends ChangeNotifier {
         leadTimeDays: 5,
         category: 'plumbing',
       ),
-      const Material(
+      const ConstructionMaterial(
         id: 'mat_4',
         productCode: 'PB-904B',
         name: '普通コンクリート 25-18-25N',
@@ -389,7 +389,7 @@ class OrderService extends ChangeNotifier {
         leadTimeDays: 2,
         category: 'structure',
       ),
-      const Material(
+      const ConstructionMaterial(
         id: 'mat_5',
         productCode: 'SD295A-D16',
         name: '異形鉄筋 D16',
@@ -403,10 +403,10 @@ class OrderService extends ChangeNotifier {
     ]);
   }
 
-  void _initializeMockTaskMaterials() {
+  void _initializeMockTaskConstructionMaterials() {
     // These would be linked to actual tasks in a real app
-    _taskMaterials.addAll([
-      TaskMaterial(
+    _taskConstructionMaterials.addAll([
+      TaskConstructionMaterial(
         id: 'tm_1',
         taskId: 'task_foundation',
         materialId: 'mat_4',
@@ -414,7 +414,7 @@ class OrderService extends ChangeNotifier {
         quantity: 15,
         orderStatus: OrderStatus.notOrdered,
       ),
-      TaskMaterial(
+      TaskConstructionMaterial(
         id: 'tm_2',
         taskId: 'task_foundation',
         materialId: 'mat_5',
@@ -423,7 +423,7 @@ class OrderService extends ChangeNotifier {
         orderStatus: OrderStatus.ordered,
         orderId: 'po_001',
       ),
-      TaskMaterial(
+      TaskConstructionMaterial(
         id: 'tm_3',
         taskId: 'task_electrical',
         materialId: 'mat_1',
@@ -431,7 +431,7 @@ class OrderService extends ChangeNotifier {
         quantity: 500,
         orderStatus: OrderStatus.notOrdered,
       ),
-      TaskMaterial(
+      TaskConstructionMaterial(
         id: 'tm_4',
         taskId: 'task_electrical',
         materialId: 'mat_2',
@@ -439,7 +439,7 @@ class OrderService extends ChangeNotifier {
         quantity: 20,
         orderStatus: OrderStatus.notOrdered,
       ),
-      TaskMaterial(
+      TaskConstructionMaterial(
         id: 'tm_5',
         taskId: 'task_plumbing',
         materialId: 'mat_3',
