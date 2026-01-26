@@ -1,45 +1,52 @@
 import 'package:flutter/material.dart';
 
 /// Constants specific to the Gantt chart widget system
+/// Compass-demo inspired clean, modern styling
 class GanttConstants {
   GanttConstants._();
 
-  // ============== Dimensions ==============
-  /// Height of each task row in the Gantt chart (現場向けに拡大: 56px)
-  static const double rowHeight = 56.0;
+  // ============== Dimensions (Compass-demo style) ==============
+  /// Height of each task row in the Gantt chart (compact but readable)
+  static const double rowHeight = 44.0;
 
-  /// Height of parent task row (親タスク用)
-  static const double parentRowHeight = 60.0;
+  /// Height of parent task row (親タスク用 - slightly taller)
+  static const double parentRowHeight = 48.0;
 
   /// Height of child task row (子タスク用)
-  static const double childRowHeight = 52.0;
+  static const double childRowHeight = 40.0;
 
-  /// Height of the timeline header (month + day rows)
-  static const double headerHeight = 60.0;
+  /// Height of the timeline header (clean single-row style)
+  static const double headerHeight = 52.0;
 
   /// Height of the month row in header
-  static const double monthRowHeight = 28.0;
+  static const double monthRowHeight = 24.0;
 
   /// Height of the day row in header
-  static const double dayRowHeight = 32.0;
+  static const double dayRowHeight = 28.0;
 
   /// Width of each day cell in the timeline
-  static const double dayWidth = 40.0;
+  static const double dayWidth = 36.0;
 
   /// Width of the task list panel
-  static const double taskListWidth = 350.0;
+  static const double taskListWidth = 300.0;
+
+  /// Minimum task list width
+  static const double minTaskListWidth = 200.0;
+
+  /// Maximum task list width
+  static const double maxTaskListWidth = 450.0;
 
   /// Indentation for each level in the task tree
-  static const double treeIndent = 24.0;
+  static const double treeIndent = 20.0;
 
   /// Minimum width for a task bar
-  static const double minTaskBarWidth = 8.0;
+  static const double minTaskBarWidth = 6.0;
 
-  /// Height of the task bar within a row
-  static const double taskBarHeight = 24.0;
+  /// Height of the task bar within a row (Compass-demo style rounded bars)
+  static const double taskBarHeight = 28.0;
 
-  /// Border radius for task bars
-  static const double taskBarRadius = 4.0;
+  /// Border radius for task bars (more rounded for modern look)
+  static const double taskBarRadius = 6.0;
 
   /// Size of the expand/collapse icon
   static const double expandIconSize = 18.0;

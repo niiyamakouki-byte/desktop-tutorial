@@ -288,40 +288,41 @@ class TaskListPanel extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       height: GanttConstants.headerHeight,
-      padding: const EdgeInsets.symmetric(horizontal: GanttConstants.cellPadding),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: AppColors.ganttHeaderBg,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.ganttGridLine,
+            width: 1,
           ),
-        ],
+        ),
       ),
       child: Row(
         children: [
-          const SizedBox(width: 8),
-          const Expanded(
+          // Expand icon spacer
+          const SizedBox(width: 28),
+          Expanded(
             child: Text(
-              'タスク名',
+              'タスク',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppColors.ganttHeaderText,
+                letterSpacing: 0.3,
               ),
             ),
           ),
-          SizedBox(
-            width: 60,
+          Container(
+            width: 52,
+            alignment: Alignment.center,
             child: Text(
               '進捗',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.ganttHeaderText.withOpacity(0.8),
+                color: AppColors.ganttHeaderSubtext,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
         ],
@@ -353,6 +354,7 @@ class TaskListPanel extends StatelessWidget {
 }
 
 /// Header for the task list panel with column titles and actions
+/// Compass-demo style: clean white background with subtle separators
 class TaskListHeader extends StatelessWidget {
   final double width;
   final VoidCallback? onExpandAll;
@@ -373,52 +375,57 @@ class TaskListHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.ganttHeaderBg,
         border: Border(
+          bottom: BorderSide(
+            color: AppColors.ganttGridLine,
+            width: 1,
+          ),
           right: BorderSide(
-            color: AppColors.ganttHeaderBg,
+            color: AppColors.ganttGridLine,
             width: GanttConstants.dividerWidth,
           ),
         ),
       ),
       child: Row(
         children: [
-          const SizedBox(width: GanttConstants.cellPadding),
+          const SizedBox(width: 8),
           // Expand/Collapse buttons
           _buildHeaderButton(
-            icon: Icons.unfold_more,
+            icon: Icons.unfold_more_rounded,
             tooltip: '全て展開',
             onPressed: onExpandAll,
           ),
           _buildHeaderButton(
-            icon: Icons.unfold_less,
+            icon: Icons.unfold_less_rounded,
             tooltip: '全て折りたたむ',
             onPressed: onCollapseAll,
           ),
           const SizedBox(width: 8),
           // Column title
-          const Expanded(
+          Expanded(
             child: Text(
-              'タスク名',
+              'タスク',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppColors.ganttHeaderText,
+                letterSpacing: 0.3,
               ),
             ),
           ),
           // Progress column
-          SizedBox(
-            width: 60,
+          Container(
+            width: 52,
+            alignment: Alignment.center,
             child: Text(
               '進捗',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.ganttHeaderText.withOpacity(0.8),
+                color: AppColors.ganttHeaderSubtext,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: GanttConstants.cellPadding),
+          const SizedBox(width: 8),
         ],
       ),
     );
@@ -431,15 +438,20 @@ class TaskListHeader extends StatelessWidget {
   }) {
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(4),
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Icon(
-            icon,
-            size: 18,
-            color: AppColors.ganttHeaderText.withOpacity(0.7),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(6),
+          hoverColor: AppColors.ganttRowHover,
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Icon(
+              icon,
+              size: 18,
+              color: AppColors.ganttHeaderSubtext,
+            ),
           ),
         ),
       ),

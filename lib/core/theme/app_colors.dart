@@ -49,18 +49,30 @@ class AppColors {
   static const Color info = Color(0xFF2196F3);
   static const Color infoLight = Color(0xFFE3F2FD);
 
-  // ============== Gantt Chart Colors (Navy Theme) ==============
-  static const Color ganttBackground = Color(0xFFFAFBFC);
-  static const Color ganttGridLine = Color(0xFFE2E8F0);
-  static const Color ganttWeekend = Color(0xFFF1F5F9);
-  static const Color ganttToday = Color(0xFFEBF8FF);
-  static const Color ganttTodayLine = Color(0xFF1A365D);
-  static const Color ganttHeaderBg = Color(0xFF1A365D);
-  static const Color ganttHeaderText = Color(0xFFFFFFFF);
-  static const Color ganttRowHover = Color(0xFFEBF8FF);
-  static const Color ganttRowSelected = Color(0xFFBEE3F8);
-  static const Color ganttDependencyLine = Color(0xFF4A5568);
-  static const Color ganttDependencyHighlight = Color(0xFF2B6CB0);
+  // ============== Gantt Chart Colors (Modern Material Design 3) ==============
+  static const Color ganttBackground = Color(0xFFFCFCFC);
+  static const Color ganttGridLine = Color(0xFFE8E8E8);
+  static const Color ganttWeekend = Color(0xFFF5F5F5);
+  static const Color ganttToday = Color(0xFFF0F7FF);
+  static const Color ganttTodayLine = Color(0xFF1976D2);
+  static const Color ganttHeaderBg = Color(0xFFFFFFFF);
+  static const Color ganttHeaderText = Color(0xFF424242);
+  static const Color ganttHeaderSubtext = Color(0xFF9E9E9E);
+  static const Color ganttRowHover = Color(0xFFF5F9FF);
+  static const Color ganttRowSelected = Color(0xFFE3F2FD);
+  static const Color ganttRowAlternate = Color(0xFFFAFAFA);
+  static const Color ganttDependencyLine = Color(0xFF757575);
+  static const Color ganttDependencyHighlight = Color(0xFF1976D2);
+  static const Color ganttMonthDivider = Color(0xFFBDBDBD);
+
+  // ============== Modern Task Bar Colors ==============
+  static const Color taskBarBlue = Color(0xFF42A5F5);
+  static const Color taskBarGreen = Color(0xFF66BB6A);
+  static const Color taskBarOrange = Color(0xFFFFA726);
+  static const Color taskBarPurple = Color(0xFFAB47BC);
+  static const Color taskBarTeal = Color(0xFF26A69A);
+  static const Color taskBarPink = Color(0xFFEC407A);
+  static const Color taskBarIndigo = Color(0xFF5C6BC0);
 
   // ============== Task Status Colors ==============
   static const Color taskNotStarted = Color(0xFF9E9E9E);
@@ -287,6 +299,49 @@ class AppColors {
         return categoryInspection;
       default:
         return categoryGeneral;
+    }
+  }
+
+  /// Get modern task bar color by index (for variety)
+  static Color getTaskBarColorByIndex(int index) {
+    final colors = [
+      taskBarBlue,
+      taskBarGreen,
+      taskBarOrange,
+      taskBarPurple,
+      taskBarTeal,
+      taskBarPink,
+      taskBarIndigo,
+    ];
+    return colors[index % colors.length];
+  }
+
+  /// Get phase color for Gantt chart (建設工程用)
+  static Color getPhaseColor(String phase) {
+    switch (phase.toLowerCase()) {
+      case '基礎':
+      case 'foundation':
+        return taskBarIndigo;
+      case '躯体':
+      case 'structure':
+        return taskBarBlue;
+      case '内装':
+      case 'interior':
+        return taskBarGreen;
+      case '外装':
+      case 'exterior':
+        return taskBarTeal;
+      case '設備':
+      case 'equipment':
+        return taskBarOrange;
+      case '検査':
+      case 'inspection':
+        return taskBarPink;
+      case '土木':
+      case 'civil':
+        return taskBarPurple;
+      default:
+        return taskBarBlue;
     }
   }
 }

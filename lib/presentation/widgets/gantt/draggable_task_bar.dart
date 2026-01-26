@@ -245,48 +245,39 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Main bar
+                  // Main bar - Compass-demo style clean design
                   Transform.scale(
-                    scale: isDragging ? 1.05 : (widget.isSelected ? 1.03 : _scaleAnimation.value),
+                    scale: isDragging ? 1.02 : (widget.isSelected ? 1.01 : _scaleAnimation.value),
                     child: Container(
                       width: displayWidth.clamp(GanttConstants.minTaskBarWidth, double.infinity),
                       height: GanttConstants.taskBarHeight,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            categoryColor.withOpacity(0.9),
-                            categoryColor.withOpacity(0.75),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
+                        color: categoryColor,
                         borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
                         border: Border.all(
-                          color: isDragging
-                              ? AppColors.primary
-                              : (widget.isSelected
-                                  ? AppColors.primary
-                                  : categoryColor.withOpacity(0.3 + _glowAnimation.value * 0.5)),
-                          width: isDragging ? 2.5 : (widget.isSelected ? 2.5 : 1 + _glowAnimation.value),
+                          color: isDragging || widget.isSelected
+                              ? categoryColor.withOpacity(0.8)
+                              : Colors.transparent,
+                          width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: categoryColor.withOpacity(isDragging ? 0.4 : 0.15 + _glowAnimation.value * 0.25),
-                            blurRadius: isDragging ? 16 : 4 + _glowAnimation.value * 8,
-                            spreadRadius: isDragging ? 4 : _glowAnimation.value * 2,
-                            offset: Offset(0, isDragging ? 4 : 2 + _glowAnimation.value * 2),
+                            color: Colors.black.withOpacity(isDragging ? 0.2 : 0.08),
+                            blurRadius: isDragging ? 12 : 4,
+                            spreadRadius: 0,
+                            offset: Offset(0, isDragging ? 3 : 1),
                           ),
-                          if (widget.isSelected || isDragging)
+                          if (widget.isSelected)
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 12,
-                              spreadRadius: 2,
+                              color: categoryColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              spreadRadius: 1,
                             ),
                           if (widget.isCriticalPath)
                             BoxShadow(
-                              color: AppColors.error.withOpacity(0.3),
-                              blurRadius: 8,
-                              spreadRadius: 1,
+                              color: AppColors.error.withOpacity(0.25),
+                              blurRadius: 6,
+                              spreadRadius: 0,
                             ),
                         ],
                       ),
@@ -294,49 +285,51 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                         borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
                         child: Stack(
                           children: [
-                            // Progress fill
-                            Positioned(
-                              left: 0,
-                              top: 0,
-                              bottom: 0,
-                              child: Container(
-                                width: displayWidth * widget.task.progress,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(GanttConstants.progressOpacity),
+                            // Progress fill - cleaner stripe style
+                            if (widget.task.progress > 0)
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: displayWidth * widget.task.progress,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withOpacity(0.25),
+                                        Colors.white.withOpacity(0.15),
+                                      ],
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            // Critical path indicator
+                            // Critical path indicator - subtle top stripe
                             if (widget.isCriticalPath)
                               Positioned(
                                 top: 0,
                                 left: 0,
                                 right: 0,
                                 child: Container(
-                                  height: 3,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        AppColors.error.withOpacity(0.8),
-                                        AppColors.error.withOpacity(0.4),
-                                      ],
-                                    ),
-                                  ),
+                                  height: 2,
+                                  color: AppColors.error.withOpacity(0.9),
                                 ),
                               ),
-                            // Task name
-                            if (displayWidth > 60)
+                            // Task name - larger text for readability
+                            if (displayWidth > 50)
                               Positioned.fill(
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10),
                                   child: Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
                                       widget.task.name,
                                       style: const TextStyle(
-                                        fontSize: 11,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                         color: Colors.white,
+                                        letterSpacing: 0.2,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -344,54 +337,47 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                                   ),
                                 ),
                               ),
-                            // Progress percentage
-                            if (displayWidth > 80)
+                            // Progress percentage - simplified
+                            if (displayWidth > 100 && widget.task.progress > 0)
                               Positioned(
-                                right: 6,
+                                right: 8,
                                 top: 0,
                                 bottom: 0,
                                 child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                    child: Text(
-                                      '${(widget.task.progress * 100).round()}%',
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
+                                  child: Text(
+                                    '${(widget.task.progress * 100).round()}%',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white.withOpacity(0.9),
                                     ),
                                   ),
                                 ),
                               ),
-                            // Resize handles (visible on hover)
+                            // Resize handles - cleaner compass-demo style
                             if (_isHovered || isDragging) ...[
                               // Left handle
                               Positioned(
                                 left: 0,
-                                top: 0,
-                                bottom: 0,
+                                top: 4,
+                                bottom: 4,
                                 child: MouseRegion(
                                   cursor: SystemMouseCursors.resizeColumn,
                                   child: Container(
                                     width: _handleWidth,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.3),
+                                      color: Colors.white.withOpacity(isDragging ? 0.5 : 0.35),
                                       borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(GanttConstants.taskBarRadius),
-                                        bottomLeft: Radius.circular(GanttConstants.taskBarRadius),
+                                        topLeft: Radius.circular(4),
+                                        bottomLeft: Radius.circular(4),
                                       ),
                                     ),
                                     child: Center(
                                       child: Container(
                                         width: 2,
-                                        height: 16,
+                                        height: 14,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: Colors.white.withOpacity(0.8),
                                           borderRadius: BorderRadius.circular(1),
                                         ),
                                       ),
@@ -402,25 +388,25 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                               // Right handle
                               Positioned(
                                 right: 0,
-                                top: 0,
-                                bottom: 0,
+                                top: 4,
+                                bottom: 4,
                                 child: MouseRegion(
                                   cursor: SystemMouseCursors.resizeColumn,
                                   child: Container(
                                     width: _handleWidth,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.3),
+                                      color: Colors.white.withOpacity(isDragging ? 0.5 : 0.35),
                                       borderRadius: const BorderRadius.only(
-                                        topRight: Radius.circular(GanttConstants.taskBarRadius),
-                                        bottomRight: Radius.circular(GanttConstants.taskBarRadius),
+                                        topRight: Radius.circular(4),
+                                        bottomRight: Radius.circular(4),
                                       ),
                                     ),
                                     child: Center(
                                       child: Container(
                                         width: 2,
-                                        height: 16,
+                                        height: 14,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: Colors.white.withOpacity(0.8),
                                           borderRadius: BorderRadius.circular(1),
                                         ),
                                       ),
@@ -466,33 +452,49 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
     final duration = _previewEndDate!.difference(_previewStartDate!).inDays + 1;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.tooltipBackground,
-        borderRadius: BorderRadius.circular(6),
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.calendar_today,
-            size: 12,
-            color: Colors.white70,
+          Icon(
+            Icons.date_range_rounded,
+            size: 14,
+            color: Colors.white.withOpacity(0.8),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Text(
-            '$startStr → $endStr ($duration日)',
+            '$startStr → $endStr',
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               color: Colors.white,
               fontWeight: FontWeight.w500,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              '$duration日',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withOpacity(0.9),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
