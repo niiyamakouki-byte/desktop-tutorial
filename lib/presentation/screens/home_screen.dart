@@ -8,6 +8,7 @@ import '../../data/services/template_service.dart';
 import '../../data/models/material_model.dart';
 import '../../data/models/dependency_model.dart';
 import '../widgets/gantt/gantt_chart.dart';
+import '../widgets/gantt/rain_cancel_dialog.dart';
 import '../widgets/chat/communication_sidebar.dart';
 import '../widgets/common/app_header.dart';
 import '../widgets/modal/task_edit_modal.dart';
@@ -20,7 +21,16 @@ enum HomeViewMode { gantt, cockpit }
 
 /// Main home screen with Gantt chart and communication sidebar
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? projectId;
+  final String? projectName;
+  final VoidCallback? onBackToProjects;
+
+  const HomeScreen({
+    super.key,
+    this.projectId,
+    this.projectName,
+    this.onBackToProjects,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -267,8 +277,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
           return Column(
             children: [
-              // App Header
-              const AppHeader(),
+              // App Header with back button
+              _buildAppHeader(),
               // View Mode Tabs
               _buildViewTabs(),
               // Main Content Area
@@ -302,6 +312,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               },
                               onDependencyDeleted: (depId) {
                                 provider.removeDependency(depId);
+                              },
+                              onRainCancel: (result) {
+                                // Update tasks with new dates from rain cancellation
+                                provider.applyRainCancellation(result);
                               },
                             )
                           : CockpitDashboard(
@@ -406,6 +420,77 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildAppHeader() {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDark,
+        border: Border(
+          bottom: BorderSide(color: AppColors.border.withOpacity(0.3)),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Back button
+          if (widget.onBackToProjects != null)
+            IconButton(
+              onPressed: widget.onBackToProjects,
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              tooltip: 'プロジェクト一覧に戻る',
+            ),
+          if (widget.onBackToProjects != null)
+            const SizedBox(width: 8),
+          // Project info
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: AppColors.industrialGradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.construction, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.projectName ?? '建設プロジェクト管理',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (widget.projectId != null)
+                  Text(
+                    'ID: ${widget.projectId}',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 11,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Actions
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.notifications_outlined, color: Colors.white.withOpacity(0.7)),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.settings_outlined, color: Colors.white.withOpacity(0.7)),
+          ),
+        ],
+      ),
     );
   }
 

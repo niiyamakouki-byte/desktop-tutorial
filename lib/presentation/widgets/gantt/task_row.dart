@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
+import '../../../data/models/phase_model.dart';
 import 'gantt_constants.dart';
 
 /// Individual task row component for the task list panel
@@ -15,6 +16,9 @@ class TaskRow extends StatefulWidget {
   final VoidCallback? onExpandToggle;
   final double width;
 
+  /// Phase information for display
+  final Phase? phase;
+
   const TaskRow({
     super.key,
     required this.task,
@@ -24,6 +28,7 @@ class TaskRow extends StatefulWidget {
     this.onDoubleTap,
     this.onExpandToggle,
     this.width = GanttConstants.taskListWidth,
+    this.phase,
   });
 
   @override
@@ -76,7 +81,7 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final indent = widget.task.level * GanttConstants.treeIndent;
-    final statusColor = AppColors.getTaskStatusColor(widget.task.status);
+    final delayStatus = widget.task.delayStatus;
     final categoryColor = AppColors.getCategoryColor(widget.task.category);
 
     return MouseRegion(
@@ -100,19 +105,22 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
           ),
           child: Row(
             children: [
+              // 左ステータスレール（遅延状態で色が変わる）
+              _buildStatusRail(delayStatus),
+
               // Indentation and expand button
               SizedBox(width: GanttConstants.cellPadding + indent),
               _buildExpandButton(),
               const SizedBox(width: 4),
 
-              // Status indicator
-              _buildStatusIndicator(statusColor),
-              const SizedBox(width: 8),
-
               // Task name and info
               Expanded(
-                child: _buildTaskInfo(categoryColor),
+                child: _buildTaskInfoEnhanced(categoryColor, delayStatus),
               ),
+
+              // 添付アイコン
+              _buildAttachmentIcons(),
+              const SizedBox(width: 8),
 
               // Progress indicator
               _buildProgressBadge(),
@@ -120,6 +128,259 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 左ステータスレール（太め、遅延状態で色変化）
+  Widget _buildStatusRail(DelayStatus status) {
+    return Container(
+      width: 4,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: status.color,
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(2),
+          bottomRight: Radius.circular(2),
+        ),
+      ),
+    );
+  }
+
+  /// 強化版タスク情報（期限・担当者を含む）
+  Widget _buildTaskInfoEnhanced(Color categoryColor, DelayStatus delayStatus) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 1行目: タスク名
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.task.name,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: widget.task.level == 0
+                      ? FontWeight.w600
+                      : FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // 2行目: ステータス・期限・担当者
+        Row(
+          children: [
+            // 遅延/待ちバッジ
+            if (delayStatus != DelayStatus.onTrack) ...[
+              _buildDelayBadge(delayStatus),
+              const SizedBox(width: 6),
+            ],
+            // 期限表示
+            _buildDeadlineChip(),
+            const SizedBox(width: 6),
+            // 担当者チップ
+            if (widget.task.assigneeDisplayText.isNotEmpty) ...[
+              _buildAssigneeChip(),
+              const SizedBox(width: 6),
+            ],
+            // フェーズバッジ
+            if (widget.phase != null) ...[
+              _buildPhaseBadge(widget.phase!),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 遅延/待ちバッジ（⚠ +Xd形式で視覚強調）
+  Widget _buildDelayBadge(DelayStatus status) {
+    String text;
+    bool isUrgent = false;
+
+    if (status == DelayStatus.overdue) {
+      final days = widget.task.daysOverdue;
+      text = '+${days}d';
+      isUrgent = days >= 3; // 3日以上遅延は緊急扱い
+    } else if (status == DelayStatus.blocked) {
+      text = widget.task.blockingReason?.displayName ?? '待ち';
+    } else if (status == DelayStatus.atRisk) {
+      final days = widget.task.daysRemaining;
+      text = '残${days}d';
+    } else {
+      text = status.displayName;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: status.color.withValues(alpha: isUrgent ? 0.25 : 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: status.color.withValues(alpha: isUrgent ? 0.7 : 0.4),
+          width: isUrgent ? 1.5 : 1,
+        ),
+        boxShadow: isUrgent
+            ? [
+                BoxShadow(
+                  color: status.color.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  spreadRadius: 0,
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ⚠️ アイコン（遅延時は警告マーク）
+          if (status == DelayStatus.overdue)
+            const Text(
+              '⚠',
+              style: TextStyle(fontSize: 10),
+            )
+          else
+            Icon(
+              status.icon,
+              size: 10,
+              color: status.color,
+            ),
+          const SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              color: status.color,
+              fontWeight: isUrgent ? FontWeight.w700 : FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 期限チップ
+  Widget _buildDeadlineChip() {
+    final deadlineText = widget.task.deadlineText;
+    final isOverdue = widget.task.isOverdue;
+    final isToday = widget.task.isToday;
+
+    Color textColor;
+    if (isOverdue) {
+      textColor = AppColors.error;
+    } else if (isToday) {
+      textColor = AppColors.warning;
+    } else {
+      textColor = AppColors.textSecondary;
+    }
+
+    return Text(
+      '期日 ${widget.task.endDate.month}/${widget.task.endDate.day} ($deadlineText)',
+      style: TextStyle(
+        fontSize: 10,
+        color: textColor,
+        fontWeight: isOverdue ? FontWeight.w600 : FontWeight.w400,
+      ),
+    );
+  }
+
+  /// 担当者チップ
+  Widget _buildAssigneeChip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.person_outline,
+            size: 10,
+            color: AppColors.primary,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            widget.task.assigneeDisplayText,
+            style: const TextStyle(
+              fontSize: 9,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 添付アイコン群
+  Widget _buildAttachmentIcons() {
+    final status = widget.task.attachmentStatus;
+    if (!status.hasAny) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 図面アイコン
+        if (status.hasDrawing)
+          _buildAttachmentIcon(
+            Icons.architecture,
+            status.isLatestDrawing ? AppColors.success : AppColors.textTertiary,
+            status.isLatestDrawing ? '最新' : null,
+          ),
+        // 写真アイコン
+        if (status.photoCount > 0)
+          _buildAttachmentIcon(
+            Icons.photo_camera,
+            status.todayPhotoCount > 0 ? AppColors.primary : AppColors.textTertiary,
+            status.todayPhotoCount > 0 ? '${status.todayPhotoCount}' : null,
+          ),
+        // コメントアイコン
+        if (status.unreadComments > 0)
+          _buildAttachmentIcon(
+            Icons.chat_bubble_outline,
+            status.hasActionRequired ? AppColors.error : AppColors.warning,
+            '${status.unreadComments}',
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAttachmentIcon(IconData icon, Color color, String? badge) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(icon, size: 14, color: color),
+          if (badge != null)
+            Positioned(
+              right: -4,
+              top: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    fontSize: 8,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -208,6 +469,11 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
         const SizedBox(height: 2),
         Row(
           children: [
+            // Phase badge (if task has a phase)
+            if (widget.phase != null) ...[
+              _buildPhaseBadge(widget.phase!),
+              const SizedBox(width: 6),
+            ],
             // Category badge
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
@@ -226,16 +492,56 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
             ),
             const SizedBox(width: 8),
             // Date range
-            Text(
-              _formatDateRange(),
-              style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.textTertiary,
+            Flexible(
+              child: Text(
+                _formatDateRange(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textTertiary,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildPhaseBadge(Phase phase) {
+    final phaseColor = PhaseColors.getColorForOrder(phase.order);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: phaseColor.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(
+          color: phaseColor.withOpacity(0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: phaseColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            phase.shortName,
+            style: TextStyle(
+              fontSize: 9,
+              color: phaseColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -287,6 +593,12 @@ class TaskBar extends StatefulWidget {
   final Function(DragUpdateDetails)? onDragUpdate;
   final Function(DragEndDetails)? onDragEnd;
 
+  /// Phase information for color coding (if available)
+  final Phase? phase;
+
+  /// Whether to use phase-based coloring
+  final bool usePhaseColor;
+
   const TaskBar({
     super.key,
     required this.task,
@@ -296,6 +608,8 @@ class TaskBar extends StatefulWidget {
     this.onTap,
     this.onDragUpdate,
     this.onDragEnd,
+    this.phase,
+    this.usePhaseColor = true,
   });
 
   @override
@@ -339,10 +653,20 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
     _hoverController.reverse();
   }
 
+  /// Get the display color for this task bar
+  Color _getTaskBarColor() {
+    // Use phase color if phase is provided and usePhaseColor is enabled
+    if (widget.usePhaseColor && widget.phase != null) {
+      return PhaseColors.getColorForOrder(widget.phase!.order);
+    }
+    // Fallback to category color
+    return AppColors.getCategoryColor(widget.task.category);
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColor = AppColors.getTaskStatusColor(widget.task.status);
-    final categoryColor = AppColors.getCategoryColor(widget.task.category);
+    final barColor = _getTaskBarColor();
 
     // For milestones, render a diamond
     if (widget.task.isMilestone) {
@@ -370,8 +694,8 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        categoryColor.withOpacity(0.9),
-                        categoryColor.withOpacity(0.75),
+                        barColor.withOpacity(0.9),
+                        barColor.withOpacity(0.75),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -380,12 +704,12 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                     border: Border.all(
                       color: widget.isSelected
                           ? AppColors.primary
-                          : categoryColor.withOpacity(0.3 + _glowAnimation.value * 0.5),
+                          : barColor.withOpacity(0.3 + _glowAnimation.value * 0.5),
                       width: widget.isSelected ? 2.5 : 1 + _glowAnimation.value,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: categoryColor.withOpacity(0.15 + _glowAnimation.value * 0.25),
+                        color: barColor.withOpacity(0.15 + _glowAnimation.value * 0.25),
                         blurRadius: 4 + _glowAnimation.value * 8,
                         spreadRadius: _glowAnimation.value * 2,
                         offset: Offset(0, 2 + _glowAnimation.value * 2),
@@ -455,6 +779,41 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                               color: Colors.white,
                             ),
                           ),
+                        ),
+                      ),
+                    ),
+                  // 遅延インジケーター（⚠ +Xd形式）
+                  if (widget.task.delayStatus == DelayStatus.overdue)
+                    Positioned(
+                      right: widget.width > 80 ? 40 : 4,
+                      top: -8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.error.withOpacity(0.4),
+                              blurRadius: 4,
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('⚠', style: TextStyle(fontSize: 9)),
+                            const SizedBox(width: 2),
+                            Text(
+                              '+${widget.task.daysOverdue}d',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -674,6 +1033,123 @@ class TaskBarTooltip extends StatelessWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Phase legend widget to display phase color coding
+class PhaseLegend extends StatelessWidget {
+  final List<Phase> phases;
+  final bool compact;
+
+  const PhaseLegend({
+    super.key,
+    required this.phases,
+    this.compact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (phases.isEmpty) return const SizedBox.shrink();
+
+    if (compact) {
+      return _buildCompactLegend();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'フェーズ凡例',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 12,
+            runSpacing: 6,
+            children: phases.map((phase) => _buildLegendItem(phase)).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactLegend() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: phases.map((phase) => _buildCompactItem(phase)).toList(),
+    );
+  }
+
+  Widget _buildLegendItem(Phase phase) {
+    final color = PhaseColors.getColorForOrder(phase.order);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          phase.name,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactItem(Phase phase) {
+    final color = PhaseColors.getColorForOrder(phase.order);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            phase.shortName,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
         ],
       ),
     );

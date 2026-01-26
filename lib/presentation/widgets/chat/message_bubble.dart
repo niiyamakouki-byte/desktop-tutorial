@@ -8,6 +8,7 @@ import 'document_card.dart';
 
 /// Message bubble component for chat messages
 /// Displays sender info, message content, attachments, and read status
+/// 現場向けに読みやすい大きめのテキストとタッチターゲット
 class MessageBubble extends StatelessWidget {
   final Message message;
   final bool isOwnMessage;
@@ -39,9 +40,10 @@ class MessageBubble extends StatelessWidget {
     }
 
     return Padding(
+      // 現場向けに広めのパディング
       padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.paddingM,
-        vertical: AppConstants.paddingXS,
+        horizontal: 16,
+        vertical: 6,
       ),
       child: Row(
         mainAxisAlignment:
@@ -50,10 +52,10 @@ class MessageBubble extends StatelessWidget {
         children: [
           if (!isOwnMessage && showAvatar) ...[
             _buildSenderAvatar(),
-            const SizedBox(width: AppConstants.paddingS),
+            const SizedBox(width: 10),
           ],
           if (!isOwnMessage && !showAvatar)
-            const SizedBox(width: AppConstants.avatarSizeM + AppConstants.paddingS),
+            const SizedBox(width: AppConstants.avatarSizeM + 10),
           Flexible(
             child: Column(
               crossAxisAlignment:
@@ -67,7 +69,7 @@ class MessageBubble extends StatelessWidget {
             ),
           ),
           if (isOwnMessage && showAvatar) ...[
-            const SizedBox(width: AppConstants.paddingS),
+            const SizedBox(width: 10),
             _buildSenderAvatar(),
           ],
         ],
@@ -133,8 +135,8 @@ class MessageBubble extends StatelessWidget {
   Widget _buildSenderName() {
     return Padding(
       padding: const EdgeInsets.only(
-        left: AppConstants.paddingXS,
-        bottom: AppConstants.paddingXS,
+        left: 4,
+        bottom: 4,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -143,16 +145,17 @@ class MessageBubble extends StatelessWidget {
             message.sender?.name ?? '不明なユーザー',
             style: const TextStyle(
               color: AppColors.textSecondary,
-              fontSize: 12,
+              // 現場向けに見やすいサイズ
+              fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
           if (message.sender?.role != null) ...[
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 2,
+                horizontal: 8,
+                vertical: 3,
               ),
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.1),
@@ -162,7 +165,7 @@ class MessageBubble extends StatelessWidget {
                 UserRole.getLabel(message.sender!.role),
                 style: const TextStyle(
                   color: AppColors.primary,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -267,15 +270,12 @@ class MessageBubble extends StatelessWidget {
 
   Widget _buildTextContent() {
     return Padding(
+      // 現場向けに大きめのパディング
       padding: EdgeInsets.only(
-        left: AppConstants.paddingM,
-        right: AppConstants.paddingM,
-        top: message.replyTo != null
-            ? AppConstants.paddingS
-            : AppConstants.paddingM,
-        bottom: message.hasAttachments
-            ? AppConstants.paddingS
-            : AppConstants.paddingM,
+        left: 14,
+        right: 14,
+        top: message.replyTo != null ? 8 : 12,
+        bottom: message.hasAttachments ? 8 : 12,
       ),
       child: Text(
         message.displayContent,
@@ -283,8 +283,10 @@ class MessageBubble extends StatelessWidget {
           color: isOwnMessage
               ? AppColors.chatTextSent
               : AppColors.chatTextReceived,
-          fontSize: 14,
-          height: 1.4,
+          // 現場向けに大きなフォント
+          fontSize: 16,
+          height: 1.5,
+          letterSpacing: 0.2,
         ),
       ),
     );
@@ -374,9 +376,9 @@ class MessageBubble extends StatelessWidget {
   Widget _buildTimestampRow() {
     return Padding(
       padding: const EdgeInsets.only(
-        top: AppConstants.paddingXS,
-        left: AppConstants.paddingXS,
-        right: AppConstants.paddingXS,
+        top: 4,
+        left: 4,
+        right: 4,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -385,22 +387,23 @@ class MessageBubble extends StatelessWidget {
             message.timeString,
             style: const TextStyle(
               color: AppColors.chatTimestamp,
-              fontSize: 10,
+              // 現場向けに見やすいサイズ
+              fontSize: 11,
             ),
           ),
           if (message.isEdited) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             const Text(
               '(編集済み)',
               style: TextStyle(
                 color: AppColors.chatTimestamp,
-                fontSize: 10,
+                fontSize: 11,
                 fontStyle: FontStyle.italic,
               ),
             ),
           ],
           if (isOwnMessage) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             _buildReadStatus(),
           ],
         ],

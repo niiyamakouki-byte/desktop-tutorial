@@ -5,8 +5,14 @@ class GanttConstants {
   GanttConstants._();
 
   // ============== Dimensions ==============
-  /// Height of each task row in the Gantt chart
-  static const double rowHeight = 44.0;
+  /// Height of each task row in the Gantt chart (現場向けに拡大: 56px)
+  static const double rowHeight = 56.0;
+
+  /// Height of parent task row (親タスク用)
+  static const double parentRowHeight = 60.0;
+
+  /// Height of child task row (子タスク用)
+  static const double childRowHeight = 52.0;
 
   /// Height of the timeline header (month + day rows)
   static const double headerHeight = 60.0;
@@ -56,8 +62,14 @@ class GanttConstants {
   /// Horizontal gap for dependency routing
   static const double dependencyHorizontalGap = 8.0;
 
-  /// Width of the today line
-  static const double todayLineWidth = 2.0;
+  /// Width of the today line (太く強調)
+  static const double todayLineWidth = 3.0;
+
+  /// Width of this week background band
+  static const double thisWeekBandOpacity = 0.08;
+
+  /// Today line glow blur radius
+  static const double todayLineGlowRadius = 6.0;
 
   /// Width of the progress indicator within task bar
   static const double progressBarHeight = 4.0;

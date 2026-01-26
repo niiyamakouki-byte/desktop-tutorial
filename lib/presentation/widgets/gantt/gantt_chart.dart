@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
 import '../../../data/models/dependency_model.dart';
+import '../../../data/models/phase_model.dart';
 import '../../../data/services/weather_service.dart';
 import '../../../data/services/dependency_service.dart';
 import '../common/context_menu.dart';
@@ -17,6 +18,7 @@ import 'enhanced_dependency_painter.dart';
 import 'dependency_connector.dart';
 import 'dependency_dialog.dart';
 import 'task_row.dart';
+import 'rain_cancel_dialog.dart';
 
 /// Main Gantt Chart widget that combines task list and timeline panels
 class GanttChart extends StatefulWidget {
@@ -107,6 +109,15 @@ class GanttChart extends StatefulWidget {
   /// Callback when dependency is deleted
   final Function(String dependencyId)? onDependencyDeleted;
 
+  /// Callback when rain cancellation is applied (tasks need to be rescheduled)
+  final Function(RainCancelResult result)? onRainCancel;
+
+  /// List of phases for phase-based color coding
+  final List<Phase> phases;
+
+  /// Whether to use phase-based coloring
+  final bool usePhaseColors;
+
   const GanttChart({
     super.key,
     required this.tasks,
@@ -138,6 +149,9 @@ class GanttChart extends StatefulWidget {
     this.delayImpactMap,
     this.onDependencyCreated,
     this.onDependencyDeleted,
+    this.onRainCancel,
+    this.phases = const [],
+    this.usePhaseColors = true,
   });
 
   @override
@@ -170,6 +184,10 @@ class _GanttChartState extends State<GanttChart> {
   // Weather alerts
   List<WeatherAlert> _weatherAlerts = [];
 
+  // クイックフィルター状態
+  Set<QuickFilterType> _activeFilters = {};
+  Map<QuickFilterType, int> _filterCounts = {};
+
   @override
   void initState() {
     super.initState();
@@ -184,6 +202,7 @@ class _GanttChartState extends State<GanttChart> {
 
     _computeDateRange();
     _computeVisibleTasks();
+    _computeFilterCounts();
     _loadWeatherAlerts();
 
     // Sync vertical scrolling between task list and timeline
@@ -412,7 +431,34 @@ class _GanttChartState extends State<GanttChart> {
   }
 
   void _computeVisibleTasks() {
-    _visibleTasks = widget.tasks.getVisibleTasks();
+    var tasks = widget.tasks.getVisibleTasks();
+    // クイックフィルターを適用
+    if (_activeFilters.isNotEmpty) {
+      tasks = TaskFilterUtils.applyFilters(tasks, _activeFilters);
+    }
+    _visibleTasks = tasks;
+  }
+
+  void _computeFilterCounts() {
+    _filterCounts = TaskFilterUtils.calculateFilterCounts(widget.tasks);
+  }
+
+  void _handleFilterToggle(QuickFilterType filter) {
+    setState(() {
+      if (_activeFilters.contains(filter)) {
+        _activeFilters.remove(filter);
+      } else {
+        _activeFilters.add(filter);
+      }
+      _computeVisibleTasks();
+    });
+  }
+
+  void _handleClearFilters() {
+    setState(() {
+      _activeFilters.clear();
+      _computeVisibleTasks();
+    });
   }
 
   void _handleTaskTap(Task task) {
@@ -455,6 +501,11 @@ class _GanttChartState extends State<GanttChart> {
     return _viewMode.dayWidth * _zoomLevel;
   }
 
+  /// Build phaseMap from phases list for quick lookup
+  Map<String, Phase> get _phaseMap {
+    return {for (var phase in widget.phases) phase.id: phase};
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.tasks.isEmpty) {
@@ -485,16 +536,37 @@ class _GanttChartState extends State<GanttChart> {
               Expanded(
                 child: Row(
                   children: [
-                    // Task list panel
-                    TaskListPanel(
-                      tasks: _visibleTasks,
-                      allTasks: widget.tasks,
-                      selectedTaskId: _selectedTaskId,
-                      scrollController: _taskListScrollController,
+                    // Task list panel with filter bar
+                    SizedBox(
                       width: _taskListWidth,
-                      onTaskTap: _handleTaskTap,
-                      onTaskDoubleTap: _handleTaskDoubleTap,
-                      onExpandToggle: _handleExpandToggle,
+                      child: Column(
+                        children: [
+                          // クイックフィルターバー
+                          QuickFilterBar(
+                            activeFilters: _activeFilters,
+                            onFilterToggle: _handleFilterToggle,
+                            onClearAll: _handleClearFilters,
+                            todayCount: _filterCounts[QuickFilterType.today] ?? 0,
+                            delayedCount: _filterCounts[QuickFilterType.delayed] ?? 0,
+                            blockedCount: _filterCounts[QuickFilterType.blocked] ?? 0,
+                            mineCount: _filterCounts[QuickFilterType.mine] ?? 0,
+                          ),
+                          // Task list
+                          Expanded(
+                            child: TaskListPanel(
+                              tasks: _visibleTasks,
+                              allTasks: widget.tasks,
+                              selectedTaskId: _selectedTaskId,
+                              scrollController: _taskListScrollController,
+                              width: _taskListWidth,
+                              onTaskTap: _handleTaskTap,
+                              onTaskDoubleTap: _handleTaskDoubleTap,
+                              onExpandToggle: _handleExpandToggle,
+                              phaseMap: _phaseMap,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     // Resizable divider
@@ -654,6 +726,11 @@ class _GanttChartState extends State<GanttChart> {
 
           const SizedBox(width: 12),
 
+          // Rain cancellation button
+          _buildRainCancelButton(),
+
+          const SizedBox(width: 8),
+
           // Today button
           _buildTodayButton(),
 
@@ -664,6 +741,64 @@ class _GanttChartState extends State<GanttChart> {
         ],
       ),
     );
+  }
+
+  Widget _buildRainCancelButton() {
+    return Tooltip(
+      message: '雨天中止 - 日程スライド',
+      child: InkWell(
+        onTap: _handleRainCancelTap,
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.blue[700]!.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: Colors.blue[700]!.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '☔',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '雨天中止',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.blue[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleRainCancelTap() async {
+    final result = await RainCancelDialog.show(
+      context: context,
+      tasks: widget.tasks,
+      dependencies: widget.dependencies,
+      initialDate: DateTime.now(),
+    );
+
+    if (result != null && mounted) {
+      // Callback to parent to actually update the tasks
+      widget.onRainCancel?.call(result);
+
+      // Show summary dialog
+      await RainCancelSummaryDialog.show(
+        context: context,
+        result: result,
+      );
+    }
   }
 
   Widget _buildTodayButton() {
@@ -781,6 +916,9 @@ class _GanttChartState extends State<GanttChart> {
           delayImpactMap: widget.delayImpactMap,
           onDependencyCreated: widget.onDependencyCreated,
           enableDependencyCreation: widget.showDependencies,
+          // Phase-related parameters
+          phaseMap: _phaseMap,
+          usePhaseColors: widget.usePhaseColors,
         ),
 
         // Dependency creation layer (drag & drop)

@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
 import '../../../data/models/dependency_model.dart';
+import '../../../data/models/phase_model.dart';
 import '../../../data/services/dependency_service.dart';
 import 'gantt_constants.dart';
 import 'task_row.dart';
@@ -36,6 +37,12 @@ class TimelinePanel extends StatefulWidget {
   final Function(String fromTaskId, String toTaskId, DependencyType type, int lagDays)? onDependencyCreated;
   final bool enableDependencyCreation;
 
+  /// Map of phaseId -> Phase for color coding tasks by phase
+  final Map<String, Phase> phaseMap;
+
+  /// Whether to use phase-based coloring for task bars
+  final bool usePhaseColors;
+
   const TimelinePanel({
     super.key,
     required this.tasks,
@@ -57,6 +64,8 @@ class TimelinePanel extends StatefulWidget {
     this.delayImpactMap,
     this.onDependencyCreated,
     this.enableDependencyCreation = true,
+    this.phaseMap = const {},
+    this.usePhaseColors = true,
   });
 
   @override
@@ -220,13 +229,15 @@ class _TimelinePanelState extends State<TimelinePanel> {
                 dayWidth: widget.dayWidth,
               ),
             ),
-            // Task bar
+            // Task bar with phase color support
             TaskBar(
               task: task,
               left: leftPosition,
               width: taskWidth,
               isSelected: isSelected,
               onTap: () => widget.onTaskTap?.call(task),
+              phase: task.phaseId != null ? widget.phaseMap[task.phaseId] : null,
+              usePhaseColor: widget.usePhaseColors,
             ),
           ],
         ),
@@ -256,6 +267,10 @@ class TimelineBody extends StatelessWidget {
   final bool showCriticalPath;
   final Map<String, int>? delayImpactMap;
 
+  // Phase-related properties
+  final Map<String, Phase> phaseMap;
+  final bool usePhaseColors;
+
   const TimelineBody({
     super.key,
     required this.tasks,
@@ -274,6 +289,8 @@ class TimelineBody extends StatelessWidget {
     this.criticalPathIds = const {},
     this.showCriticalPath = true,
     this.delayImpactMap,
+    this.phaseMap = const {},
+    this.usePhaseColors = true,
   });
 
   @override
@@ -347,6 +364,8 @@ class TimelineBody extends StatelessWidget {
                           width: taskWidth,
                           isSelected: task.id == selectedTaskId,
                           onTap: () => onTaskTap?.call(task),
+                          phase: task.phaseId != null ? phaseMap[task.phaseId] : null,
+                          usePhaseColor: usePhaseColors,
                         ),
                       ],
                     ),
@@ -491,7 +510,7 @@ class _VerticalGridPainter extends CustomPainter {
   }
 }
 
-/// Today column highlight painter
+/// Today column highlight painter with week band
 class _TodayColumnPainter extends CustomPainter {
   final DateTime startDate;
   final double dayWidth;
@@ -511,21 +530,62 @@ class _TodayColumnPainter extends CustomPainter {
     final daysDiff = today.difference(startDate).inDays;
     final x = daysDiff * dayWidth;
 
-    // Draw today column highlight
+    // 今週の帯を描画（月曜日から日曜日）
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+    final weekEnd = weekStart.add(const Duration(days: 6));
+
+    final weekStartDiff = weekStart.difference(startDate).inDays;
+    final weekEndDiff = weekEnd.difference(startDate).inDays;
+
+    if (weekStartDiff >= 0) {
+      final weekStartX = weekStartDiff * dayWidth;
+      final weekWidth = (weekEndDiff - weekStartDiff + 1) * dayWidth;
+      final weekRect = Rect.fromLTWH(
+        weekStartX.clamp(0.0, size.width),
+        0,
+        weekWidth.clamp(0.0, size.width - weekStartX),
+        size.height,
+      );
+
+      // 今週帯の背景色（薄い）
+      final weekPaint = Paint()
+        ..color = AppColors.primary.withOpacity(GanttConstants.thisWeekBandOpacity)
+        ..style = PaintingStyle.fill;
+
+      canvas.drawRect(weekRect, weekPaint);
+    }
+
+    // 今日のカラム背景（やや強調）
     final rect = Rect.fromLTWH(x, 0, dayWidth, size.height);
     final paint = Paint()
-      ..color = AppColors.ganttToday.withOpacity(0.3)
+      ..color = AppColors.ganttToday.withOpacity(0.35)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(rect, paint);
 
-    // Draw today line
+    // 今日ラインのグロー効果
+    final lineX = x + dayWidth / 2;
+
+    // グロー（外側）
+    final glowPaint = Paint()
+      ..color = AppColors.ganttTodayLine.withOpacity(0.3)
+      ..strokeWidth = GanttConstants.todayLineWidth + GanttConstants.todayLineGlowRadius
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+
+    canvas.drawLine(
+      Offset(lineX, 0),
+      Offset(lineX, size.height),
+      glowPaint,
+    );
+
+    // 今日ライン（太く強調）
     final linePaint = Paint()
       ..color = AppColors.ganttTodayLine
       ..strokeWidth = GanttConstants.todayLineWidth
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
-    final lineX = x + dayWidth / 2;
     canvas.drawLine(
       Offset(lineX, 0),
       Offset(lineX, size.height),

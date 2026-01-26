@@ -221,6 +221,7 @@ class _CommunicationSidebarState extends State<CommunicationSidebar>
                 onLoadMore: widget.onLoadMoreMessages,
                 isLoadingMore: widget.isLoadingMoreMessages,
                 hasMoreMessages: widget.hasMoreMessages,
+                autoFocusInput: widget.isOpen,
               ),
             ),
           ),
