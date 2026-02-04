@@ -13,6 +13,7 @@ import 'timeline_header.dart';
 import 'dependency_painter.dart';
 import 'enhanced_dependency_painter.dart';
 import 'dependency_connector.dart';
+import 'dependency_dialog.dart';
 import 'cascade_preview_painter.dart';
 
 /// Right panel showing the timeline grid and task bars
@@ -182,25 +183,48 @@ class _TimelinePanelState extends State<TimelinePanel> {
   /// Handle dependency drag update
   void _handleDependencyDragUpdate(Offset globalPosition) {
     final renderBox = context.findRenderObject() as RenderBox;
-    final localPosition = renderBox.globalToLocal(globalPosition);
+    var localPosition = renderBox.globalToLocal(globalPosition);
 
-    // Find hovered task
+    // Find hovered task and implement snapping
     String? hoveredTaskId;
+    Offset? snapPosition;
     final taskIndexMap = _buildTaskIndexMap();
+    const snapDistance = 30.0; // Distance at which snapping activates
+
     for (final task in widget.tasks) {
       final index = taskIndexMap[task.id];
       if (index == null) continue;
+      if (task.id == _dependencyDragController.sourceTaskId) continue;
+      if (!_dependencyDragController.isValidTarget(task.id)) continue;
 
       final taskBounds = _getTaskBounds(task, index);
-      if (taskBounds.contains(localPosition) &&
-          task.id != _dependencyDragController.sourceTaskId &&
-          _dependencyDragController.isValidTarget(task.id)) {
+
+      // Calculate the input connector position (left side center of task bar)
+      final inputConnectorX = taskBounds.left;
+      final inputConnectorY = taskBounds.top + taskBounds.height / 2;
+      final inputConnectorPos = Offset(inputConnectorX, inputConnectorY);
+
+      // Check distance to input connector for snapping
+      final distance = (localPosition - inputConnectorPos).distance;
+
+      if (distance < snapDistance) {
         hoveredTaskId = task.id;
+        snapPosition = inputConnectorPos;
+        break;
+      }
+
+      // Also check if cursor is within task bounds (wider hit area)
+      if (taskBounds.inflate(10).contains(localPosition)) {
+        hoveredTaskId = task.id;
+        snapPosition = inputConnectorPos;
         break;
       }
     }
 
-    _dependencyDragController.updateDrag(localPosition, hoveredTaskId: hoveredTaskId);
+    // Use snap position if available, otherwise use cursor position
+    final finalPosition = snapPosition ?? localPosition;
+
+    _dependencyDragController.updateDrag(finalPosition, hoveredTaskId: hoveredTaskId);
   }
 
   /// Handle dependency drag end
@@ -256,6 +280,18 @@ class _TimelinePanelState extends State<TimelinePanel> {
     final left = startOffset * widget.dayWidth;
     final top = index * GanttConstants.rowHeight;
     return Rect.fromLTWH(left, top, taskWidth, GanttConstants.rowHeight);
+  }
+
+  /// Build a map of task ID to bounds for the dependency drag painter
+  Map<String, Rect> _buildTaskBoundsMap(Map<String, int> taskIndexMap) {
+    final bounds = <String, Rect>{};
+    for (final task in widget.tasks) {
+      final index = taskIndexMap[task.id];
+      if (index != null) {
+        bounds[task.id] = _getTaskBounds(task, index);
+      }
+    }
+    return bounds;
   }
 
   void _syncHeaderScroll() {
@@ -515,6 +551,54 @@ class _TimelinePanelState extends State<TimelinePanel> {
                   preview: _cascadePreview!,
                   onCancel: _cancelDrag,
                 ),
+              // Dependency drag hint overlay
+              if (_dependencyDragState != null)
+                Positioned(
+                  bottom: 16,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.tooltipBackground,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.25),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _dependencyDragController.hoveredTaskId != null
+                                ? Icons.check_circle
+                                : Icons.link,
+                            color: _dependencyDragController.hoveredTaskId != null
+                                ? AppColors.constructionGreen
+                                : AppColors.industrialOrange,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            _dependencyDragController.hoveredTaskId != null
+                                ? '離して依存関係を作成'
+                                : 'タスクにドラッグして接続',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -643,18 +727,6 @@ class _TimelinePanelState extends State<TimelinePanel> {
               isDependencyDragActive: _dependencyDragController.isDragging &&
                   task.id != _dependencyDragController.sourceTaskId,
             ),
-            // Dependency drag line overlay (rendered in each row for proper stacking)
-            if (_dependencyDragState != null)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    painter: DependencyDragPainter(
-                      dragState: _dependencyDragState,
-                      taskBounds: {task.id: Rect.fromLTWH(leftPosition, 0, taskWidth, GanttConstants.rowHeight)},
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),

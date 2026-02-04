@@ -331,6 +331,66 @@ class DependencyDragPainter extends CustomPainter {
   }
 }
 
+/// Controller for managing dependency drag state across the timeline
+/// This is used to coordinate between TaskBars and the overlay
+class DependencyDragController extends ChangeNotifier {
+  DependencyDragState? _dragState;
+  String? _hoveredTaskId;
+  final Set<String> _validTargetIds = {};
+
+  DependencyDragState? get dragState => _dragState;
+  String? get hoveredTaskId => _hoveredTaskId;
+  bool get isDragging => _dragState != null;
+  String? get sourceTaskId => _dragState?.fromTaskId;
+
+  bool isValidTarget(String taskId) {
+    return _dragState != null &&
+        taskId != _dragState!.fromTaskId &&
+        _validTargetIds.contains(taskId);
+  }
+
+  void startDrag({
+    required String fromTaskId,
+    required ConnectorType fromConnector,
+    required Offset startPosition,
+    required Set<String> validTargetIds,
+  }) {
+    _validTargetIds.clear();
+    _validTargetIds.addAll(validTargetIds);
+    _dragState = DependencyDragState(
+      fromTaskId: fromTaskId,
+      fromConnector: fromConnector,
+      startPosition: startPosition,
+      currentPosition: startPosition,
+    );
+    notifyListeners();
+  }
+
+  void updateDrag(Offset position, {String? hoveredTaskId}) {
+    if (_dragState == null) return;
+    _dragState = _dragState!.copyWith(
+      currentPosition: position,
+      hoveredTaskId: hoveredTaskId,
+    );
+    _hoveredTaskId = hoveredTaskId;
+    notifyListeners();
+  }
+
+  void endDrag() {
+    _dragState = null;
+    _hoveredTaskId = null;
+    _validTargetIds.clear();
+    notifyListeners();
+  }
+
+  void setHoveredTask(String? taskId) {
+    if (_dragState == null) return;
+    _hoveredTaskId = taskId;
+    _dragState = _dragState!.copyWith(hoveredTaskId: taskId);
+    notifyListeners();
+  }
+}
+
 /// Widget that wraps the timeline to handle dependency creation
 class DependencyCreationLayer extends StatefulWidget {
   final List<Task> tasks;
@@ -343,10 +403,14 @@ class DependencyCreationLayer extends StatefulWidget {
   final Function(String fromTaskId, String toTaskId, DependencyType type, int lagDays)? onDependencyCreated;
   final Widget? child;
 
+  /// External drag controller for coordinating with TaskBars
+  final DependencyDragController? dragController;
+
   const DependencyCreationLayer({
     super.key,
     required this.tasks,
     this.taskIndexMap,
+    this.dragController,
     this.taskBounds,
     this.startDate,
     this.dayWidth,
@@ -363,6 +427,40 @@ class DependencyCreationLayer extends StatefulWidget {
 class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
   DependencyDragState? _dragState;
   String? _hoveredTaskId;
+  late DependencyDragController _internalController;
+
+  DependencyDragController get _controller =>
+      widget.dragController ?? _internalController;
+
+  @override
+  void initState() {
+    super.initState();
+    _internalController = DependencyDragController();
+    _controller.addListener(_onControllerChanged);
+  }
+
+  @override
+  void didUpdateWidget(DependencyCreationLayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.dragController != widget.dragController) {
+      oldWidget.dragController?.removeListener(_onControllerChanged);
+      _controller.addListener(_onControllerChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onControllerChanged);
+    _internalController.dispose();
+    super.dispose();
+  }
+
+  void _onControllerChanged() {
+    setState(() {
+      _dragState = _controller.dragState;
+      _hoveredTaskId = _controller.hoveredTaskId;
+    });
+  }
 
   /// Compute task bounds from parameters if not provided directly
   Map<String, Rect> _computeTaskBounds() {
