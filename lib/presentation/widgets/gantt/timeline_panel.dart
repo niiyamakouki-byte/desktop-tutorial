@@ -78,6 +78,11 @@ class _TimelinePanelState extends State<TimelinePanel> {
   late ScrollController _headerScrollController;
   String? _localHoveredTaskId;
 
+  // Dependency drag state
+  late DependencyDragController _dependencyDragController;
+  DependencyDragState? _dependencyDragState;
+  String? _dependencyDragSourceId;
+
   // Resize state tracking
   String? _resizingTaskId;
   double _resizeAccumulatedDelta = 0.0;
@@ -97,6 +102,10 @@ class _TimelinePanelState extends State<TimelinePanel> {
   void initState() {
     super.initState();
     _headerScrollController = ScrollController();
+
+    // Initialize dependency drag controller
+    _dependencyDragController = DependencyDragController();
+    _dependencyDragController.addListener(_onDependencyDragChanged);
 
     // Initialize cascade preview service
     _cascadePreviewService.initialize(
@@ -124,7 +133,129 @@ class _TimelinePanelState extends State<TimelinePanel> {
   void dispose() {
     widget.horizontalScrollController.removeListener(_syncHeaderScroll);
     _headerScrollController.dispose();
+    _dependencyDragController.removeListener(_onDependencyDragChanged);
+    _dependencyDragController.dispose();
     super.dispose();
+  }
+
+  void _onDependencyDragChanged() {
+    setState(() {
+      _dependencyDragState = _dependencyDragController.dragState;
+      _dependencyDragSourceId = _dependencyDragController.sourceTaskId;
+    });
+  }
+
+  /// Calculate valid target task IDs for dependency creation
+  Set<String> _computeValidTargets(String sourceTaskId) {
+    final validTargets = <String>{};
+    for (final task in widget.tasks) {
+      if (task.id == sourceTaskId) continue;
+      // Check for cycle using dependency service if available
+      if (widget.dependencyService != null) {
+        if (!widget.dependencyService!.wouldCreateCycle(sourceTaskId, task.id)) {
+          validTargets.add(task.id);
+        }
+      } else {
+        // Fallback: simple check
+        if (!task.dependsOn.contains(sourceTaskId)) {
+          validTargets.add(task.id);
+        }
+      }
+    }
+    return validTargets;
+  }
+
+  /// Handle dependency drag start from TaskBar
+  void _handleDependencyDragStart(Task task, Offset globalPosition) {
+    final renderBox = context.findRenderObject() as RenderBox;
+    final localPosition = renderBox.globalToLocal(globalPosition);
+    final validTargets = _computeValidTargets(task.id);
+
+    _dependencyDragController.startDrag(
+      fromTaskId: task.id,
+      fromConnector: ConnectorType.output,
+      startPosition: localPosition,
+      validTargetIds: validTargets,
+    );
+  }
+
+  /// Handle dependency drag update
+  void _handleDependencyDragUpdate(Offset globalPosition) {
+    final renderBox = context.findRenderObject() as RenderBox;
+    final localPosition = renderBox.globalToLocal(globalPosition);
+
+    // Find hovered task
+    String? hoveredTaskId;
+    final taskIndexMap = _buildTaskIndexMap();
+    for (final task in widget.tasks) {
+      final index = taskIndexMap[task.id];
+      if (index == null) continue;
+
+      final taskBounds = _getTaskBounds(task, index);
+      if (taskBounds.contains(localPosition) &&
+          task.id != _dependencyDragController.sourceTaskId &&
+          _dependencyDragController.isValidTarget(task.id)) {
+        hoveredTaskId = task.id;
+        break;
+      }
+    }
+
+    _dependencyDragController.updateDrag(localPosition, hoveredTaskId: hoveredTaskId);
+  }
+
+  /// Handle dependency drag end
+  Future<void> _handleDependencyDragEnd(Task? targetTask) async {
+    final hoveredTaskId = _dependencyDragController.hoveredTaskId;
+    final sourceTaskId = _dependencyDragController.sourceTaskId;
+
+    if (hoveredTaskId != null && sourceTaskId != null) {
+      final fromTask = widget.tasks.firstWhere(
+        (t) => t.id == sourceTaskId,
+        orElse: () => widget.tasks.first,
+      );
+      final toTask = widget.tasks.firstWhere(
+        (t) => t.id == hoveredTaskId,
+        orElse: () => widget.tasks.first,
+      );
+
+      _dependencyDragController.endDrag();
+
+      // Show dependency type selection dialog
+      final result = await DependencyDialog.show(
+        context: context,
+        fromTask: fromTask,
+        toTask: toTask,
+      );
+
+      if (result != null) {
+        widget.onDependencyCreated?.call(
+          sourceTaskId,
+          hoveredTaskId,
+          result.type,
+          result.lagDays,
+        );
+      }
+    } else {
+      _dependencyDragController.endDrag();
+    }
+  }
+
+  Map<String, int> _buildTaskIndexMap() {
+    final map = <String, int>{};
+    for (var i = 0; i < widget.tasks.length; i++) {
+      map[widget.tasks[i].id] = i;
+    }
+    return map;
+  }
+
+  Rect _getTaskBounds(Task task, int index) {
+    final startOffset = task.startDate.difference(widget.startDate).inDays;
+    final taskWidth = task.isMilestone
+        ? GanttConstants.milestoneSize
+        : task.durationDays * widget.dayWidth;
+    final left = startOffset * widget.dayWidth;
+    final top = index * GanttConstants.rowHeight;
+    return Rect.fromLTWH(left, top, taskWidth, GanttConstants.rowHeight);
   }
 
   void _syncHeaderScroll() {
@@ -290,6 +421,14 @@ class _TimelinePanelState extends State<TimelinePanel> {
     final totalWidth = totalDays * widget.dayWidth;
     final totalHeight = widget.tasks.length * GanttConstants.rowHeight;
 
+    // Build task index map for cascade preview painter
+    final taskIndexMap = <String, int>{};
+    final taskMap = <String, Task>{};
+    for (var i = 0; i < widget.tasks.length; i++) {
+      taskIndexMap[widget.tasks[i].id] = i;
+      taskMap[widget.tasks[i].id] = widget.tasks[i];
+    }
+
     return Column(
       children: [
         // Timeline header
@@ -300,39 +439,83 @@ class _TimelinePanelState extends State<TimelinePanel> {
           scrollController: _headerScrollController,
           viewMode: widget.viewMode,
         ),
-        // Timeline body
+        // Timeline body with cascade preview overlay
         Expanded(
-          child: Listener(
-            onPointerSignal: (event) {
-              if (event is PointerScrollEvent) {
-                // Handle horizontal scroll with shift key or horizontal scroll
-                if (event.scrollDelta.dx != 0) {
-                  final newOffset = widget.horizontalScrollController.offset +
-                      event.scrollDelta.dx;
-                  widget.horizontalScrollController.jumpTo(
-                    newOffset.clamp(
-                      0.0,
-                      widget.horizontalScrollController.position.maxScrollExtent,
+          child: Stack(
+            children: [
+              // Main timeline content
+              Listener(
+                onPointerSignal: (event) {
+                  if (event is PointerScrollEvent) {
+                    // Handle horizontal scroll with shift key or horizontal scroll
+                    if (event.scrollDelta.dx != 0) {
+                      final newOffset = widget.horizontalScrollController.offset +
+                          event.scrollDelta.dx;
+                      widget.horizontalScrollController.jumpTo(
+                        newOffset.clamp(
+                          0.0,
+                          widget.horizontalScrollController.position.maxScrollExtent,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: SingleChildScrollView(
+                  controller: widget.horizontalScrollController,
+                  scrollDirection: Axis.horizontal,
+                  physics: GanttConstants.scrollPhysics,
+                  child: SizedBox(
+                    width: totalWidth,
+                    child: Stack(
+                      children: [
+                        // Task rows
+                        ListView.builder(
+                          controller: widget.verticalScrollController,
+                          itemCount: widget.tasks.length,
+                          itemBuilder: (context, index) {
+                            return _buildTimelineRow(index, totalWidth);
+                          },
+                        ),
+                        // Cascade preview overlay (above task bars)
+                        if (_cascadePreview != null && _draggingTaskId != null)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                painter: CascadePreviewPainter(
+                                  preview: _cascadePreview!,
+                                  taskIndexMap: taskIndexMap,
+                                  startDate: widget.startDate,
+                                  dayWidth: widget.dayWidth,
+                                  rowHeight: GanttConstants.rowHeight,
+                                  taskMap: taskMap,
+                                ),
+                              ),
+                            ),
+                          ),
+                        // Dependency drag line overlay (bezier curve)
+                        if (_dependencyDragState != null)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                painter: DependencyDragPainter(
+                                  dragState: _dependencyDragState,
+                                  taskBounds: _buildTaskBoundsMap(taskIndexMap),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  );
-                }
-              }
-            },
-            child: SingleChildScrollView(
-              controller: widget.horizontalScrollController,
-              scrollDirection: Axis.horizontal,
-              physics: GanttConstants.scrollPhysics,
-              child: SizedBox(
-                width: totalWidth,
-                child: ListView.builder(
-                  controller: widget.verticalScrollController,
-                  itemCount: widget.tasks.length,
-                  itemBuilder: (context, index) {
-                    return _buildTimelineRow(index, totalWidth);
-                  },
+                  ),
                 ),
               ),
-            ),
+              // Cascade preview info overlay (fixed position)
+              if (_cascadePreview != null && _cascadePreview!.cascadeCount > 0)
+                CascadePreviewOverlay(
+                  preview: _cascadePreview!,
+                  onCancel: _cancelDrag,
+                ),
+            ],
           ),
         ),
       ],
@@ -415,7 +598,7 @@ class _TimelinePanelState extends State<TimelinePanel> {
                 dayWidth: widget.dayWidth,
               ),
             ),
-            // Task bar with phase color support and resize handles
+            // Task bar with phase color support, drag, resize handles, and dependency connectors
             TaskBar(
               task: task,
               left: leftPosition,
@@ -424,6 +607,13 @@ class _TimelinePanelState extends State<TimelinePanel> {
               onTap: () => widget.onTaskTap?.call(task),
               phase: task.phaseId != null ? widget.phaseMap[task.phaseId] : null,
               usePhaseColor: widget.usePhaseColors,
+              // Drag callbacks for task move with cascade preview
+              onDragUpdate: widget.onTaskDateChange != null
+                  ? (details) => _updateDrag(task, details.delta.dx)
+                  : null,
+              onDragEnd: widget.onTaskDateChange != null
+                  ? (details) => _endDrag(task)
+                  : null,
               // Resize callbacks for start date (left handle)
               onResizeStartUpdate: widget.onTaskDateChange != null
                   ? (delta) => _updateResize(task, delta, true)
@@ -438,7 +628,33 @@ class _TimelinePanelState extends State<TimelinePanel> {
               onResizeEndEnd: widget.onTaskDateChange != null
                   ? () => _endResize(task)
                   : null,
+              // Dependency drag callbacks
+              showDependencyHandle: widget.enableDependencyCreation,
+              onDependencyDragStart: widget.enableDependencyCreation
+                  ? _handleDependencyDragStart
+                  : null,
+              onDependencyDragUpdate: widget.enableDependencyCreation
+                  ? _handleDependencyDragUpdate
+                  : null,
+              onDependencyDragEnd: widget.enableDependencyCreation
+                  ? _handleDependencyDragEnd
+                  : null,
+              isValidDropTarget: _dependencyDragController.isValidTarget(task.id),
+              isDependencyDragActive: _dependencyDragController.isDragging &&
+                  task.id != _dependencyDragController.sourceTaskId,
             ),
+            // Dependency drag line overlay (rendered in each row for proper stacking)
+            if (_dependencyDragState != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: DependencyDragPainter(
+                      dragState: _dependencyDragState,
+                      taskBounds: {task.id: Rect.fromLTWH(leftPosition, 0, taskWidth, GanttConstants.rowHeight)},
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
