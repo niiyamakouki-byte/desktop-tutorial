@@ -6,12 +6,14 @@ import '../../../data/models/models.dart';
 import '../../../data/models/dependency_model.dart';
 import '../../../data/models/phase_model.dart';
 import '../../../data/services/dependency_service.dart';
+import '../../../data/services/drag_cascade_preview_service.dart';
 import 'gantt_constants.dart';
 import 'task_row.dart';
 import 'timeline_header.dart';
 import 'dependency_painter.dart';
 import 'enhanced_dependency_painter.dart';
 import 'dependency_connector.dart';
+import 'cascade_preview_painter.dart';
 
 /// Right panel showing the timeline grid and task bars
 class TimelinePanel extends StatefulWidget {
@@ -76,13 +78,46 @@ class _TimelinePanelState extends State<TimelinePanel> {
   late ScrollController _headerScrollController;
   String? _localHoveredTaskId;
 
+  // Resize state tracking
+  String? _resizingTaskId;
+  double _resizeAccumulatedDelta = 0.0;
+  DateTime? _resizeOriginalStart;
+  DateTime? _resizeOriginalEnd;
+  bool _isResizingStart = false; // true = resizing start date, false = resizing end date
+
+  // Drag state tracking (for task move with cascade preview)
+  String? _draggingTaskId;
+  double _dragAccumulatedDelta = 0.0;
+  DateTime? _dragOriginalStart;
+  DateTime? _dragOriginalEnd;
+  DragCascadePreviewResult? _cascadePreview;
+  final DragCascadePreviewService _cascadePreviewService = DragCascadePreviewService();
+
   @override
   void initState() {
     super.initState();
     _headerScrollController = ScrollController();
 
+    // Initialize cascade preview service
+    _cascadePreviewService.initialize(
+      tasks: widget.tasks,
+      dependencies: widget.dependencies,
+    );
+
     // Sync header scroll with main scroll
     widget.horizontalScrollController.addListener(_syncHeaderScroll);
+  }
+  
+  @override
+  void didUpdateWidget(TimelinePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update cascade preview service when tasks or dependencies change
+    if (widget.tasks != oldWidget.tasks) {
+      _cascadePreviewService.updateTasks(widget.tasks);
+    }
+    if (widget.dependencies != oldWidget.dependencies) {
+      _cascadePreviewService.updateDependencies(widget.dependencies);
+    }
   }
 
   @override
@@ -96,6 +131,157 @@ class _TimelinePanelState extends State<TimelinePanel> {
     if (_headerScrollController.hasClients) {
       _headerScrollController.jumpTo(widget.horizontalScrollController.offset);
     }
+  }
+
+  /// Start tracking resize for a task
+  void _startResize(Task task, bool isStart) {
+    setState(() {
+      _resizingTaskId = task.id;
+      _resizeAccumulatedDelta = 0.0;
+      _resizeOriginalStart = task.startDate;
+      _resizeOriginalEnd = task.endDate;
+      _isResizingStart = isStart;
+    });
+  }
+
+  /// Update resize with accumulated delta (snaps to days)
+  void _updateResize(Task task, double delta, bool isStart) {
+    if (_resizingTaskId != task.id) {
+      _startResize(task, isStart);
+    }
+
+    _resizeAccumulatedDelta += delta;
+
+    // Calculate number of days to adjust (snap to day boundaries)
+    final daysDelta = (_resizeAccumulatedDelta / widget.dayWidth).round();
+
+    if (daysDelta != 0 && _resizeOriginalStart != null && _resizeOriginalEnd != null) {
+      DateTime newStart = _resizeOriginalStart!;
+      DateTime newEnd = _resizeOriginalEnd!;
+
+      if (isStart) {
+        // Resizing start date (left handle)
+        newStart = _resizeOriginalStart!.add(Duration(days: daysDelta));
+        // Ensure start doesn't go past end
+        if (newStart.isAfter(newEnd.subtract(const Duration(days: 1)))) {
+          newStart = newEnd.subtract(const Duration(days: 1));
+        }
+      } else {
+        // Resizing end date (right handle)
+        newEnd = _resizeOriginalEnd!.add(Duration(days: daysDelta));
+        // Ensure end doesn't go before start
+        if (newEnd.isBefore(newStart.add(const Duration(days: 1)))) {
+          newEnd = newStart.add(const Duration(days: 1));
+        }
+      }
+
+      // Call the callback to update the task
+      widget.onTaskDateChange?.call(task, newStart, newEnd);
+    }
+  }
+
+  /// End resize operation
+  void _endResize(Task task) {
+    // Reset resize state
+    setState(() {
+      _resizingTaskId = null;
+      _resizeAccumulatedDelta = 0.0;
+      _resizeOriginalStart = null;
+      _resizeOriginalEnd = null;
+    });
+  }
+
+  /// Start tracking drag for a task (whole task move)
+  void _startDrag(Task task) {
+    setState(() {
+      _draggingTaskId = task.id;
+      _dragAccumulatedDelta = 0.0;
+      _dragOriginalStart = task.startDate;
+      _dragOriginalEnd = task.endDate;
+      _cascadePreview = null;
+    });
+    _cascadePreviewService.startDrag(task.id);
+  }
+
+  /// Update drag with accumulated delta and calculate cascade preview
+  void _updateDrag(Task task, double delta) {
+    if (_draggingTaskId != task.id) {
+      _startDrag(task);
+    }
+
+    _dragAccumulatedDelta += delta;
+
+    // Calculate number of days to adjust
+    final daysDelta = (_dragAccumulatedDelta / widget.dayWidth).round();
+
+    if (_dragOriginalStart != null && _dragOriginalEnd != null) {
+      // Calculate cascade preview
+      final preview = _cascadePreviewService.calculatePreview(
+        taskId: task.id,
+        deltaDays: daysDelta,
+      );
+      
+      setState(() {
+        _cascadePreview = preview;
+      });
+    }
+  }
+
+  /// End drag operation and apply changes
+  void _endDrag(Task task) {
+    if (_draggingTaskId != task.id) return;
+
+    // Calculate final day delta
+    final daysDelta = (_dragAccumulatedDelta / widget.dayWidth).round();
+
+    if (daysDelta != 0 && _dragOriginalStart != null && _dragOriginalEnd != null) {
+      final newStart = _dragOriginalStart!.add(Duration(days: daysDelta));
+      final newEnd = _dragOriginalEnd!.add(Duration(days: daysDelta));
+
+      // Apply changes to the dragged task
+      widget.onTaskDateChange?.call(task, newStart, newEnd);
+
+      // Apply cascade changes to successor tasks
+      if (_cascadePreview != null) {
+        for (final preview in _cascadePreview!.cascadedPreviews) {
+          if (preview.hasChange) {
+            final cascadedTask = widget.tasks.firstWhere(
+              (t) => t.id == preview.taskId,
+              orElse: () => task,
+            );
+            if (cascadedTask.id != task.id) {
+              widget.onTaskDateChange?.call(
+                cascadedTask,
+                preview.previewStart,
+                preview.previewEnd,
+              );
+            }
+          }
+        }
+      }
+    }
+
+    // Reset drag state
+    setState(() {
+      _draggingTaskId = null;
+      _dragAccumulatedDelta = 0.0;
+      _dragOriginalStart = null;
+      _dragOriginalEnd = null;
+      _cascadePreview = null;
+    });
+    _cascadePreviewService.endDrag();
+  }
+
+  /// Cancel drag without applying changes
+  void _cancelDrag() {
+    setState(() {
+      _draggingTaskId = null;
+      _dragAccumulatedDelta = 0.0;
+      _dragOriginalStart = null;
+      _dragOriginalEnd = null;
+      _cascadePreview = null;
+    });
+    _cascadePreviewService.endDrag();
   }
 
   @override
@@ -229,7 +415,7 @@ class _TimelinePanelState extends State<TimelinePanel> {
                 dayWidth: widget.dayWidth,
               ),
             ),
-            // Task bar with phase color support
+            // Task bar with phase color support and resize handles
             TaskBar(
               task: task,
               left: leftPosition,
@@ -238,6 +424,20 @@ class _TimelinePanelState extends State<TimelinePanel> {
               onTap: () => widget.onTaskTap?.call(task),
               phase: task.phaseId != null ? widget.phaseMap[task.phaseId] : null,
               usePhaseColor: widget.usePhaseColors,
+              // Resize callbacks for start date (left handle)
+              onResizeStartUpdate: widget.onTaskDateChange != null
+                  ? (delta) => _updateResize(task, delta, true)
+                  : null,
+              onResizeStartEnd: widget.onTaskDateChange != null
+                  ? () => _endResize(task)
+                  : null,
+              // Resize callbacks for end date (right handle)
+              onResizeEndUpdate: widget.onTaskDateChange != null
+                  ? (delta) => _updateResize(task, delta, false)
+                  : null,
+              onResizeEndEnd: widget.onTaskDateChange != null
+                  ? () => _endResize(task)
+                  : null,
             ),
           ],
         ),

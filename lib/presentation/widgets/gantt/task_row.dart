@@ -583,6 +583,14 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
   }
 }
 
+/// Enum to track which resize handle is being dragged
+enum ResizeHandle { none, start, end }
+
+/// Callback signature for dependency drag events
+typedef OnDependencyDragStart = void Function(Task task, Offset globalPosition);
+typedef OnDependencyDragUpdate = void Function(Offset globalPosition);
+typedef OnDependencyDragEnd = void Function(Task? targetTask);
+
 /// Task bar component for the timeline panel
 class TaskBar extends StatefulWidget {
   final Task task;
@@ -593,11 +601,41 @@ class TaskBar extends StatefulWidget {
   final Function(DragUpdateDetails)? onDragUpdate;
   final Function(DragEndDetails)? onDragEnd;
 
+  /// Callback when start date is being resized (left handle)
+  /// The double parameter represents the delta in pixels
+  final Function(double delta)? onResizeStartUpdate;
+  final VoidCallback? onResizeStartEnd;
+
+  /// Callback when end date is being resized (right handle)
+  /// The double parameter represents the delta in pixels
+  final Function(double delta)? onResizeEndUpdate;
+  final VoidCallback? onResizeEndEnd;
+
   /// Phase information for color coding (if available)
   final Phase? phase;
 
   /// Whether to use phase-based coloring
   final bool usePhaseColor;
+
+  // === Dependency drag handle parameters ===
+
+  /// Whether to show the dependency connector handle on hover
+  final bool showDependencyHandle;
+
+  /// Callback when dependency drag starts from this task's output connector
+  final OnDependencyDragStart? onDependencyDragStart;
+
+  /// Callback when dependency drag updates
+  final OnDependencyDragUpdate? onDependencyDragUpdate;
+
+  /// Callback when dependency drag ends
+  final OnDependencyDragEnd? onDependencyDragEnd;
+
+  /// Whether this task is a valid drop target for dependency creation
+  final bool isValidDropTarget;
+
+  /// Whether a dependency drag is active from another task
+  final bool isDependencyDragActive;
 
   const TaskBar({
     super.key,
@@ -608,8 +646,18 @@ class TaskBar extends StatefulWidget {
     this.onTap,
     this.onDragUpdate,
     this.onDragEnd,
+    this.onResizeStartUpdate,
+    this.onResizeStartEnd,
+    this.onResizeEndUpdate,
+    this.onResizeEndEnd,
     this.phase,
     this.usePhaseColor = true,
+    this.showDependencyHandle = true,
+    this.onDependencyDragStart,
+    this.onDependencyDragUpdate,
+    this.onDependencyDragEnd,
+    this.isValidDropTarget = false,
+    this.isDependencyDragActive = false,
   });
 
   @override
@@ -618,9 +666,21 @@ class TaskBar extends StatefulWidget {
 
 class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
   bool _isHovered = false;
+  bool _isStartHandleHovered = false;
+  bool _isEndHandleHovered = false;
+  bool _isDependencyHandleHovered = false;
+  bool _isDependencyDragging = false;
+  ResizeHandle _activeResize = ResizeHandle.none;
   late AnimationController _hoverController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
+
+  /// Width of the resize handle hit area
+  static const double _handleWidth = 12.0;
+  /// Visual width of the handle indicator
+  static const double _handleIndicatorWidth = 4.0;
+  /// Size of the dependency connector handle
+  static const double _dependencyHandleSize = 14.0;
 
   @override
   void initState() {
@@ -649,7 +709,11 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
   }
 
   void _onHoverEnd() {
-    setState(() => _isHovered = false);
+    setState(() {
+      _isHovered = false;
+      _isStartHandleHovered = false;
+      _isEndHandleHovered = false;
+    });
     _hoverController.reverse();
   }
 
@@ -663,10 +727,217 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
     return AppColors.getCategoryColor(widget.task.category);
   }
 
+  /// Build a resize handle widget
+  Widget _buildResizeHandle({
+    required bool isStart,
+    required bool isHovered,
+    required Color barColor,
+  }) {
+    final isActive = (isStart && _activeResize == ResizeHandle.start) ||
+        (!isStart && _activeResize == ResizeHandle.end);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeLeftRight,
+      onEnter: (_) {
+        setState(() {
+          if (isStart) {
+            _isStartHandleHovered = true;
+          } else {
+            _isEndHandleHovered = true;
+          }
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          if (isStart) {
+            _isStartHandleHovered = false;
+          } else {
+            _isEndHandleHovered = false;
+          }
+        });
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragStart: (_) {
+          setState(() {
+            _activeResize = isStart ? ResizeHandle.start : ResizeHandle.end;
+          });
+        },
+        onHorizontalDragUpdate: (details) {
+          if (isStart) {
+            widget.onResizeStartUpdate?.call(details.delta.dx);
+          } else {
+            widget.onResizeEndUpdate?.call(details.delta.dx);
+          }
+        },
+        onHorizontalDragEnd: (_) {
+          setState(() => _activeResize = ResizeHandle.none);
+          if (isStart) {
+            widget.onResizeStartEnd?.call();
+          } else {
+            widget.onResizeEndEnd?.call();
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: _handleWidth,
+          height: GanttConstants.taskBarHeight,
+          alignment: isStart ? Alignment.centerLeft : Alignment.centerRight,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: _handleIndicatorWidth,
+            height: isHovered || isActive
+                ? GanttConstants.taskBarHeight - 4
+                : GanttConstants.taskBarHeight - 12,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? Colors.white
+                  : (isHovered
+                      ? Colors.white.withOpacity(0.9)
+                      : Colors.white.withOpacity(0.5)),
+              borderRadius: BorderRadius.circular(2),
+              boxShadow: isActive || isHovered
+                  ? [
+                      BoxShadow(
+                        color: barColor.withOpacity(0.5),
+                        blurRadius: 4,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build the dependency connector handle (small circle at right edge)
+  Widget _buildDependencyHandle(Color barColor) {
+    final isActive = _isDependencyDragging;
+    final showHandle = _isHovered || isActive || widget.isDependencyDragActive;
+
+    // Pulse animation for valid drop target
+    final isPulsingTarget = widget.isValidDropTarget;
+
+    return Positioned(
+      right: -_dependencyHandleSize / 2 - 2,
+      top: (GanttConstants.taskBarHeight - _dependencyHandleSize) / 2,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.grab,
+        onEnter: (_) => setState(() => _isDependencyHandleHovered = true),
+        onExit: (_) => setState(() => _isDependencyHandleHovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onPanStart: (details) {
+            setState(() => _isDependencyDragging = true);
+            widget.onDependencyDragStart?.call(widget.task, details.globalPosition);
+          },
+          onPanUpdate: (details) {
+            widget.onDependencyDragUpdate?.call(details.globalPosition);
+          },
+          onPanEnd: (details) {
+            setState(() => _isDependencyDragging = false);
+            widget.onDependencyDragEnd?.call(null);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: _dependencyHandleSize * (showHandle ? 1.2 : 0.8),
+            height: _dependencyHandleSize * (showHandle ? 1.2 : 0.8),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? AppColors.industrialOrange
+                  : (_isDependencyHandleHovered
+                      ? AppColors.industrialOrange.withOpacity(0.9)
+                      : barColor.withOpacity(showHandle ? 0.8 : 0.5)),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: showHandle ? 2.0 : 1.0,
+              ),
+              boxShadow: showHandle
+                  ? [
+                      BoxShadow(
+                        color: (isActive ? AppColors.industrialOrange : barColor)
+                            .withOpacity(0.4),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: showHandle
+                ? const Center(
+                    child: Icon(
+                      Icons.arrow_forward,
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                  )
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build the input connector indicator (left side, for drop target)
+  Widget _buildInputConnectorIndicator() {
+    if (!widget.isValidDropTarget) return const SizedBox.shrink();
+
+    return Positioned(
+      left: -_dependencyHandleSize / 2 - 2,
+      top: (GanttConstants.taskBarHeight - _dependencyHandleSize) / 2,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 1.0, end: 1.3),
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+        builder: (context, scale, child) {
+          return Transform.scale(
+            scale: scale,
+            child: Container(
+              width: _dependencyHandleSize,
+              height: _dependencyHandleSize,
+              decoration: BoxDecoration(
+                color: AppColors.constructionGreen,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 2.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.constructionGreen.withOpacity(0.5),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.arrow_back,
+                  size: 10,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          );
+        },
+        onEnd: () {
+          // Restart animation
+          if (mounted && widget.isValidDropTarget) {
+            setState(() {});
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColor = AppColors.getTaskStatusColor(widget.task.status);
     final barColor = _getTaskBarColor();
+    final isResizing = _activeResize != ResizeHandle.none;
 
     // For milestones, render a diamond
     if (widget.task.isMilestone) {
@@ -681,38 +952,41 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
         onExit: (_) => _onHoverEnd(),
         child: GestureDetector(
           onTap: widget.onTap,
-          onPanUpdate: widget.onDragUpdate,
-          onPanEnd: widget.onDragEnd,
+          onPanUpdate: isResizing ? null : widget.onDragUpdate,
+          onPanEnd: isResizing ? null : widget.onDragEnd,
           child: AnimatedBuilder(
             animation: _hoverController,
             builder: (context, child) {
               return Transform.scale(
                 scale: widget.isSelected ? 1.03 : _scaleAnimation.value,
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
                   width: widget.width.clamp(GanttConstants.minTaskBarWidth, double.infinity),
                   height: GanttConstants.taskBarHeight,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        barColor.withOpacity(0.9),
-                        barColor.withOpacity(0.75),
+                        barColor.withOpacity(isResizing ? 1.0 : 0.9),
+                        barColor.withOpacity(isResizing ? 0.85 : 0.75),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
                     borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
                     border: Border.all(
-                      color: widget.isSelected
-                          ? AppColors.primary
-                          : barColor.withOpacity(0.3 + _glowAnimation.value * 0.5),
-                      width: widget.isSelected ? 2.5 : 1 + _glowAnimation.value,
+                      color: isResizing
+                          ? Colors.white
+                          : (widget.isSelected
+                              ? AppColors.primary
+                              : barColor.withOpacity(0.3 + _glowAnimation.value * 0.5)),
+                      width: isResizing ? 2.0 : (widget.isSelected ? 2.5 : 1 + _glowAnimation.value),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: barColor.withOpacity(0.15 + _glowAnimation.value * 0.25),
-                        blurRadius: 4 + _glowAnimation.value * 8,
-                        spreadRadius: _glowAnimation.value * 2,
-                        offset: Offset(0, 2 + _glowAnimation.value * 2),
+                        color: barColor.withOpacity(isResizing ? 0.5 : 0.15 + _glowAnimation.value * 0.25),
+                        blurRadius: isResizing ? 12 : 4 + _glowAnimation.value * 8,
+                        spreadRadius: isResizing ? 3 : _glowAnimation.value * 2,
+                        offset: Offset(0, isResizing ? 4 : 2 + _glowAnimation.value * 2),
                       ),
                       if (widget.isSelected)
                         BoxShadow(
@@ -723,106 +997,137 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                     ],
                   ),
                   child: ClipRRect(
-              borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
-              child: Stack(
-                children: [
-                  // Progress fill
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: widget.width * widget.task.progress,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(GanttConstants.progressOpacity),
-                      ),
-                    ),
-                  ),
-                  // Task name (only show if bar is wide enough)
-                  if (widget.width > 60)
-                    Positioned.fill(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            widget.task.name,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Progress percentage (right side)
-                  if (widget.width > 80)
-                    Positioned(
-                      right: 6,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: Text(
-                            '${(widget.task.progress * 100).round()}%',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                    borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Progress fill
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: widget.width * widget.task.progress,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(GanttConstants.progressOpacity),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  // 遅延インジケーター（⚠ +Xd形式）
-                  if (widget.task.delayStatus == DelayStatus.overdue)
-                    Positioned(
-                      right: widget.width > 80 ? 40 : 4,
-                      top: -8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          borderRadius: BorderRadius.circular(4),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.error.withOpacity(0.4),
-                              blurRadius: 4,
-                              spreadRadius: 0,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('⚠', style: TextStyle(fontSize: 9)),
-                            const SizedBox(width: 2),
-                            Text(
-                              '+${widget.task.daysOverdue}d',
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                        // Task name (only show if bar is wide enough)
+                        if (widget.width > 60)
+                          Positioned.fill(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  widget.task.name,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        // Progress percentage (right side)
+                        if (widget.width > 80)
+                          Positioned(
+                            right: 14,
+                            top: 0,
+                            bottom: 0,
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: Text(
+                                  '${(widget.task.progress * 100).round()}%',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        // 遅延インジケーター（⚠ +Xd形式）
+                        if (widget.task.delayStatus == DelayStatus.overdue)
+                          Positioned(
+                            right: widget.width > 80 ? 48 : 4,
+                            top: -8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.error,
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.error.withOpacity(0.4),
+                                    blurRadius: 4,
+                                    spreadRadius: 0,
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('⚠', style: TextStyle(fontSize: 9)),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '+${widget.task.daysOverdue}d',
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        // Left resize handle (start date)
+                        if (_isHovered || isResizing)
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            child: _buildResizeHandle(
+                              isStart: true,
+                              isHovered: _isStartHandleHovered,
+                              barColor: barColor,
+                            ),
+                          ),
+                        // Right resize handle (end date)
+                        if (_isHovered || isResizing)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            child: _buildResizeHandle(
+                              isStart: false,
+                              isHovered: _isEndHandleHovered,
+                              barColor: barColor,
+                            ),
+                          ),
+                        // Dependency output connector (right side, for creating dependencies)
+                        if (widget.showDependencyHandle && (_isHovered || _isDependencyDragging || widget.isDependencyDragActive))
+                          _buildDependencyHandle(barColor),
+                        // Dependency input connector indicator (left side, shown when valid drop target)
+                        if (widget.isValidDropTarget)
+                          _buildInputConnectorIndicator(),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
+              );
+            },
           ),
         ),
       ),
