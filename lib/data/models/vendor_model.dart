@@ -8,7 +8,7 @@ enum TradeCategory {
   plumbing('plumbing', '給排水設備', Icons.water_drop),
   hvac('hvac', '空調設備', Icons.ac_unit),
   roofing('roofing', '屋根工事', Icons.roofing),
-  exterior('exterior', '外装工事', Icons.wall),
+  exterior('exterior', '外装工事', Icons.business),
   interior('interior', '内装工事', Icons.format_paint),
   painting('painting', '塗装工事', Icons.brush),
   flooring('flooring', '床工事', Icons.grid_on),
