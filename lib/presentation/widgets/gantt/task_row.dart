@@ -38,6 +38,7 @@ class TaskRow extends StatefulWidget {
 
 class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
   bool _isHovered = false;
+  bool _isTaskNameExpanded = false; // Add this line
   late AnimationController _expandController;
   late Animation<double> _expandAnimation;
 
@@ -158,17 +159,69 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
         Row(
           children: [
             Expanded(
-              child: Text(
-                widget.task.name,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: widget.task.level == 0
-                      ? FontWeight.w600
-                      : FontWeight.w500,
-                  color: AppColors.textPrimary,
+              child: GestureDetector(
+                onTap: () {
+                  // Calculate if text exceeds max lines for 'more' button visibility
+                  final textPainter = TextPainter(
+                    text: TextSpan(
+                      text: widget.task.name,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: widget.task.level == 0 ? FontWeight.w600 : FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    maxLines: 1,
+                    textDirection: TextDirection.ltr,
+                  )..layout(maxWidth: MediaQuery.of(context).size.width * 0.4); // Adjust maxWidth as needed
+
+                  if (textPainter.didExceedMaxLines) {
+                    setState(() {
+                      _isTaskNameExpanded = !_isTaskNameExpanded;
+                    });
+                  }
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.task.name,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: widget.task.level == 0
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: _isTaskNameExpanded ? null : 1,
+                      overflow: _isTaskNameExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                    ),
+                    // Show 'more'/'less' button only if text actually overflows
+                    if (TextPainter(
+                      text: TextSpan(
+                        text: widget.task.name,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: widget.task.level == 0 ? FontWeight.w600 : FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      maxLines: 1,
+                      textDirection: TextDirection.ltr,
+                    )..layout(maxWidth: MediaQuery.of(context).size.width * 0.4)).didExceedMaxLines)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.0),
+                        child: Text(
+                          _isTaskNameExpanded ? '▲ 閉じる' : '▼ もっと見る',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
