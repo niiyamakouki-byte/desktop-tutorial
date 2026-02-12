@@ -151,6 +151,22 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
 
   /// 強化版タスク情報（期限・担当者を含む）
   Widget _buildTaskInfoEnhanced(Color categoryColor, DelayStatus delayStatus) {
+    // Calculate if text exceeds max lines for 'more' button visibility
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: widget.task.name,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: widget.task.level == 0 ? FontWeight.w600 : FontWeight.w500,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: MediaQuery.of(context).size.width * 0.4); // Adjust maxWidth as needed
+
+    final showExpandCollapseButton = textPainter.didExceedMaxLines;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -161,21 +177,7 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  // Calculate if text exceeds max lines for 'more' button visibility
-                  final textPainter = TextPainter(
-                    text: TextSpan(
-                      text: widget.task.name,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: widget.task.level == 0 ? FontWeight.w600 : FontWeight.w500,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    maxLines: 1,
-                    textDirection: TextDirection.ltr,
-                  )..layout(maxWidth: MediaQuery.of(context).size.width * 0.4); // Adjust maxWidth as needed
-
-                  if (textPainter.didExceedMaxLines) {
+                  if (showExpandCollapseButton) {
                     setState(() {
                       _isTaskNameExpanded = !_isTaskNameExpanded;
                     });
