@@ -1,7 +1,7 @@
 name: construction_project_manager
 description: A comprehensive construction project management app with Gantt chart, task management, and team communication features.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
