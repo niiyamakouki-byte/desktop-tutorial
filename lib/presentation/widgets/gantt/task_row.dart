@@ -196,19 +196,7 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
                       maxLines: _isTaskNameExpanded ? null : 1,
                       overflow: _isTaskNameExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                     ),
-                    // Show 'more'/'less' button only if text actually overflows
-                    if (TextPainter(
-                      text: TextSpan(
-                        text: widget.task.name,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: widget.task.level == 0 ? FontWeight.w600 : FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      maxLines: 1,
-                      textDirection: TextDirection.ltr,
-                    )..layout(maxWidth: MediaQuery.of(context).size.width * 0.4)).didExceedMaxLines)
+                    if (showExpandCollapseButton)
                       Padding(
                         padding: const EdgeInsets.only(top: 2.0),
                         child: Text(
