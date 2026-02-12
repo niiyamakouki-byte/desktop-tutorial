@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
@@ -477,10 +478,22 @@ class _TimelinePanelState extends State<TimelinePanel> {
         ),
         // Timeline body with cascade preview overlay
         Expanded(
-          child: Stack(
-            children: [
-              // Main timeline content
-              Listener(
+          child: Focus(
+            autofocus: true,
+            onKeyEvent: (node, event) {
+              // Cancel dependency drag with Escape key
+              if (event is KeyDownEvent &&
+                  event.logicalKey == LogicalKeyboardKey.escape &&
+                  _dependencyDragController.isDragging) {
+                _dependencyDragController.endDrag();
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: Stack(
+              children: [
+                // Main timeline content
+                Listener(
                 onPointerSignal: (event) {
                   if (event is PointerScrollEvent) {
                     // Handle horizontal scroll with shift key or horizontal scroll
@@ -599,7 +612,8 @@ class _TimelinePanelState extends State<TimelinePanel> {
                     ),
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
