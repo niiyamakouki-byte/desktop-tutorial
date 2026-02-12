@@ -198,7 +198,7 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
                       maxLines: _isTaskNameExpanded ? null : 1,
                       overflow: _isTaskNameExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                     ),
-                    if (showExpandCollapseButton)
+                    if (textPainter.didExceedMaxLines) // Use local variable here
                       Padding(
                         padding: const EdgeInsets.only(top: 2.0),
                         child: Text(
