@@ -88,11 +88,16 @@ class ConstructionDXApp {
           // 接続キャンセル
           document.getElementById('cancelConnection').addEventListener('click', () => this.cancelConnection());
 
-          // キャンバスでのドラッグ
+          // キャンバスでのドラッグ（マウス + タッチ対応）
           const canvas = document.getElementById('canvas');
               canvas.addEventListener('mousemove', (e) => this.handleDrag(e));
               canvas.addEventListener('mouseup', () => this.endDrag());
               canvas.addEventListener('mouseleave', () => this.endDrag());
+              
+              // タッチイベント対応
+              canvas.addEventListener('touchmove', (e) => this.handleDrag(this.touchToMouse(e)), { passive: false });
+              canvas.addEventListener('touchend', () => this.endDrag());
+              canvas.addEventListener('touchcancel', () => this.endDrag());
     }
 
     // === 雨天中止機能（キラー機能） ===
@@ -184,11 +189,31 @@ class ConstructionDXApp {
                         const checkCount = Object.values(node.checklist).filter(v => v).length;
                         const progress = (checkCount / 4) * 100;
                         el.innerHTML = '<div class="node-header"><span class="node-title">' + node.name + '</span><span class="node-date">' + node.date + '</span></div><div class="node-progress"><div class="node-progress-bar" style="width:' + progress + '%"></div></div><div class="node-materials">📦 ' + node.materials.join(', ') + '</div><div class="node-actions"><button class="btn-connect" data-action="connect">🔗 接続</button><button class="btn-edit" data-action="edit">✏️ 編集</button></div>';
+                        
+                        // マウスイベント
                         el.addEventListener('mousedown', (e) => { if (e.target.tagName !== 'BUTTON') this.startDrag(e, node.id); });
+                        
+                        // タッチイベント
+                        el.addEventListener('touchstart', (e) => { 
+                            if (e.target.tagName !== 'BUTTON') {
+                                this.startDrag(this.touchToMouse(e), node.id);
+                            }
+                        }, { passive: false });
+                        
                         el.querySelector('[data-action="connect"]').addEventListener('click', () => this.startConnection(node.id));
                         el.querySelector('[data-action="edit"]').addEventListener('click', () => this.openModal(node.id));
                         el.addEventListener('click', () => { if (this.connectionMode.active && this.connectionMode.fromId !== node.id) this.completeConnection(node.id); });
                         return el;
+          }
+          
+          // タッチイベントをマウスイベントに変換
+          touchToMouse(e) {
+                        if (e.touches && e.touches.length > 0) {
+                                          e.preventDefault(); // デフォルトのタッチスクロールを防止（ドラッグ中のみ）
+                                          const touch = e.touches[0];
+                                          return { clientX: touch.clientX, clientY: touch.clientY, target: e.target };
+                        }
+                        return e;
           }
 
           startDrag(e, nodeId) {
