@@ -759,6 +759,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onHorizontalDragStart: (_) {
+          HapticFeedback.lightImpact();
           setState(() {
             _activeResize = isStart ? ResizeHandle.start : ResizeHandle.end;
           });
@@ -771,6 +772,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
           }
         },
         onHorizontalDragEnd: (_) {
+          HapticFeedback.mediumImpact();
           setState(() => _activeResize = ResizeHandle.none);
           if (isStart) {
             widget.onResizeStartEnd?.call();
