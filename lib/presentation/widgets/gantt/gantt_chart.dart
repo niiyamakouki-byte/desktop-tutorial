@@ -921,19 +921,8 @@ class _GanttChartState extends State<GanttChart> {
           usePhaseColors: widget.usePhaseColors,
         ),
 
-        // Dependency creation layer (drag & drop)
-        if (widget.showDependencies)
-          Positioned.fill(
-            child: DependencyCreationLayer(
-              tasks: _visibleTasks,
-              taskIndexMap: taskIndexMap,
-              startDate: _startDate,
-              dayWidth: _effectiveDayWidth,
-              rowHeight: GanttConstants.rowHeight,
-              dependencyService: widget.dependencyService,
-              onDependencyCreated: widget.onDependencyCreated,
-            ),
-          ),
+        // Note: Dependency creation is now handled within TimelinePanel
+        // via TaskBar widgets and DependencyDragController
       ],
     );
   }

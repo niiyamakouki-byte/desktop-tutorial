@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
@@ -508,7 +509,7 @@ class _TimelinePanelState extends State<TimelinePanel> {
                     }
                   }
                 },
-                child: SingleChildScrollView(
+                  child: SingleChildScrollView(
                   controller: widget.horizontalScrollController,
                   scrollDirection: Axis.horizontal,
                   physics: GanttConstants.scrollPhysics,
@@ -611,7 +612,8 @@ class _TimelinePanelState extends State<TimelinePanel> {
                     ),
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
