@@ -1,3 +1,4 @@
+import 'package:construction_project_manager/data/services/mock_data_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -13,6 +14,15 @@ class ProjectRepository {
   /// Initialize Hive box
   Future<void> initialize() async {
     _box = await Hive.openBox<String>(_boxName);
+
+    // If no projects exist, seed with mock data
+    if (_box!.isEmpty) {
+      print('Seeding initial project data...');
+      final mockProject = MockDataService().currentProject;
+      await saveProject(mockProject);
+      print('Initial project seeded: ${mockProject.name}');
+    }
+
   }
 
   /// Get all projects from storage
