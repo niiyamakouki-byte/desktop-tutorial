@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../models/dependency_model.dart';
+import '../repositories/task_repository.dart';
+import '../repositories/project_repository.dart';
 import 'mock_data_service.dart';
 import 'dependency_service.dart';
 import 'schedule_calculator.dart';
@@ -8,8 +11,15 @@ import '../../presentation/widgets/gantt/rain_cancel_dialog.dart';
 
 /// Provider for project state management
 class ProjectProvider extends ChangeNotifier {
+  final TaskRepository taskRepository;
+  final ProjectRepository projectRepository;
   final MockDataService _dataService = MockDataService();
   final DependencyService _dependencyService = DependencyService();
+
+  ProjectProvider({
+    required this.taskRepository,
+    required this.projectRepository,
+  });
 
   Project? _currentProject;
   List<Task> _tasks = [];
@@ -61,11 +71,27 @@ class ProjectProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Try to load from Hive first
+      final savedProjects = await projectRepository.getAllProjects();
+      final savedTasks = await taskRepository.getAllTasks();
 
-      _currentProject = _dataService.currentProject;
-      _tasks = _dataService.getTasks();
+      if (savedProjects.isNotEmpty) {
+        // Load from Hive storage
+        _currentProject = savedProjects.first;
+        _tasks = savedTasks;
+      } else {
+        // Load mock data for first run
+        _currentProject = _dataService.currentProject;
+        _tasks = _dataService.getTasks();
+        
+        // Save mock data to Hive
+        if (_currentProject != null) {
+          await projectRepository.saveProject(_currentProject!);
+        }
+        await taskRepository.saveTasks(_tasks);
+      }
+
+      // Always load these from mock service (not persisted yet)
       _messages = _dataService.getMessages();
       _pinnedAttachments = _dataService.getPinnedAttachments();
       _users = _dataService.users;
@@ -76,6 +102,25 @@ class ProjectProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Auto-save helper for tasks
+  Future<void> _autoSaveTasks() async {
+    try {
+      await taskRepository.saveTasks(_tasks);
+    } catch (e) {
+      print('Failed to auto-save tasks: $e');
+    }
+  }
+
+  // Auto-save helper for current project
+  Future<void> _autoSaveProject() async {
+    if (_currentProject == null) return;
+    try {
+      await projectRepository.saveProject(_currentProject!);
+    } catch (e) {
+      print('Failed to auto-save project: $e');
     }
   }
 
@@ -103,6 +148,7 @@ class ProjectProvider extends ChangeNotifier {
       _tasks[index] = _tasks[index].copyWith(
         isExpanded: !_tasks[index].isExpanded,
       );
+      _autoSaveTasks();
       notifyListeners();
     }
   }
@@ -112,6 +158,7 @@ class ProjectProvider extends ChangeNotifier {
     final index = _tasks.indexWhere((t) => t.id == updatedTask.id);
     if (index != -1) {
       _tasks[index] = updatedTask.copyWith(updatedAt: DateTime.now());
+      _autoSaveTasks();
       notifyListeners();
     }
   }
@@ -372,6 +419,63 @@ class ProjectProvider extends ChangeNotifier {
 
     // Recalculate schedule after moving tasks
     _recalculateSchedule();
+    _autoSaveTasks();
     notifyListeners();
+  }
+
+  // === Data Export/Import Functions ===
+
+  /// Export all data to JSON string
+  Future<String> exportAllData() async {
+    final data = {
+      'exportDate': DateTime.now().toIso8601String(),
+      'version': '1.0',
+      'project': _currentProject?.toJson(),
+      'tasks': await taskRepository.exportToJson(),
+      'tasksCount': _tasks.length,
+    };
+    return jsonEncode(data);
+  }
+
+  /// Import data from JSON string
+  Future<bool> importAllData(String jsonStr, {bool clearFirst = false}) async {
+    try {
+      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
+      
+      // Import tasks
+      if (data['tasks'] != null) {
+        await taskRepository.importFromJson(
+          data['tasks'] as String,
+          clearFirst: clearFirst,
+        );
+      }
+
+      // Import project
+      if (data['project'] != null) {
+        final project = Project.fromJson(data['project'] as Map<String, dynamic>);
+        await projectRepository.saveProject(project);
+        _currentProject = project;
+      }
+
+      // Reload data
+      await initialize();
+      return true;
+    } catch (e) {
+      print('Failed to import data: $e');
+      return false;
+    }
+  }
+
+  /// Force save all data immediately
+  Future<void> forceSaveAll() async {
+    await taskRepository.forceSave();
+    await projectRepository.forceSave();
+  }
+
+  @override
+  void dispose() {
+    taskRepository.dispose();
+    projectRepository.dispose();
+    super.dispose();
   }
 }
