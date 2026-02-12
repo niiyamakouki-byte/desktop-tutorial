@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../data/services/project_provider.dart';
+import '../modal/data_backup_dialog.dart';
 import 'dark_mode_toggle.dart';
 
 /// Application header with project info and navigation
@@ -169,6 +170,17 @@ class AppHeader extends StatelessWidget {
                       },
                     ),
                     const SizedBox(width: 16),
+                    // Backup button
+                    _HeaderButton(
+                      icon: Icons.backup_outlined,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => const DataBackupDialog(),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
                     // Dark mode toggle
                     const CompactDarkModeToggle(),
                     const SizedBox(width: 8),
