@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../data/models/models.dart';
 import '../../data/services/project_provider.dart';
 import '../widgets/common/glass_container.dart';
+import '../widgets/common/dark_mode_toggle.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
   final Function(Project) onProjectSelected;
@@ -156,8 +157,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +179,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateProjectDialog(),
-        backgroundColor: AppColors.primary,
+        backgroundColor: colorScheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('新規プロジェクト', style: TextStyle(color: Colors.white)),
       ),
@@ -185,10 +187,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   }
 
   Widget _buildHeader() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -227,16 +230,17 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                 Text(
                   '${_projects.length}件のプロジェクト',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 14,
                   ),
                 ),
               ],
             ),
           ),
+          const CompactDarkModeToggle(),
           IconButton(
             onPressed: _loadProjects,
-            icon: const Icon(Icons.refresh, color: AppColors.textSecondary),
+            icon: Icon(Icons.refresh, color: colorScheme.onSurfaceVariant),
             tooltip: '更新',
           ),
         ],

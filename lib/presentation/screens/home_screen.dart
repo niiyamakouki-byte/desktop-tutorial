@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/theme_provider.dart';
 import '../../data/services/project_provider.dart';
 import '../../data/services/order_service.dart';
 import '../../data/services/template_service.dart';
@@ -11,6 +12,7 @@ import '../widgets/gantt/gantt_chart.dart';
 import '../widgets/gantt/rain_cancel_dialog.dart';
 import '../widgets/chat/communication_sidebar.dart';
 import '../widgets/common/app_header.dart';
+import '../widgets/common/dark_mode_toggle.dart';
 import '../widgets/modal/task_edit_modal.dart';
 import '../widgets/templates/template_panel.dart';
 import '../widgets/order/order_dashboard.dart';
@@ -97,10 +99,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _showOrdersDialog() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: SizedBox(
           width: MediaQuery.of(context).size.width * 0.8,
@@ -110,20 +114,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Header
               Container(
                 padding: const EdgeInsets.all(AppConstants.paddingM),
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceVariant,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.inventory_2_outlined, color: AppColors.primary),
+                    Icon(Icons.inventory_2_outlined, color: colorScheme.primary),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       '発注管理',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const Spacer(),
@@ -152,10 +156,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _showTemplatesDialog() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: SizedBox(
           width: MediaQuery.of(context).size.width * 0.7,
@@ -165,20 +171,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Header
               Container(
                 padding: const EdgeInsets.all(AppConstants.paddingM),
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceVariant,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.description_outlined, color: AppColors.primary),
+                    Icon(Icons.description_outlined, color: colorScheme.primary),
                     const SizedBox(width: 8),
-                    const Text(
+                    Text(
                       'テンプレート・プロンプト',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const Spacer(),
@@ -224,8 +230,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Consumer<ProjectProvider>(
         builder: (context, provider, child) {
           // Sync animation with provider state
@@ -262,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Text(
                     provider.error!,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                   ),
                   const SizedBox(height: 24),
@@ -372,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               provider.toggleSidebar();
               _toggleSidebar(!provider.isSidebarOpen);
             },
-            backgroundColor: AppColors.primary,
+            backgroundColor: theme.colorScheme.primary,
             tooltip: provider.isSidebarOpen ? 'サイドバーを閉じる' : 'サイドバーを開く',
             child: AnimatedBuilder(
               animation: _sidebarAnimation,
@@ -424,13 +431,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildAppHeader() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = context.watch<ThemeProvider>().isDarkMode;
+    final iconColor = colorScheme.onSurface.withOpacity(0.72);
+
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDark,
+        color: colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: AppColors.border.withOpacity(0.3)),
+          bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.45)),
         ),
       ),
       child: Row(
@@ -439,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           if (widget.onBackToProjects != null)
             IconButton(
               onPressed: widget.onBackToProjects,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
               tooltip: 'プロジェクト一覧に戻る',
             ),
           if (widget.onBackToProjects != null)
@@ -461,8 +472,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Text(
                   widget.projectName ?? '建設プロジェクト管理',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -473,7 +484,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Text(
                     'ID: ${widget.projectId}',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 11,
                     ),
                   ),
@@ -483,11 +494,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // Actions
           IconButton(
             onPressed: () {},
-            icon: Icon(Icons.notifications_outlined, color: Colors.white.withOpacity(0.7)),
+            icon: Icon(Icons.notifications_outlined, color: iconColor),
           ),
+          const CompactDarkModeToggle(),
           IconButton(
             onPressed: () {},
-            icon: Icon(Icons.settings_outlined, color: Colors.white.withOpacity(0.7)),
+            icon: Icon(
+              isDark ? Icons.settings_suggest_outlined : Icons.settings_outlined,
+              color: iconColor,
+            ),
           ),
         ],
       ),
@@ -495,9 +510,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildViewTabs() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 40,
-      color: AppColors.surfaceVariant,
+      color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
       child: Row(
         children: [
           const SizedBox(width: AppConstants.paddingM),
@@ -541,6 +557,10 @@ class _ViewTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final activeColor = colorScheme.primary;
+    final inactiveColor = colorScheme.onSurfaceVariant;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -549,10 +569,10 @@ class _ViewTab extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+            color: isSelected ? activeColor.withOpacity(0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: isSelected
-                ? Border.all(color: AppColors.primary.withOpacity(0.3))
+                ? Border.all(color: activeColor.withOpacity(0.35))
                 : null,
           ),
           child: Row(
@@ -561,7 +581,7 @@ class _ViewTab extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                color: isSelected ? activeColor : inactiveColor,
               ),
               const SizedBox(width: 6),
               Text(
@@ -569,7 +589,7 @@ class _ViewTab extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                  color: isSelected ? activeColor : inactiveColor,
                 ),
               ),
               if (badge != null) ...[
