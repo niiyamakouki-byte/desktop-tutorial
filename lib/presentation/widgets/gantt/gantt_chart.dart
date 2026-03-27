@@ -118,6 +118,9 @@ class GanttChart extends StatefulWidget {
   /// Whether to use phase-based coloring
   final bool usePhaseColors;
 
+  /// Enable optimized rendering mode for large projects
+  final bool largeProjectMode;
+
   const GanttChart({
     super.key,
     required this.tasks,
@@ -152,6 +155,7 @@ class GanttChart extends StatefulWidget {
     this.onRainCancel,
     this.phases = const [],
     this.usePhaseColors = true,
+    this.largeProjectMode = false,
   });
 
   @override
@@ -188,6 +192,9 @@ class _GanttChartState extends State<GanttChart> {
   Set<QuickFilterType> _activeFilters = {};
   Map<QuickFilterType, int> _filterCounts = {};
 
+  bool get _isPerformanceMode =>
+      widget.largeProjectMode || widget.tasks.length >= 400;
+
   @override
   void initState() {
     super.initState();
@@ -211,9 +218,11 @@ class _GanttChartState extends State<GanttChart> {
   }
 
   void _loadWeatherAlerts() {
-    if (widget.showWeather) {
+    if (widget.showWeather && !_isPerformanceMode) {
       WeatherService.initializeMockData();
       _weatherAlerts = WeatherService.getAlertsForDateRange(_startDate, _endDate);
+    } else {
+      _weatherAlerts = [];
     }
   }
 
@@ -356,6 +365,8 @@ class _GanttChartState extends State<GanttChart> {
     if (widget.tasks != oldWidget.tasks) {
       _computeDateRange();
       _computeVisibleTasks();
+      _computeFilterCounts();
+      _loadWeatherAlerts();
     }
 
     if (widget.selectedTaskId != oldWidget.selectedTaskId) {
@@ -440,7 +451,11 @@ class _GanttChartState extends State<GanttChart> {
   }
 
   void _computeFilterCounts() {
-    _filterCounts = TaskFilterUtils.calculateFilterCounts(widget.tasks);
+    // Sampling avoids expensive full scan with very large task lists.
+    final sourceTasks = _isPerformanceMode && widget.tasks.length > 1500
+        ? widget.tasks.take(1500).toList()
+        : widget.tasks;
+    _filterCounts = TaskFilterUtils.calculateFilterCounts(sourceTasks);
   }
 
   void _handleFilterToggle(QuickFilterType filter) {
@@ -508,6 +523,8 @@ class _GanttChartState extends State<GanttChart> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (widget.tasks.isEmpty) {
       return _buildEmptyState();
     }
@@ -519,14 +536,14 @@ class _GanttChartState extends State<GanttChart> {
         onScaleUpdate: _handleScaleUpdate,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.ganttBackground,
-            border: Border.all(color: AppColors.border),
+            color: colorScheme.surface,
+            border: Border.all(color: colorScheme.outlineVariant),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
             children: [
               // Weather alerts (if any)
-              if (widget.showWeather && _weatherAlerts.isNotEmpty)
+              if (widget.showWeather && _weatherAlerts.isNotEmpty && !_isPerformanceMode)
                 _buildWeatherAlerts(),
 
               // Toolbar
@@ -688,57 +705,80 @@ class _GanttChartState extends State<GanttChart> {
   }
 
   Widget _buildToolbar() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
         border: Border(
-          bottom: BorderSide(color: AppColors.border),
+          bottom: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
-      child: Row(
-        children: [
-          // Title
-          const Icon(
-            Icons.view_timeline,
-            size: 20,
-            color: AppColors.primary,
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'ガントチャート',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // Title
+            const Icon(
+              Icons.view_timeline,
+              size: 20,
+              color: AppColors.primary,
             ),
-          ),
-          const Spacer(),
+            const SizedBox(width: 8),
+            const Text(
+              'ガントチャート',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 16),
 
-          // View mode and zoom controls
-          TimelineZoomControl(
-            currentZoom: _zoomLevel,
-            onZoomChanged: _handleZoomChange,
-            currentMode: _viewMode,
-            onModeChanged: _handleViewModeChange,
-          ),
+            // View mode and zoom controls
+            TimelineZoomControl(
+              currentZoom: _zoomLevel,
+              onZoomChanged: _handleZoomChange,
+              currentMode: _viewMode,
+              onModeChanged: _handleViewModeChange,
+            ),
 
-          const SizedBox(width: 12),
+            if (_isPerformanceMode) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  '高速表示',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.info,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
 
-          // Rain cancellation button
-          _buildRainCancelButton(),
+            const SizedBox(width: 12),
 
-          const SizedBox(width: 8),
+            // Rain cancellation button
+            _buildRainCancelButton(),
 
-          // Today button
-          _buildTodayButton(),
+            const SizedBox(width: 8),
 
-          const SizedBox(width: 8),
+            // Today button
+            _buildTodayButton(),
 
-          // Expand/Collapse all
-          _buildExpandCollapseButtons(),
-        ],
+            const SizedBox(width: 8),
+
+            // Expand/Collapse all
+            _buildExpandCollapseButtons(),
+          ],
+        ),
       ),
     );
   }
@@ -919,6 +959,7 @@ class _GanttChartState extends State<GanttChart> {
           // Phase-related parameters
           phaseMap: _phaseMap,
           usePhaseColors: widget.usePhaseColors,
+          enableRowAnimations: !_isPerformanceMode,
         ),
 
         // Note: Dependency creation is now handled within TimelinePanel
@@ -928,6 +969,7 @@ class _GanttChartState extends State<GanttChart> {
   }
 
   Widget _buildFooter() {
+    final colorScheme = Theme.of(context).colorScheme;
     final totalTasks = widget.tasks.length;
     final completedTasks = widget.tasks.where((t) => t.status == 'completed').length;
     final inProgressTasks = widget.tasks.where((t) => t.status == 'in_progress').length;
@@ -937,9 +979,9 @@ class _GanttChartState extends State<GanttChart> {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
         border: Border(
-          top: BorderSide(color: AppColors.border),
+          top: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
       child: Row(

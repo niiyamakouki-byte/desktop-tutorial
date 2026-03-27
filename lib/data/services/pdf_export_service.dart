@@ -54,6 +54,22 @@ class PDFExportService {
       pageCount: (records.length / 30).ceil() + 1,
     );
   }
+
+  Future<PDFExportResult> exportProjectSummaryPDF({
+    required String projectName,
+    required int totalTasks,
+    required int completedTasks,
+    required int delayedTasks,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 700));
+    final reportName = projectName.replaceAll(' ', '_');
+    return PDFExportResult(
+      success: true,
+      filePath:
+          '/downloads/project_summary_${reportName}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      pageCount: totalTasks > 20 ? 2 : 1,
+    );
+  }
 }
 
 enum PDFTemplateType { ganttChart, photoLedger, attendanceReport, projectSummary }

@@ -412,7 +412,224 @@ class TemplateService {
         description: '発注期限が近い材料の一覧',
         format: 'csv',
       ),
+      SpreadsheetTemplate(
+        id: 'progress_report',
+        name: '進捗レポート',
+        description: '工程進捗の集計レポート（Excel互換CSV）',
+        format: 'csv',
+      ),
     ];
+  }
+
+  /// Get available project templates
+  static List<ProjectTemplate> getProjectTemplates() {
+    return [
+      ProjectTemplate(
+        id: 'office_building_standard',
+        name: 'オフィスビル新築（標準）',
+        description: '基礎から引渡しまでの標準工程テンプレート',
+        industry: '建築',
+        tasks: const [
+          ProjectTemplateTask(
+            id: 'foundation',
+            name: '基礎工事',
+            category: 'foundation',
+            durationDays: 30,
+            offsetDays: 0,
+            priority: 'high',
+          ),
+          ProjectTemplateTask(
+            id: 'structure',
+            name: '躯体工事',
+            category: 'structure',
+            durationDays: 60,
+            offsetDays: 30,
+            dependsOn: ['foundation'],
+            priority: 'high',
+          ),
+          ProjectTemplateTask(
+            id: 'mep',
+            name: '電気・設備工事',
+            category: 'electrical',
+            durationDays: 45,
+            offsetDays: 70,
+            dependsOn: ['structure'],
+            priority: 'medium',
+          ),
+          ProjectTemplateTask(
+            id: 'finish',
+            name: '内装仕上げ',
+            category: 'finishing',
+            durationDays: 35,
+            offsetDays: 95,
+            dependsOn: ['mep'],
+            priority: 'medium',
+          ),
+          ProjectTemplateTask(
+            id: 'inspection',
+            name: '検査・引渡し',
+            category: 'inspection',
+            durationDays: 14,
+            offsetDays: 130,
+            dependsOn: ['finish'],
+            priority: 'high',
+          ),
+        ],
+      ),
+      ProjectTemplate(
+        id: 'renovation_fast_track',
+        name: '改修工事（短工期）',
+        description: '既存建物の改修向けテンプレート',
+        industry: '改修',
+        tasks: const [
+          ProjectTemplateTask(
+            id: 'demo',
+            name: '解体・撤去',
+            category: 'general',
+            durationDays: 10,
+            offsetDays: 0,
+            priority: 'high',
+          ),
+          ProjectTemplateTask(
+            id: 'base',
+            name: '下地補修',
+            category: 'foundation',
+            durationDays: 12,
+            offsetDays: 10,
+            dependsOn: ['demo'],
+          ),
+          ProjectTemplateTask(
+            id: 'equip',
+            name: '設備更新',
+            category: 'plumbing',
+            durationDays: 14,
+            offsetDays: 20,
+            dependsOn: ['base'],
+          ),
+          ProjectTemplateTask(
+            id: 'interior',
+            name: '内装復旧',
+            category: 'finishing',
+            durationDays: 14,
+            offsetDays: 32,
+            dependsOn: ['equip'],
+          ),
+          ProjectTemplateTask(
+            id: 'final_check',
+            name: '完了検査',
+            category: 'inspection',
+            durationDays: 5,
+            offsetDays: 46,
+            dependsOn: ['interior'],
+          ),
+        ],
+      ),
+      ProjectTemplate(
+        id: 'warehouse_shell',
+        name: '倉庫新築（S造）',
+        description: '物流倉庫向けのシンプル工程テンプレート',
+        industry: '物流',
+        tasks: const [
+          ProjectTemplateTask(
+            id: 'ground',
+            name: '造成・地盤',
+            category: 'foundation',
+            durationDays: 20,
+            offsetDays: 0,
+          ),
+          ProjectTemplateTask(
+            id: 'steel',
+            name: '鉄骨建方',
+            category: 'structure',
+            durationDays: 30,
+            offsetDays: 20,
+            dependsOn: ['ground'],
+            priority: 'high',
+          ),
+          ProjectTemplateTask(
+            id: 'roof_wall',
+            name: '屋根・外壁',
+            category: 'structure',
+            durationDays: 25,
+            offsetDays: 40,
+            dependsOn: ['steel'],
+          ),
+          ProjectTemplateTask(
+            id: 'equipment',
+            name: '電気・給排水',
+            category: 'electrical',
+            durationDays: 20,
+            offsetDays: 55,
+            dependsOn: ['roof_wall'],
+          ),
+          ProjectTemplateTask(
+            id: 'handover',
+            name: '検査・引渡し',
+            category: 'inspection',
+            durationDays: 10,
+            offsetDays: 75,
+            dependsOn: ['equipment'],
+            priority: 'high',
+          ),
+        ],
+      ),
+    ];
+  }
+
+  /// Build concrete task list from a project template
+  static List<Task> buildTasksFromTemplate({
+    required String templateId,
+    required String projectId,
+    required DateTime projectStartDate,
+    required List<User> availableUsers,
+  }) {
+    final template = getProjectTemplates().firstWhere(
+      (item) => item.id == templateId,
+      orElse: () => getProjectTemplates().first,
+    );
+
+    final now = DateTime.now();
+    final taskIdMap = <String, String>{};
+    final tasks = <Task>[];
+
+    for (var i = 0; i < template.tasks.length; i++) {
+      final item = template.tasks[i];
+      final concreteId =
+          '${projectId}_${template.id}_${item.id}_${now.millisecondsSinceEpoch}_$i';
+      taskIdMap[item.id] = concreteId;
+    }
+
+    for (var i = 0; i < template.tasks.length; i++) {
+      final item = template.tasks[i];
+      final start = projectStartDate.add(Duration(days: item.offsetDays));
+      final end = start.add(Duration(days: item.durationDays - 1));
+      final assignees = availableUsers.isNotEmpty
+          ? [availableUsers[i % availableUsers.length]]
+          : const <User>[];
+
+      tasks.add(
+        Task(
+          id: taskIdMap[item.id]!,
+          projectId: projectId,
+          name: item.name,
+          startDate: start,
+          endDate: end,
+          status: item.status,
+          priority: item.priority,
+          category: item.category,
+          dependsOn: item.dependsOn
+              .map((dependsId) => taskIdMap[dependsId])
+              .whereType<String>()
+              .toList(),
+          assignees: assignees,
+          level: 0,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+    }
+
+    return tasks;
   }
 }
 

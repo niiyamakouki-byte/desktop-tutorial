@@ -332,6 +332,8 @@ class TaskListPanel extends StatelessWidget {
   Widget _buildTaskList() {
     return ListView.builder(
       controller: scrollController,
+      itemExtent: GanttConstants.rowHeight,
+      cacheExtent: GanttConstants.rowHeight * 30,
       itemCount: tasks.length,
       itemBuilder: (context, index) {
         final task = tasks[index];

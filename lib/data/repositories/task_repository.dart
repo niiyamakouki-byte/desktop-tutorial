@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
 import '../models/task_model.dart';
 
 /// Repository for managing task persistence with Hive
@@ -10,69 +13,73 @@ class TaskRepository {
   Timer? _autoSaveTimer;
   bool _hasUnsavedChanges = false;
 
+  bool _cacheInitialized = false;
+  final Map<String, Task> _taskCache = <String, Task>{};
+
   /// Initialize Hive box
   Future<void> initialize() async {
     _box = await Hive.openBox<String>(_boxName);
+    await _ensureCacheLoaded();
+  }
+
+  Future<void> _ensureCacheLoaded() async {
+    if (_cacheInitialized || _box == null) return;
+
+    _taskCache.clear();
+    for (final key in _box!.keys) {
+      try {
+        final id = key.toString();
+        final jsonStr = _box!.get(id);
+        if (jsonStr == null) continue;
+        final json = jsonDecode(jsonStr) as Map<String, dynamic>;
+        _taskCache[id] = Task.fromJson(json);
+      } catch (e) {
+        debugPrint('Error loading task $key: $e');
+      }
+    }
+    _cacheInitialized = true;
   }
 
   /// Get all tasks from storage
   Future<List<Task>> getAllTasks() async {
     if (_box == null) throw StateError('Repository not initialized');
-    
-    final tasks = <Task>[];
-    for (var key in _box!.keys) {
-      try {
-        final jsonStr = _box!.get(key);
-        if (jsonStr != null) {
-          final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-          tasks.add(Task.fromJson(json));
-        }
-      } catch (e) {
-        // Skip corrupted entries
-        print('Error loading task $key: $e');
-      }
-    }
-    return tasks;
+    await _ensureCacheLoaded();
+    return _taskCache.values.toList();
   }
 
   /// Get tasks by project ID
   Future<List<Task>> getTasksByProject(String projectId) async {
-    final allTasks = await getAllTasks();
-    return allTasks.where((task) => task.projectId == projectId).toList();
+    await _ensureCacheLoaded();
+    return _taskCache.values.where((task) => task.projectId == projectId).toList();
   }
 
   /// Get single task by ID
   Future<Task?> getTask(String id) async {
     if (_box == null) throw StateError('Repository not initialized');
-    
-    final jsonStr = _box!.get(id);
-    if (jsonStr == null) return null;
-    
-    try {
-      final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-      return Task.fromJson(json);
-    } catch (e) {
-      print('Error loading task $id: $e');
-      return null;
-    }
+    await _ensureCacheLoaded();
+    return _taskCache[id];
   }
 
   /// Save single task
   Future<void> saveTask(Task task) async {
     if (_box == null) throw StateError('Repository not initialized');
-    
+    await _ensureCacheLoaded();
+
     final jsonStr = jsonEncode(task.toJson());
     await _box!.put(task.id, jsonStr);
+    _taskCache[task.id] = task;
     _markForAutoSave();
   }
 
   /// Save multiple tasks
   Future<void> saveTasks(List<Task> tasks) async {
     if (_box == null) throw StateError('Repository not initialized');
-    
+    await _ensureCacheLoaded();
+
     final entries = <String, String>{};
-    for (var task in tasks) {
+    for (final task in tasks) {
       entries[task.id] = jsonEncode(task.toJson());
+      _taskCache[task.id] = task;
     }
     await _box!.putAll(entries);
     _markForAutoSave();
@@ -81,14 +88,20 @@ class TaskRepository {
   /// Delete task by ID
   Future<void> deleteTask(String id) async {
     if (_box == null) throw StateError('Repository not initialized');
+    await _ensureCacheLoaded();
     await _box!.delete(id);
+    _taskCache.remove(id);
     _markForAutoSave();
   }
 
   /// Delete multiple tasks
   Future<void> deleteTasks(List<String> ids) async {
     if (_box == null) throw StateError('Repository not initialized');
+    await _ensureCacheLoaded();
     await _box!.deleteAll(ids);
+    for (final id in ids) {
+      _taskCache.remove(id);
+    }
     _markForAutoSave();
   }
 
@@ -103,17 +116,19 @@ class TaskRepository {
   Future<void> clearAll() async {
     if (_box == null) throw StateError('Repository not initialized');
     await _box!.clear();
+    _taskCache.clear();
   }
 
   /// Export all tasks to JSON
   Future<String> exportToJson() async {
-    final tasks = await getAllTasks();
-    final jsonList = tasks.map((task) => task.toJson()).toList();
+    await _ensureCacheLoaded();
+    final jsonList = _taskCache.values.map((task) => task.toJson()).toList();
     return jsonEncode(jsonList);
   }
 
   /// Import tasks from JSON
   Future<void> importFromJson(String jsonStr, {bool clearFirst = false}) async {
+    if (_box == null) throw StateError('Repository not initialized');
     if (clearFirst) {
       await clearAll();
     }
@@ -122,7 +137,6 @@ class TaskRepository {
     final tasks = jsonList
         .map((json) => Task.fromJson(json as Map<String, dynamic>))
         .toList();
-    
     await saveTasks(tasks);
   }
 
@@ -140,13 +154,13 @@ class TaskRepository {
   /// Perform auto-save (flush to disk)
   Future<void> _performAutoSave() async {
     if (_box == null) return;
-    
+
     try {
       await _box!.flush();
       _hasUnsavedChanges = false;
-      print('Auto-save completed for tasks');
+      debugPrint('Auto-save completed for tasks');
     } catch (e) {
-      print('Auto-save failed: $e');
+      debugPrint('Auto-save failed: $e');
     }
   }
 

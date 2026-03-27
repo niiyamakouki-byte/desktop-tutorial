@@ -1,7 +1,10 @@
-import 'package:construction_project_manager/data/services/mock_data_service.dart';
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:construction_project_manager/data/services/mock_data_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
 import '../models/project_model.dart';
 
 /// Repository for managing project persistence with Hive
@@ -11,72 +14,77 @@ class ProjectRepository {
   Timer? _autoSaveTimer;
   bool _hasUnsavedChanges = false;
 
+  bool _cacheInitialized = false;
+  final Map<String, Project> _projectCache = <String, Project>{};
+
   /// Initialize Hive box
   Future<void> initialize() async {
     _box = await Hive.openBox<String>(_boxName);
 
     // If no projects exist, seed with mock data
     if (_box!.isEmpty) {
-      print('Seeding initial project data...');
+      debugPrint('Seeding initial project data...');
       final mockProject = MockDataService().currentProject;
       await saveProject(mockProject);
-      print('Initial project seeded: ${mockProject.name}');
+      debugPrint('Initial project seeded: ${mockProject.name}');
     }
 
+    await _ensureCacheLoaded();
+  }
+
+  Future<void> _ensureCacheLoaded() async {
+    if (_cacheInitialized || _box == null) return;
+
+    _projectCache.clear();
+    for (final key in _box!.keys) {
+      try {
+        final id = key.toString();
+        final jsonStr = _box!.get(id);
+        if (jsonStr == null) continue;
+        final json = jsonDecode(jsonStr) as Map<String, dynamic>;
+        _projectCache[id] = Project.fromJson(json);
+      } catch (e) {
+        debugPrint('Error loading project $key: $e');
+      }
+    }
+
+    _cacheInitialized = true;
   }
 
   /// Get all projects from storage
   Future<List<Project>> getAllProjects() async {
     if (_box == null) throw StateError('Repository not initialized');
-    
-    final projects = <Project>[];
-    for (var key in _box!.keys) {
-      try {
-        final jsonStr = _box!.get(key);
-        if (jsonStr != null) {
-          final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-          projects.add(Project.fromJson(json));
-        }
-      } catch (e) {
-        // Skip corrupted entries
-        print('Error loading project $key: $e');
-      }
-    }
-    return projects;
+    await _ensureCacheLoaded();
+    return _projectCache.values.toList();
   }
 
   /// Get single project by ID
   Future<Project?> getProject(String id) async {
     if (_box == null) throw StateError('Repository not initialized');
-    
-    final jsonStr = _box!.get(id);
-    if (jsonStr == null) return null;
-    
-    try {
-      final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-      return Project.fromJson(json);
-    } catch (e) {
-      print('Error loading project $id: $e');
-      return null;
-    }
+    await _ensureCacheLoaded();
+    return _projectCache[id];
   }
 
   /// Save single project
   Future<void> saveProject(Project project) async {
     if (_box == null) throw StateError('Repository not initialized');
-    
+    await _ensureCacheLoaded();
+
     final jsonStr = jsonEncode(project.toJson());
     await _box!.put(project.id, jsonStr);
+    _projectCache[project.id] = project;
     _markForAutoSave();
   }
 
   /// Save multiple projects
   Future<void> saveProjects(List<Project> projects) async {
     if (_box == null) throw StateError('Repository not initialized');
-    
+    await _ensureCacheLoaded();
+
     final entries = <String, String>{};
-    for (var project in projects) {
+    for (final project in projects) {
       entries[project.id] = jsonEncode(project.toJson());
+      _projectCache[project.id] = project;
     }
     await _box!.putAll(entries);
     _markForAutoSave();
@@ -86,6 +94,7 @@ class ProjectRepository {
   Future<void> deleteProject(String id) async {
     if (_box == null) throw StateError('Repository not initialized');
     await _box!.delete(id);
+    _projectCache.remove(id);
     _markForAutoSave();
   }
 
@@ -93,6 +102,9 @@ class ProjectRepository {
   Future<void> deleteProjects(List<String> ids) async {
     if (_box == null) throw StateError('Repository not initialized');
     await _box!.deleteAll(ids);
+    for (final id in ids) {
+      _projectCache.remove(id);
+    }
     _markForAutoSave();
   }
 
@@ -100,17 +112,19 @@ class ProjectRepository {
   Future<void> clearAll() async {
     if (_box == null) throw StateError('Repository not initialized');
     await _box!.clear();
+    _projectCache.clear();
   }
 
   /// Export all projects to JSON
   Future<String> exportToJson() async {
-    final projects = await getAllProjects();
-    final jsonList = projects.map((project) => project.toJson()).toList();
+    await _ensureCacheLoaded();
+    final jsonList = _projectCache.values.map((project) => project.toJson()).toList();
     return jsonEncode(jsonList);
   }
 
   /// Import projects from JSON
   Future<void> importFromJson(String jsonStr, {bool clearFirst = false}) async {
+    if (_box == null) throw StateError('Repository not initialized');
     if (clearFirst) {
       await clearAll();
     }
@@ -119,23 +133,28 @@ class ProjectRepository {
     final projects = jsonList
         .map((json) => Project.fromJson(json as Map<String, dynamic>))
         .toList();
-    
+
     await saveProjects(projects);
   }
 
   /// Get projects by status
   Future<List<Project>> getProjectsByStatus(String status) async {
-    final allProjects = await getAllProjects();
-    return allProjects.where((project) => project.status == status).toList();
+    await _ensureCacheLoaded();
+    return _projectCache.values
+        .where((project) => project.status == status)
+        .toList();
   }
 
   /// Get active projects (not completed or cancelled)
   Future<List<Project>> getActiveProjects() async {
-    final allProjects = await getAllProjects();
-    return allProjects.where((project) => 
-      project.status != ProjectStatus.completed && 
-      project.status != ProjectStatus.cancelled
-    ).toList();
+    await _ensureCacheLoaded();
+    return _projectCache.values
+        .where(
+          (project) =>
+              project.status != ProjectStatus.completed &&
+              project.status != ProjectStatus.cancelled,
+        )
+        .toList();
   }
 
   /// Mark data for auto-save (saves after 3 seconds of no changes)
@@ -152,13 +171,13 @@ class ProjectRepository {
   /// Perform auto-save (flush to disk)
   Future<void> _performAutoSave() async {
     if (_box == null) return;
-    
+
     try {
       await _box!.flush();
       _hasUnsavedChanges = false;
-      print('Auto-save completed for projects');
+      debugPrint('Auto-save completed for projects');
     } catch (e) {
-      print('Auto-save failed: $e');
+      debugPrint('Auto-save failed: $e');
     }
   }
 

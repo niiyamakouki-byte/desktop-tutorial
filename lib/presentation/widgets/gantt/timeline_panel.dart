@@ -47,6 +47,9 @@ class TimelinePanel extends StatefulWidget {
   /// Whether to use phase-based coloring for task bars
   final bool usePhaseColors;
 
+  /// Enable row-level hover/selection animation
+  final bool enableRowAnimations;
+
   const TimelinePanel({
     super.key,
     required this.tasks,
@@ -70,6 +73,7 @@ class TimelinePanel extends StatefulWidget {
     this.enableDependencyCreation = true,
     this.phaseMap = const {},
     this.usePhaseColors = true,
+    this.enableRowAnimations = true,
   });
 
   @override
@@ -520,6 +524,8 @@ class _TimelinePanelState extends State<TimelinePanel> {
                         // Task rows
                         ListView.builder(
                           controller: widget.verticalScrollController,
+                          itemExtent: GanttConstants.rowHeight,
+                          cacheExtent: GanttConstants.rowHeight * 30,
                           itemCount: widget.tasks.length,
                           itemBuilder: (context, index) {
                             return _buildTimelineRow(index, totalWidth);
@@ -641,7 +647,9 @@ class _TimelinePanelState extends State<TimelinePanel> {
         setState(() => _localHoveredTaskId = null);
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: widget.enableRowAnimations
+            ? const Duration(milliseconds: 150)
+            : Duration.zero,
         height: GanttConstants.rowHeight,
         width: totalWidth,
         decoration: BoxDecoration(
@@ -657,7 +665,7 @@ class _TimelinePanelState extends State<TimelinePanel> {
                 ? BorderSide(color: AppColors.primary, width: 3)
                 : BorderSide.none,
           ),
-          boxShadow: isHovered && !isSelected
+          boxShadow: widget.enableRowAnimations && isHovered && !isSelected
               ? [
                   BoxShadow(
                     color: AppColors.primary.withOpacity(0.08),

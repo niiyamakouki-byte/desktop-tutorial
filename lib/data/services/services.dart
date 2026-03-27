@@ -31,3 +31,4 @@ export 'cashflow_service.dart';
 
 // Task management services
 export 'task_cascade_service.dart';
+export 'progress_report_service.dart';

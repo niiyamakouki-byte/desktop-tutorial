@@ -7,6 +7,7 @@ import '../repositories/project_repository.dart';
 import 'mock_data_service.dart';
 import 'dependency_service.dart';
 import 'schedule_calculator.dart';
+import 'template_service.dart';
 import '../../presentation/widgets/gantt/rain_cancel_dialog.dart';
 
 /// Provider for project state management
@@ -34,6 +35,7 @@ class ProjectProvider extends ChangeNotifier {
   String? _error;
   bool _autoScheduleEnabled = true;
   bool _showCriticalPath = true;
+  bool _largeProjectMode = false;
 
   // Getters
   Project? get currentProject => _currentProject;
@@ -48,6 +50,8 @@ class ProjectProvider extends ChangeNotifier {
   String? get error => _error;
   bool get autoScheduleEnabled => _autoScheduleEnabled;
   bool get showCriticalPath => _showCriticalPath;
+  bool get largeProjectMode => _largeProjectMode;
+  bool get isLargeProject => _tasks.length >= 500;
 
   // Dependency service getters
   DependencyService get dependencyService => _dependencyService;
@@ -68,12 +72,17 @@ class ProjectProvider extends ChangeNotifier {
   // Initialize data
   Future<void> initialize() async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
-      // Try to load from Hive first
-      final savedProjects = await projectRepository.getAllProjects();
-      final savedTasks = await taskRepository.getAllTasks();
+      // Parallel loading for faster startup on large datasets.
+      final loadResults = await Future.wait([
+        projectRepository.getAllProjects(),
+        taskRepository.getAllTasks(),
+      ]);
+      final savedProjects = loadResults[0] as List<Project>;
+      final savedTasks = loadResults[1] as List<Task>;
 
       if (savedProjects.isNotEmpty) {
         // Load from Hive storage
@@ -96,9 +105,10 @@ class ProjectProvider extends ChangeNotifier {
       _pinnedAttachments = _dataService.getPinnedAttachments();
       _users = _dataService.users;
       _currentUser = _dataService.currentUser;
+      _largeProjectMode = isLargeProject;
       _error = null;
     } catch (e) {
-      _error = e.toString();
+      _setError('初期化に失敗しました: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -110,7 +120,8 @@ class ProjectProvider extends ChangeNotifier {
     try {
       await taskRepository.saveTasks(_tasks);
     } catch (e) {
-      print('Failed to auto-save tasks: $e');
+      debugPrint('Failed to auto-save tasks: $e');
+      _setError('タスク保存に失敗しました');
     }
   }
 
@@ -120,8 +131,19 @@ class ProjectProvider extends ChangeNotifier {
     try {
       await projectRepository.saveProject(_currentProject!);
     } catch (e) {
-      print('Failed to auto-save project: $e');
+      debugPrint('Failed to auto-save project: $e');
+      _setError('プロジェクト保存に失敗しました');
     }
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  void _setError(String message) {
+    _error = message;
+    debugPrint(message);
   }
 
   // Toggle sidebar
@@ -420,7 +442,137 @@ class ProjectProvider extends ChangeNotifier {
     // Recalculate schedule after moving tasks
     _recalculateSchedule();
     _autoSaveTasks();
+    _largeProjectMode = isLargeProject;
     notifyListeners();
+  }
+
+  /// Apply a predefined project template.
+  Future<bool> applyProjectTemplate(
+    String templateId, {
+    DateTime? startDate,
+    bool replaceExisting = false,
+  }) async {
+    if (_currentProject == null) {
+      _setError('プロジェクトが選択されていません');
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      final generatedTasks = TemplateService.buildTasksFromTemplate(
+        templateId: templateId,
+        projectId: _currentProject!.id,
+        projectStartDate: startDate ?? DateTime.now(),
+        availableUsers: _users,
+      );
+
+      if (replaceExisting) {
+        _tasks = generatedTasks;
+      } else {
+        _tasks = [..._tasks, ...generatedTasks];
+      }
+
+      _recalculateSchedule();
+      await _autoSaveTasks();
+      _largeProjectMode = isLargeProject;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError('テンプレート適用に失敗しました: $e');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Team member management
+  Future<bool> addTeamMember(User user) async {
+    try {
+      if (_users.any((u) => u.id == user.id)) {
+        _setError('同じIDのメンバーが既に存在します');
+        notifyListeners();
+        return false;
+      }
+
+      _users = [..._users, user];
+      if (_currentProject != null) {
+        _currentProject = _currentProject!.copyWith(
+          members: [..._currentProject!.members, user],
+          updatedAt: DateTime.now(),
+        );
+        await _autoSaveProject();
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError('メンバー追加に失敗しました: $e');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateTeamMember(User user) async {
+    try {
+      final userIndex = _users.indexWhere((u) => u.id == user.id);
+      if (userIndex < 0) {
+        _setError('更新対象のメンバーが見つかりません');
+        notifyListeners();
+        return false;
+      }
+
+      _users[userIndex] = user;
+      if (_currentProject != null) {
+        final members = [..._currentProject!.members];
+        final memberIndex = members.indexWhere((m) => m.id == user.id);
+        if (memberIndex >= 0) {
+          members[memberIndex] = user;
+        }
+        _currentProject = _currentProject!.copyWith(
+          members: members,
+          updatedAt: DateTime.now(),
+        );
+        await _autoSaveProject();
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError('メンバー更新に失敗しました: $e');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> removeTeamMember(String userId) async {
+    try {
+      _users = _users.where((u) => u.id != userId).toList();
+      if (_currentUser?.id == userId) {
+        _currentUser = _users.isNotEmpty ? _users.first : null;
+      }
+
+      // Remove assignee links from tasks.
+      _tasks = _tasks
+          .map((task) => task.copyWith(
+                assignees: task.assignees.where((a) => a.id != userId).toList(),
+              ))
+          .toList();
+
+      if (_currentProject != null) {
+        _currentProject = _currentProject!.copyWith(
+          members: _currentProject!.members.where((m) => m.id != userId).toList(),
+          updatedAt: DateTime.now(),
+        );
+      }
+
+      await Future.wait([
+        _autoSaveTasks(),
+        _autoSaveProject(),
+      ]);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError('メンバー削除に失敗しました: $e');
+      notifyListeners();
+      return false;
+    }
   }
 
   // === Data Export/Import Functions ===

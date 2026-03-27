@@ -8,10 +8,12 @@ import '../../../data/services/template_service.dart';
 /// Panel for displaying and using AI prompts and templates
 class TemplatePanel extends StatefulWidget {
   final Function(String content)? onExportCsv;
+  final Function(String templateId)? onApplyProjectTemplate;
 
   const TemplatePanel({
     super.key,
     this.onExportCsv,
+    this.onApplyProjectTemplate,
   });
 
   @override
@@ -23,12 +25,13 @@ class _TemplatePanelState extends State<TemplatePanel>
   late TabController _tabController;
   String? _selectedPromptId;
   String? _selectedSpreadsheetId;
+  String? _selectedProjectTemplateId;
   bool _showPromptPreview = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -59,6 +62,7 @@ class _TemplatePanelState extends State<TemplatePanel>
               children: [
                 _buildPromptsTab(),
                 _buildSpreadsheetsTab(),
+                _buildProjectTemplatesTab(),
               ],
             ),
           ),
@@ -148,6 +152,16 @@ class _TemplatePanelState extends State<TemplatePanel>
                 Icon(Icons.table_chart_outlined, size: 18),
                 SizedBox(width: 8),
                 Text('スプレッドシート'),
+              ],
+            ),
+          ),
+          Tab(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.auto_fix_high_outlined, size: 18),
+                SizedBox(width: 8),
+                Text('工程テンプレート'),
               ],
             ),
           ),
@@ -251,6 +265,123 @@ class _TemplatePanelState extends State<TemplatePanel>
     );
   }
 
+  Widget _buildProjectTemplatesTab() {
+    final templates = TemplateService.getProjectTemplates();
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppConstants.paddingM),
+      itemCount: templates.length,
+      itemBuilder: (context, index) {
+        final template = templates[index];
+        final isSelected = _selectedProjectTemplateId == template.id;
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(
+              color: isSelected ? AppColors.primary : AppColors.border,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () {
+              setState(() => _selectedProjectTemplateId = template.id);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.account_tree_outlined, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          template.name,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          template.industry,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    template.description,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '標準タスク数: ${template.tasks.length}件',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          final preview = template.tasks
+                              .map((item) => '・${item.name} (${item.durationDays}日)')
+                              .join('\n');
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(template.name),
+                              content: SingleChildScrollView(child: Text(preview)),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.visibility_outlined, size: 16),
+                        label: const Text('内容確認'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: () => _applyProjectTemplate(template.id),
+                        icon: const Icon(Icons.playlist_add_check, size: 16),
+                        label: const Text('適用'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _copyPromptToClipboard(String promptId) {
     final content = TemplateService.getPromptContent(promptId);
     Clipboard.setData(ClipboardData(text: content));
@@ -336,6 +467,17 @@ class _TemplatePanelState extends State<TemplatePanel>
             const SnackBar(content: Text('CSVをコピーしました')),
           );
         },
+      ),
+    );
+  }
+
+  void _applyProjectTemplate(String templateId) {
+    widget.onApplyProjectTemplate?.call(templateId);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('プロジェクトテンプレートを適用しました'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
