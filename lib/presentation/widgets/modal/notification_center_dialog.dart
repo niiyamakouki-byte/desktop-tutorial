@@ -177,7 +177,7 @@ class _NotificationCenterDialogState extends State<NotificationCenterDialog> {
                 itemBuilder: (context, index) {
                   final job = _jobs[_jobs.length - 1 - index];
                   final progress =
-                      job.recipients.isEmpty ? 0 : job.processedCount / job.recipients.length;
+                      job.recipients.isEmpty ? 0.0 : job.processedCount / job.recipients.length;
 
                   return Container(
                     padding: const EdgeInsets.all(12),
