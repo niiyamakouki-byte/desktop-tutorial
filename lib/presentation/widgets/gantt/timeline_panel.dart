@@ -94,7 +94,7 @@ class _TimelinePanelState extends State<TimelinePanel> {
   double _resizeAccumulatedDelta = 0.0;
   DateTime? _resizeOriginalStart;
   DateTime? _resizeOriginalEnd;
-  bool _isResizingStart = false; // true = resizing start date, false = resizing end date
+  bool _isResizingStart = true;
 
   // Drag state tracking (for task move with cascade preview)
   String? _draggingTaskId;
@@ -323,43 +323,24 @@ class _TimelinePanelState extends State<TimelinePanel> {
     }
 
     _resizeAccumulatedDelta += delta;
-
-    // Calculate number of days to adjust (snap to day boundaries)
-    final daysDelta = (_resizeAccumulatedDelta / widget.dayWidth).round();
-
-    if (daysDelta != 0 && _resizeOriginalStart != null && _resizeOriginalEnd != null) {
-      DateTime newStart = _resizeOriginalStart!;
-      DateTime newEnd = _resizeOriginalEnd!;
-
-      if (isStart) {
-        // Resizing start date (left handle)
-        newStart = _resizeOriginalStart!.add(Duration(days: daysDelta));
-        // Ensure start doesn't go past end
-        if (newStart.isAfter(newEnd.subtract(const Duration(days: 1)))) {
-          newStart = newEnd.subtract(const Duration(days: 1));
-        }
-      } else {
-        // Resizing end date (right handle)
-        newEnd = _resizeOriginalEnd!.add(Duration(days: daysDelta));
-        // Ensure end doesn't go before start
-        if (newEnd.isBefore(newStart.add(const Duration(days: 1)))) {
-          newEnd = newStart.add(const Duration(days: 1));
-        }
-      }
-
-      // Call the callback to update the task
-      widget.onTaskDateChange?.call(task, newStart, newEnd);
-    }
+    setState(() {});
   }
 
   /// End resize operation
   void _endResize(Task task) {
-    // Reset resize state
+    final preview = _buildResizePreview(task);
+
+    if (preview != null &&
+        (preview.start != task.startDate || preview.end != task.endDate)) {
+      widget.onTaskDateChange?.call(task, preview.start, preview.end);
+    }
+
     setState(() {
       _resizingTaskId = null;
       _resizeAccumulatedDelta = 0.0;
       _resizeOriginalStart = null;
       _resizeOriginalEnd = null;
+      _isResizingStart = true;
     });
   }
 
@@ -412,25 +393,6 @@ class _TimelinePanelState extends State<TimelinePanel> {
 
       // Apply changes to the dragged task
       widget.onTaskDateChange?.call(task, newStart, newEnd);
-
-      // Apply cascade changes to successor tasks
-      if (_cascadePreview != null) {
-        for (final preview in _cascadePreview!.cascadedPreviews) {
-          if (preview.hasChange) {
-            final cascadedTask = widget.tasks.firstWhere(
-              (t) => t.id == preview.taskId,
-              orElse: () => task,
-            );
-            if (cascadedTask.id != task.id) {
-              widget.onTaskDateChange?.call(
-                cascadedTask,
-                preview.previewStart,
-                preview.previewEnd,
-              );
-            }
-          }
-        }
-      }
     }
 
     // Reset drag state
@@ -442,6 +404,32 @@ class _TimelinePanelState extends State<TimelinePanel> {
       _cascadePreview = null;
     });
     _cascadePreviewService.endDrag();
+  }
+
+  ({DateTime start, DateTime end})? _buildResizePreview(Task task) {
+    if (_resizingTaskId != task.id ||
+        _resizeOriginalStart == null ||
+        _resizeOriginalEnd == null) {
+      return null;
+    }
+
+    final daysDelta = (_resizeAccumulatedDelta / widget.dayWidth).round();
+    DateTime previewStart = _resizeOriginalStart!;
+    DateTime previewEnd = _resizeOriginalEnd!;
+
+    if (_isResizingStart) {
+      previewStart = _resizeOriginalStart!.add(Duration(days: daysDelta));
+      if (previewStart.isAfter(previewEnd)) {
+        previewStart = previewEnd;
+      }
+    } else {
+      previewEnd = _resizeOriginalEnd!.add(Duration(days: daysDelta));
+      if (previewEnd.isBefore(previewStart)) {
+        previewEnd = previewStart;
+      }
+    }
+
+    return (start: previewStart, end: previewEnd);
   }
 
   /// Cancel drag without applying changes
@@ -460,7 +448,6 @@ class _TimelinePanelState extends State<TimelinePanel> {
   Widget build(BuildContext context) {
     final totalDays = widget.endDate.difference(widget.startDate).inDays + 1;
     final totalWidth = totalDays * widget.dayWidth;
-    final totalHeight = widget.tasks.length * GanttConstants.rowHeight;
 
     // Build task index map for cascade preview painter
     final taskIndexMap = <String, int>{};
@@ -630,12 +617,19 @@ class _TimelinePanelState extends State<TimelinePanel> {
     final task = widget.tasks[index];
     final isSelected = task.id == widget.selectedTaskId;
     final isHovered = task.id == (_localHoveredTaskId ?? widget.hoveredTaskId);
+    final dragPreview = _cascadePreview?.getPreview(task.id);
+    final resizePreview = _buildResizePreview(task);
 
-    // Calculate task bar position
-    final startOffset = task.startDate.difference(widget.startDate).inDays;
+    final previewStart =
+        dragPreview?.previewStart ?? resizePreview?.start ?? task.startDate;
+    final previewEnd =
+        dragPreview?.previewEnd ?? resizePreview?.end ?? task.endDate;
+
+    final startOffset = previewStart.difference(widget.startDate).inDays;
+    final previewDurationDays = previewEnd.difference(previewStart).inDays + 1;
     final taskWidth = task.isMilestone
         ? GanttConstants.milestoneSize
-        : (task.durationDays * widget.dayWidth);
+        : (previewDurationDays * widget.dayWidth);
     final leftPosition = startOffset * widget.dayWidth;
 
     return MouseRegion(
@@ -711,9 +705,14 @@ class _TimelinePanelState extends State<TimelinePanel> {
               width: taskWidth,
               isSelected: isSelected,
               onTap: () => widget.onTaskTap?.call(task),
+              previewStartDate: previewStart,
+              previewEndDate: previewEnd,
               phase: task.phaseId != null ? widget.phaseMap[task.phaseId] : null,
               usePhaseColor: widget.usePhaseColors,
               // Drag callbacks for task move with cascade preview
+              onDragStart: widget.onTaskDateChange != null
+                  ? () => _startDrag(task)
+                  : null,
               onDragUpdate: widget.onTaskDateChange != null
                   ? (details) => _updateDrag(task, details.delta.dx)
                   : null,

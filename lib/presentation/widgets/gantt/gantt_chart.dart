@@ -948,6 +948,7 @@ class _GanttChartState extends State<GanttChart> {
               _hoveredTaskId = task.id;
             });
           },
+          onTaskDateChange: widget.onTaskDateChange,
           // Dependency-related parameters
           dependencies: widget.dependencies,
           dependencyService: widget.dependencyService,

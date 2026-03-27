@@ -642,8 +642,11 @@ class TaskBar extends StatefulWidget {
   final double width;
   final bool isSelected;
   final VoidCallback? onTap;
+  final VoidCallback? onDragStart;
   final Function(DragUpdateDetails)? onDragUpdate;
   final Function(DragEndDetails)? onDragEnd;
+  final DateTime? previewStartDate;
+  final DateTime? previewEndDate;
 
   /// Callback when start date is being resized (left handle)
   /// The double parameter represents the delta in pixels
@@ -688,8 +691,11 @@ class TaskBar extends StatefulWidget {
     required this.width,
     this.isSelected = false,
     this.onTap,
+    this.onDragStart,
     this.onDragUpdate,
     this.onDragEnd,
+    this.previewStartDate,
+    this.previewEndDate,
     this.onResizeStartUpdate,
     this.onResizeStartEnd,
     this.onResizeEndUpdate,
@@ -710,6 +716,7 @@ class TaskBar extends StatefulWidget {
 
 class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
   bool _isHovered = false;
+  bool _isMoving = false;
   bool _isStartHandleHovered = false;
   bool _isEndHandleHovered = false;
   bool _isDependencyHandleHovered = false;
@@ -984,6 +991,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
     final statusColor = AppColors.getTaskStatusColor(widget.task.status);
     final barColor = _getTaskBarColor();
     final isResizing = _activeResize != ResizeHandle.none;
+    final isInteracting = _isMoving || isResizing;
 
     // For milestones, render a diamond
     if (widget.task.isMilestone) {
@@ -996,188 +1004,264 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
       child: MouseRegion(
         onEnter: (_) => _onHoverStart(),
         onExit: (_) => _onHoverEnd(),
+        cursor: isResizing
+            ? SystemMouseCursors.resizeLeftRight
+            : (_isMoving
+                ? SystemMouseCursors.grabbing
+                : (_isHovered ? SystemMouseCursors.grab : SystemMouseCursors.basic)),
         child: GestureDetector(
           onTap: widget.onTap,
+          onPanStart: isResizing
+              ? null
+              : (_) {
+                  setState(() => _isMoving = true);
+                  widget.onDragStart?.call();
+                },
           onPanUpdate: isResizing ? null : widget.onDragUpdate,
-          onPanEnd: isResizing ? null : widget.onDragEnd,
+          onPanEnd: isResizing
+              ? null
+              : (details) {
+                  setState(() => _isMoving = false);
+                  widget.onDragEnd?.call(details);
+                },
+          onPanCancel: () {
+            setState(() => _isMoving = false);
+          },
           child: AnimatedBuilder(
             animation: _hoverController,
             builder: (context, child) {
-              return Transform.scale(
-                scale: widget.isSelected ? 1.03 : _scaleAnimation.value,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  width: widget.width.clamp(GanttConstants.minTaskBarWidth, double.infinity),
-                  height: GanttConstants.taskBarHeight,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        barColor.withOpacity(isResizing ? 1.0 : 0.9),
-                        barColor.withOpacity(isResizing ? 0.85 : 0.75),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
-                    border: Border.all(
-                      color: isResizing
-                          ? Colors.white
-                          : (widget.isSelected
-                              ? AppColors.primary
-                              : barColor.withOpacity(0.3 + _glowAnimation.value * 0.5)),
-                      width: isResizing ? 2.0 : (widget.isSelected ? 2.5 : 1 + _glowAnimation.value),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: barColor.withOpacity(isResizing ? 0.5 : 0.15 + _glowAnimation.value * 0.25),
-                        blurRadius: isResizing ? 12 : 4 + _glowAnimation.value * 8,
-                        spreadRadius: isResizing ? 3 : _glowAnimation.value * 2,
-                        offset: Offset(0, isResizing ? 4 : 2 + _glowAnimation.value * 2),
-                      ),
-                      if (widget.isSelected)
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 12,
-                          spreadRadius: 2,
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Transform.scale(
+                    scale: isInteracting ? 1.05 : (widget.isSelected ? 1.03 : _scaleAnimation.value),
+                    child: Opacity(
+                      opacity: isInteracting ? 0.78 : 1.0,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 100),
+                        width: widget.width.clamp(GanttConstants.minTaskBarWidth, double.infinity),
+                        height: GanttConstants.taskBarHeight,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              barColor.withOpacity(isInteracting ? 0.95 : 0.9),
+                              barColor.withOpacity(isInteracting ? 0.72 : 0.75),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
+                          border: Border.all(
+                            color: isInteracting
+                                ? Colors.white
+                                : (widget.isSelected
+                                    ? AppColors.primary
+                                    : barColor.withOpacity(0.3 + _glowAnimation.value * 0.5)),
+                            width: isInteracting ? 2.0 : (widget.isSelected ? 2.5 : 1 + _glowAnimation.value),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: barColor.withOpacity(isInteracting ? 0.5 : 0.15 + _glowAnimation.value * 0.25),
+                              blurRadius: isInteracting ? 12 : 4 + _glowAnimation.value * 8,
+                              spreadRadius: isInteracting ? 3 : _glowAnimation.value * 2,
+                              offset: Offset(0, isInteracting ? 4 : 2 + _glowAnimation.value * 2),
+                            ),
+                            if (widget.isSelected)
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.3),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        // Progress fill
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: widget.width * widget.task.progress,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(GanttConstants.progressOpacity),
-                            ),
-                          ),
-                        ),
-                        // Task name (only show if bar is wide enough)
-                        if (widget.width > 60)
-                          Positioned.fill(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  widget.task.name,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Progress percentage (right side)
-                        if (widget.width > 80)
-                          Positioned(
-                            right: 14,
-                            top: 0,
-                            bottom: 0,
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                                child: Text(
-                                  '${(widget.task.progress * 100).round()}%',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: widget.width * widget.task.progress,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(GanttConstants.progressOpacity),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                        // 遅延インジケーター（⚠ +Xd形式）
-                        if (widget.task.delayStatus == DelayStatus.overdue)
-                          Positioned(
-                            right: widget.width > 80 ? 48 : 4,
-                            top: -8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.error,
-                                borderRadius: BorderRadius.circular(4),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.error.withOpacity(0.4),
-                                    blurRadius: 4,
-                                    spreadRadius: 0,
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('⚠', style: TextStyle(fontSize: 9)),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    '+${widget.task.daysOverdue}d',
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
+                              if ((_isHovered || _isMoving) && !isResizing && widget.width > 70)
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  top: 2,
+                                  child: Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.18),
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: const Icon(
+                                        Icons.drag_indicator,
+                                        size: 12,
+                                        color: Colors.white70,
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
+                                ),
+                              if (widget.width > 60)
+                                Positioned.fill(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        widget.task.name,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.white,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (widget.width > 80)
+                                Positioned(
+                                  right: 14,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                      child: Text(
+                                        '${(widget.task.progress * 100).round()}%',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (widget.task.delayStatus == DelayStatus.overdue)
+                                Positioned(
+                                  right: widget.width > 80 ? 48 : 4,
+                                  top: -8,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.error,
+                                      borderRadius: BorderRadius.circular(4),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.error.withOpacity(0.4),
+                                          blurRadius: 4,
+                                          spreadRadius: 0,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text('⚠', style: TextStyle(fontSize: 9)),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          '+${widget.task.daysOverdue}d',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              if (_isHovered || isResizing)
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: _buildResizeHandle(
+                                    isStart: true,
+                                    isHovered: _isStartHandleHovered,
+                                    barColor: barColor,
+                                  ),
+                                ),
+                              if (_isHovered || isResizing)
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: _buildResizeHandle(
+                                    isStart: false,
+                                    isHovered: _isEndHandleHovered,
+                                    barColor: barColor,
+                                  ),
+                                ),
+                              if (widget.showDependencyHandle &&
+                                  (_isHovered || _isDependencyDragging || widget.isDependencyDragActive))
+                                _buildDependencyHandle(barColor),
+                              if (widget.isValidDropTarget) _buildInputConnectorIndicator(),
+                            ],
                           ),
-                        // Left resize handle (start date)
-                        if (_isHovered || isResizing)
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            child: _buildResizeHandle(
-                              isStart: true,
-                              isHovered: _isStartHandleHovered,
-                              barColor: barColor,
-                            ),
-                          ),
-                        // Right resize handle (end date)
-                        if (_isHovered || isResizing)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            bottom: 0,
-                            child: _buildResizeHandle(
-                              isStart: false,
-                              isHovered: _isEndHandleHovered,
-                              barColor: barColor,
-                            ),
-                          ),
-                        // Dependency output connector (right side, for creating dependencies)
-                        if (widget.showDependencyHandle && (_isHovered || _isDependencyDragging || widget.isDependencyDragActive))
-                          _buildDependencyHandle(barColor),
-                        // Dependency input connector indicator (left side, shown when valid drop target)
-                        if (widget.isValidDropTarget)
-                          _buildInputConnectorIndicator(),
-                      ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (isInteracting &&
+                      widget.previewStartDate != null &&
+                      widget.previewEndDate != null)
+                    Positioned(
+                      top: -34,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.tooltipBackground,
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '${_formatDate(widget.previewStartDate!)} → ${_formatDate(widget.previewEndDate!)} '
+                            '(${widget.previewEndDate!.difference(widget.previewStartDate!).inDays + 1}日)',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               );
             },
           ),
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.month}/${date.day}';
   }
 
   Widget _buildMilestone(Color color) {

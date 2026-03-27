@@ -384,6 +384,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   onTaskDoubleTap: (task) => _showTaskEditModal(context, task),
                                   onTaskExpandToggle: (task, isExpanded) =>
                                       provider.toggleTaskExpansion(task.id),
+                                  onTaskDateChange: (task, newStart, newEnd) {
+                                    provider.updateTaskScheduleFromGantt(
+                                      taskId: task.id,
+                                      newStart: newStart,
+                                      newEnd: newEnd,
+                                    );
+                                  },
                                   timelineStartDate: provider.projectStartDate,
                                   timelineEndDate: provider.projectEndDate,
                                   dependencies: provider.dependencies,

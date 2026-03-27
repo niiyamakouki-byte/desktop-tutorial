@@ -185,6 +185,107 @@ class ProjectProvider extends ChangeNotifier {
     }
   }
 
+  /// Update a task date range from Gantt drag/resize and auto-adjust dependents.
+  void updateTaskScheduleFromGantt({
+    required String taskId,
+    required DateTime newStart,
+    required DateTime newEnd,
+  }) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index < 0) return;
+
+    final normalizedStart = DateTime(newStart.year, newStart.month, newStart.day);
+    var normalizedEnd = DateTime(newEnd.year, newEnd.month, newEnd.day);
+    if (normalizedEnd.isBefore(normalizedStart)) {
+      normalizedEnd = normalizedStart;
+    }
+
+    final currentTask = _tasks[index];
+    if (currentTask.startDate == normalizedStart &&
+        currentTask.endDate == normalizedEnd) {
+      return;
+    }
+
+    _tasks[index] = currentTask.copyWith(
+      startDate: normalizedStart,
+      endDate: normalizedEnd,
+      updatedAt: DateTime.now(),
+    );
+
+    if (_dependencyService.dependencies.isNotEmpty) {
+      _applyDependencyCascade();
+    } else {
+      _recalculateSchedule();
+    }
+
+    _autoSaveTasks();
+    _largeProjectMode = isLargeProject;
+    notifyListeners();
+  }
+
+  void _applyDependencyCascade() {
+    if (_hasDependencyCycle()) {
+      _setError('循環依存を検出したため、依存タスクの自動調整をスキップしました');
+      _recalculateSchedule();
+      return;
+    }
+    _error = null;
+
+    final adjustedTasks = _dependencyService.autoAdjustTasks(_tasks);
+    for (var i = 0; i < _tasks.length; i++) {
+      final adjusted = adjustedTasks.firstWhere(
+        (task) => task.id == _tasks[i].id,
+        orElse: () => _tasks[i],
+      );
+      if (_tasks[i].startDate != adjusted.startDate ||
+          _tasks[i].endDate != adjusted.endDate) {
+        _tasks[i] = _tasks[i].copyWith(
+          startDate: adjusted.startDate,
+          endDate: adjusted.endDate,
+          updatedAt: DateTime.now(),
+        );
+      }
+    }
+    _recalculateSchedule();
+  }
+
+  bool _hasDependencyCycle() {
+    final taskIds = _tasks.map((t) => t.id).toSet();
+    final adjacency = <String, Set<String>>{
+      for (final taskId in taskIds) taskId: <String>{},
+    };
+    final inDegree = <String, int>{for (final taskId in taskIds) taskId: 0};
+
+    for (final dep in _dependencyService.dependencies) {
+      if (!taskIds.contains(dep.fromTaskId) || !taskIds.contains(dep.toTaskId)) {
+        continue;
+      }
+      if (adjacency[dep.fromTaskId]!.add(dep.toTaskId)) {
+        inDegree[dep.toTaskId] = (inDegree[dep.toTaskId] ?? 0) + 1;
+      }
+    }
+
+    final queue = <String>[
+      for (final entry in inDegree.entries)
+        if (entry.value == 0) entry.key,
+    ];
+    var visitedCount = 0;
+
+    while (queue.isNotEmpty) {
+      final current = queue.removeLast();
+      visitedCount++;
+      for (final next in adjacency[current] ?? const <String>{}) {
+        final nextInDegree = (inDegree[next] ?? 0) - 1;
+        inDegree[next] = nextInDegree;
+        if (nextInDegree == 0) {
+          queue.add(next);
+        }
+      }
+    }
+
+    return visitedCount != taskIds.length;
+  }
+
   // Get children of a task
   List<Task> getTaskChildren(String parentId) {
     return _tasks.where((task) => task.parentId == parentId).toList();
