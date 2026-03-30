@@ -188,6 +188,9 @@ class _GanttChartState extends State<GanttChart> {
   // Weather alerts
   List<WeatherAlert> _weatherAlerts = [];
 
+  // Weekend toggle
+  late bool _showWeekends;
+
   // クイックフィルター状態
   Set<QuickFilterType> _activeFilters = {};
   Map<QuickFilterType, int> _filterCounts = {};
@@ -206,6 +209,7 @@ class _GanttChartState extends State<GanttChart> {
     _taskListWidth = widget.initialTaskListWidth;
     _viewMode = widget.initialViewMode;
     _selectedTaskId = widget.selectedTaskId;
+    _showWeekends = widget.showWeekends;
 
     _computeDateRange();
     _computeVisibleTasks();
@@ -775,6 +779,11 @@ class _GanttChartState extends State<GanttChart> {
 
             const SizedBox(width: 8),
 
+            // Weekend toggle
+            _buildWeekendToggle(),
+
+            const SizedBox(width: 8),
+
             // Expand/Collapse all
             _buildExpandCollapseButtons(),
           ],
@@ -880,6 +889,53 @@ class _GanttChartState extends State<GanttChart> {
     );
   }
 
+  Widget _buildWeekendToggle() {
+    return Tooltip(
+      message: _showWeekends ? '土日非表示' : '土日表示',
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _showWeekends = !_showWeekends;
+          });
+        },
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: _showWeekends
+                ? AppColors.primary.withOpacity(0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: _showWeekends
+                  ? AppColors.primary.withOpacity(0.3)
+                  : AppColors.textSecondary.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.weekend,
+                size: 16,
+                color: _showWeekends ? AppColors.primary : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '土日',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: _showWeekends ? AppColors.primary : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildExpandCollapseButtons() {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -961,6 +1017,7 @@ class _GanttChartState extends State<GanttChart> {
           phaseMap: _phaseMap,
           usePhaseColors: widget.usePhaseColors,
           enableRowAnimations: !_isPerformanceMode,
+          showWeekends: _showWeekends,
         ),
 
         // Note: Dependency creation is now handled within TimelinePanel

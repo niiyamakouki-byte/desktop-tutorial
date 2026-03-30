@@ -172,12 +172,14 @@ class GanttViewState {
   final DateTime rangeStart;
   final DateTime rangeEnd;
   final double zoom;
+  final bool showWeekends;
 
   const GanttViewState({
     this.granularity = GanttGranularity.week,
     required this.rangeStart,
     required this.rangeEnd,
     this.zoom = 1.0,
+    this.showWeekends = true,
   });
 
   GanttViewState copyWith({
@@ -185,12 +187,14 @@ class GanttViewState {
     DateTime? rangeStart,
     DateTime? rangeEnd,
     double? zoom,
+    bool? showWeekends,
   }) {
     return GanttViewState(
       granularity: granularity ?? this.granularity,
       rangeStart: rangeStart ?? this.rangeStart,
       rangeEnd: rangeEnd ?? this.rangeEnd,
       zoom: zoom ?? this.zoom,
+      showWeekends: showWeekends ?? this.showWeekends,
     );
   }
 }

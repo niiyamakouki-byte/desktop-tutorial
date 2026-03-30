@@ -50,6 +50,9 @@ class TimelinePanel extends StatefulWidget {
   /// Enable row-level hover/selection animation
   final bool enableRowAnimations;
 
+  /// Whether to highlight weekends
+  final bool showWeekends;
+
   const TimelinePanel({
     super.key,
     required this.tasks,
@@ -74,6 +77,7 @@ class TimelinePanel extends StatefulWidget {
     this.phaseMap = const {},
     this.usePhaseColors = true,
     this.enableRowAnimations = true,
+    this.showWeekends = true,
   });
 
   @override
@@ -672,15 +676,16 @@ class _TimelinePanelState extends State<TimelinePanel> {
         child: Stack(
           children: [
             // Weekend highlighting
-            CustomPaint(
-              size: Size(totalWidth, GanttConstants.rowHeight),
-              painter: WeekendHighlightPainter(
-                startDate: widget.startDate,
-                endDate: widget.endDate,
-                dayWidth: widget.dayWidth,
-                height: GanttConstants.rowHeight,
+            if (widget.showWeekends)
+              CustomPaint(
+                size: Size(totalWidth, GanttConstants.rowHeight),
+                painter: WeekendHighlightPainter(
+                  startDate: widget.startDate,
+                  endDate: widget.endDate,
+                  dayWidth: widget.dayWidth,
+                  height: GanttConstants.rowHeight,
+                ),
               ),
-            ),
             // Grid lines (vertical day separators)
             CustomPaint(
               size: Size(totalWidth, GanttConstants.rowHeight),
