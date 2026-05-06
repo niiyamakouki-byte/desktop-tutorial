@@ -579,15 +579,17 @@ class VendorAvailability {
       };
 
   factory VendorAvailability.fromJson(Map<String, dynamic> json) {
-    final statusMap = (json['dailyStatus'] as Map<String, dynamic>?)?.map(
-          (k, v) => MapEntry(
-            int.parse(k),
-            VendorAvailabilityStatus.values.firstWhere(
-              (e) => e.name == v,
-              orElse: () => VendorAvailabilityStatus.unknown,
-            ),
-          ),
-        ) ??
+    final statusMap = (json['dailyStatus'] as Map<String, dynamic>?)
+            ?.entries
+            .fold<Map<int, VendorAvailabilityStatus>>({}, (acc, entry) {
+              final day = int.tryParse(entry.key);
+              if (day == null) return acc;
+              acc[day] = VendorAvailabilityStatus.values.firstWhere(
+                (e) => e.name == entry.value,
+                orElse: () => VendorAvailabilityStatus.unknown,
+              );
+              return acc;
+            }) ??
         {};
 
     return VendorAvailability(

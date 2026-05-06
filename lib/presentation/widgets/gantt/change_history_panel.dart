@@ -311,11 +311,12 @@ class _ChangeHistoryPanelState extends State<ChangeHistoryPanel> {
 
   String _formatDateLabel(String dateKey) {
     final parts = dateKey.split('-');
-    final date = DateTime(
-      int.parse(parts[0]),
-      int.parse(parts[1]),
-      int.parse(parts[2]),
-    );
+    if (parts.length < 3) return dateKey;
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final day = int.tryParse(parts[2]);
+    if (year == null || month == null || day == null) return dateKey;
+    final date = DateTime(year, month, day);
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

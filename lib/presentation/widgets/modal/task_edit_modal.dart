@@ -188,6 +188,8 @@ class _TaskEditModalState extends State<TaskEditModal>
     // Simulate save delay for UX
     await Future.delayed(const Duration(milliseconds: 300));
 
+    if (!mounted) return;
+
     final now = DateTime.now();
     final task = Task(
       id: widget.task?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
