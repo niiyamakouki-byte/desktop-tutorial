@@ -151,9 +151,9 @@ class AttendanceEvent {
       personId: json['personId'] as String,
       companyId: json['companyId'] as String,
       type: AttendanceEventType.fromString(json['type'] as String),
-      occurredAt: DateTime.parse(json['occurredAt'] as String),
+      occurredAt: DateTime.tryParse(json['occurredAt'] as String? ?? '') ?? DateTime.now(),
       syncedAt: json['syncedAt'] != null
-          ? DateTime.parse(json['syncedAt'] as String)
+          ? DateTime.tryParse(json['syncedAt'] as String? ?? '')
           : null,
       deviceId: json['deviceId'] as String,
       createdByUserId: json['createdByUserId'] as String,
