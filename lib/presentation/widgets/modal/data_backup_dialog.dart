@@ -35,7 +35,7 @@ class _DataBackupDialogState extends State<DataBackupDialog> {
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'エクスポート失敗: $e';
+        _statusMessage = 'エクスポートに失敗しました';
         _isLoading = false;
       });
     }
@@ -106,7 +106,7 @@ class _DataBackupDialogState extends State<DataBackupDialog> {
       }
     } catch (e) {
       setState(() {
-        _statusMessage = 'インポート失敗: $e';
+        _statusMessage = 'インポートに失敗しました';
         _isLoading = false;
       });
     }
