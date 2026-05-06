@@ -47,22 +47,34 @@ class SafetyService extends ChangeNotifier {
     // KY活動記録
     final kyJson = _prefs?.getString(_kyRecordsKey);
     if (kyJson != null) {
-      final List<dynamic> list = json.decode(kyJson);
-      _kyRecords = list.map((e) => KYActivityRecord.fromJson(e)).toList();
+      try {
+        final List<dynamic> list = json.decode(kyJson);
+        _kyRecords = list.map((e) => KYActivityRecord.fromJson(e)).toList();
+      } on FormatException catch (e) {
+        debugPrint('Failed to parse KY records: $e');
+      }
     }
 
     // ヒヤリハット
     final nmJson = _prefs?.getString(_nearMissKey);
     if (nmJson != null) {
-      final List<dynamic> list = json.decode(nmJson);
-      _nearMissReports = list.map((e) => NearMissReport.fromJson(e)).toList();
+      try {
+        final List<dynamic> list = json.decode(nmJson);
+        _nearMissReports = list.map((e) => NearMissReport.fromJson(e)).toList();
+      } on FormatException catch (e) {
+        debugPrint('Failed to parse near-miss reports: $e');
+      }
     }
 
     // 安全パトロール
     final patrolJson = _prefs?.getString(_patrolRecordsKey);
     if (patrolJson != null) {
-      final List<dynamic> list = json.decode(patrolJson);
-      _patrolRecords = list.map((e) => SafetyPatrolRecord.fromJson(e)).toList();
+      try {
+        final List<dynamic> list = json.decode(patrolJson);
+        _patrolRecords = list.map((e) => SafetyPatrolRecord.fromJson(e)).toList();
+      } on FormatException catch (e) {
+        debugPrint('Failed to parse patrol records: $e');
+      }
     }
   }
 
