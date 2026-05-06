@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/attendance_event.dart';
@@ -41,10 +42,15 @@ class AttendanceStorageService {
   Future<List<AttendanceEvent>> getAllEvents() async {
     final prefs = await _preferences;
     final jsonList = prefs.getStringList(_eventsKey) ?? [];
-    return jsonList
-        .map((json) => AttendanceEvent.fromJson(jsonDecode(json)))
-        .toList()
-      ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+    final events = <AttendanceEvent>[];
+    for (final raw in jsonList) {
+      try {
+        events.add(AttendanceEvent.fromJson(jsonDecode(raw)));
+      } on FormatException catch (e) {
+        debugPrint('Skipping corrupt attendance event: $e');
+      }
+    }
+    return events..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
   }
 
   /// プロジェクト別イベントを取得
@@ -123,7 +129,15 @@ class AttendanceStorageService {
   Future<List<Person>> getAllPersons() async {
     final prefs = await _preferences;
     final jsonList = prefs.getStringList(_personsKey) ?? [];
-    return jsonList.map((json) => Person.fromJson(jsonDecode(json))).toList();
+    final persons = <Person>[];
+    for (final raw in jsonList) {
+      try {
+        persons.add(Person.fromJson(jsonDecode(raw)));
+      } on FormatException catch (e) {
+        debugPrint('Skipping corrupt person record: $e');
+      }
+    }
+    return persons;
   }
 
   /// プロジェクト別職人を取得
@@ -193,7 +207,15 @@ class AttendanceStorageService {
   Future<List<Company>> getAllCompanies() async {
     final prefs = await _preferences;
     final jsonList = prefs.getStringList(_companiesKey) ?? [];
-    return jsonList.map((json) => Company.fromJson(jsonDecode(json))).toList();
+    final companies = <Company>[];
+    for (final raw in jsonList) {
+      try {
+        companies.add(Company.fromJson(jsonDecode(raw)));
+      } on FormatException catch (e) {
+        debugPrint('Skipping corrupt company record: $e');
+      }
+    }
+    return companies;
   }
 
   /// 会社をIDで取得
