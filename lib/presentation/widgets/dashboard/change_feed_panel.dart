@@ -7,6 +7,8 @@
 /// - 「確認」ボタン
 /// - リアルタイム更新対応
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -43,6 +45,7 @@ class _ChangeFeedPanelState extends State<ChangeFeedPanel> {
   List<ChangeEvent> _events = [];
   int _unackedCount = 0;
   bool _isLoading = false;
+  StreamSubscription<dynamic>? _stateSubscription;
 
   @override
   void initState() {
@@ -50,7 +53,7 @@ class _ChangeFeedPanelState extends State<ChangeFeedPanel> {
     _loadEvents();
 
     // リアルタイム更新をリッスン
-    SyncServiceProvider.instance.stateStream.listen((state) {
+    _stateSubscription = SyncServiceProvider.instance.stateStream.listen((state) {
       if (mounted) {
         setState(() {
           _events = widget.projectId != null
@@ -60,6 +63,12 @@ class _ChangeFeedPanelState extends State<ChangeFeedPanel> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _stateSubscription?.cancel();
+    super.dispose();
   }
 
   void _loadEvents() {
