@@ -131,7 +131,7 @@ class ChangeEvent {
       resourceId: json['resourceId'] as String,
       projectId: json['projectId'] as String?,
       payload: json['payload'] as Map<String, dynamic>?,
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      timestamp: DateTime.tryParse(json['timestamp'] as String? ?? '') ?? DateTime.now(),
       changedByUserId: json['changedByUserId'] as String?,
       sequenceNumber: json['sequenceNumber'] as int?,
       metadata: json['metadata'] as Map<String, dynamic>?,
@@ -205,7 +205,7 @@ class ChangeFeedResponse {
       cursor: json['cursor'] as String?,
       hasMore: json['hasMore'] as bool? ?? false,
       serverTime: json['serverTime'] != null
-          ? DateTime.parse(json['serverTime'] as String)
+          ? (DateTime.tryParse(json['serverTime'] as String) ?? DateTime.now())
           : DateTime.now(),
     );
   }
@@ -251,7 +251,7 @@ class CursorAckResponse {
       success: json['success'] as bool? ?? true,
       cursor: json['cursor'] as String,
       serverTime: json['serverTime'] != null
-          ? DateTime.parse(json['serverTime'] as String)
+          ? (DateTime.tryParse(json['serverTime'] as String) ?? DateTime.now())
           : DateTime.now(),
     );
   }
