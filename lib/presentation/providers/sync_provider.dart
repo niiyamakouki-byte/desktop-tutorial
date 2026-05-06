@@ -6,6 +6,8 @@
 /// - visibilitychange対応（タブがアクティブな時だけポーリング）
 /// - エラー時は黙って次回（現場は落ちる前提）
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../data/services/sync_service.dart';
@@ -131,6 +133,9 @@ class SyncProvider extends StatefulWidget {
 class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver {
   late SyncProviderState _state;
   bool _initialized = false;
+  StreamSubscription<dynamic>? _syncSubscription;
+  StreamSubscription<dynamic>? _presenceSubscription;
+  StreamSubscription<dynamic>? _outboxSubscription;
 
   @override
   void initState() {
@@ -169,7 +174,7 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
     );
 
     // 状態変更をリッスン
-    SyncServiceProvider.instance.stateStream.listen((syncState) {
+    _syncSubscription = SyncServiceProvider.instance.stateStream.listen((syncState) {
       if (mounted) {
         setState(() {
           _state = SyncProviderState(
@@ -183,7 +188,7 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
       }
     });
 
-    PresenceServiceProvider.instance.stateStream.listen((presenceState) {
+    _presenceSubscription = PresenceServiceProvider.instance.stateStream.listen((presenceState) {
       if (mounted) {
         setState(() {
           _state = SyncProviderState(
@@ -197,7 +202,7 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
       }
     });
 
-    OutboxServiceProvider.instance.stateStream.listen((outboxState) {
+    _outboxSubscription = OutboxServiceProvider.instance.stateStream.listen((outboxState) {
       if (mounted) {
         setState(() {
           _state = SyncProviderState(
@@ -256,6 +261,11 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+
+    // ストリームサブスクリプションを解除
+    _syncSubscription?.cancel();
+    _presenceSubscription?.cancel();
+    _outboxSubscription?.cancel();
 
     // コールバックを解除
     if (widget.onChangesReceived != null) {
