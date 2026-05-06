@@ -110,10 +110,16 @@ class AttendanceStorageService {
     final updatedList = <String>[];
 
     for (final json in jsonList) {
-      final event = AttendanceEvent.fromJson(jsonDecode(json));
-      if (event.id == eventId) {
-        updatedList.add(jsonEncode(event.markAsSynced(syncTime).toJson()));
-      } else {
+      try {
+        final event = AttendanceEvent.fromJson(jsonDecode(json));
+        if (event.id == eventId) {
+          updatedList.add(jsonEncode(event.markAsSynced(syncTime).toJson()));
+        } else {
+          updatedList.add(json);
+        }
+      } on FormatException catch (e) {
+        debugPrint('Skipping corrupt event during sync mark: $e');
+        // preserve the original raw string to avoid silent data loss
         updatedList.add(json);
       }
     }
@@ -178,10 +184,18 @@ class AttendanceStorageService {
     final jsonList = prefs.getStringList(_personsKey) ?? [];
 
     // 既存の場合は更新
-    final index = jsonList.indexWhere((json) {
-      final p = Person.fromJson(jsonDecode(json));
-      return p.id == person.id;
-    });
+    int index = -1;
+    for (int i = 0; i < jsonList.length; i++) {
+      try {
+        final p = Person.fromJson(jsonDecode(jsonList[i]));
+        if (p.id == person.id) {
+          index = i;
+          break;
+        }
+      } on FormatException catch (e) {
+        debugPrint('Skipping corrupt person entry at index $i: $e');
+      }
+    }
 
     if (index >= 0) {
       jsonList[index] = jsonEncode(person.toJson());
@@ -234,10 +248,18 @@ class AttendanceStorageService {
     final jsonList = prefs.getStringList(_companiesKey) ?? [];
 
     // 既存の場合は更新
-    final index = jsonList.indexWhere((json) {
-      final c = Company.fromJson(jsonDecode(json));
-      return c.id == company.id;
-    });
+    int index = -1;
+    for (int i = 0; i < jsonList.length; i++) {
+      try {
+        final c = Company.fromJson(jsonDecode(jsonList[i]));
+        if (c.id == company.id) {
+          index = i;
+          break;
+        }
+      } on FormatException catch (e) {
+        debugPrint('Skipping corrupt company entry at index $i: $e');
+      }
+    }
 
     if (index >= 0) {
       jsonList[index] = jsonEncode(company.toJson());
