@@ -198,7 +198,7 @@ class TaskChangeHistory {
           ? User.fromJson(json['changedBy'] as Map<String, dynamic>)
           : null,
       changedByUserId: json['changedByUserId'] as String,
-      changedAt: DateTime.parse(json['changedAt'] as String),
+      changedAt: DateTime.tryParse(json['changedAt'] as String? ?? '') ?? DateTime.now(),
       changeType: ChangeType.fromString(json['changeType'] as String),
       changes: (json['changes'] as List<dynamic>?)
               ?.map((e) => FieldChange.fromJson(e as Map<String, dynamic>))
