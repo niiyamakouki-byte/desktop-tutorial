@@ -133,8 +133,11 @@ class TaskRepository {
       await clearAll();
     }
 
-    final jsonList = jsonDecode(jsonStr) as List;
-    final tasks = jsonList
+    final dynamic decoded = jsonDecode(jsonStr);
+    if (decoded is! List) {
+      throw const FormatException('Import data must be a JSON array');
+    }
+    final tasks = decoded
         .map((json) => Task.fromJson(json as Map<String, dynamic>))
         .toList();
     await saveTasks(tasks);
