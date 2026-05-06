@@ -129,8 +129,11 @@ class ProjectRepository {
       await clearAll();
     }
 
-    final jsonList = jsonDecode(jsonStr) as List;
-    final projects = jsonList
+    final dynamic decoded = jsonDecode(jsonStr);
+    if (decoded is! List) {
+      throw const FormatException('Import data must be a JSON array');
+    }
+    final projects = decoded
         .map((json) => Project.fromJson(json as Map<String, dynamic>))
         .toList();
 
