@@ -49,9 +49,9 @@ class LeftTaskNavigator extends StatelessWidget {
                 searchText: state.filters.searchText ?? '',
                 onChanged: (text) {
                   controller.updateFilters((f) => f.copyWith(
-                    searchText: text.isEmpty ? null : text,
-                    clearSearch: text.isEmpty,
-                  ));
+                        searchText: text.isEmpty ? null : text,
+                        clearSearch: text.isEmpty,
+                      ));
                 },
               ),
 
@@ -123,13 +123,15 @@ class _SearchBar extends StatelessWidget {
           ),
           suffixIcon: searchText.isNotEmpty
               ? IconButton(
-                  icon: Icon(Icons.clear, size: 18, color: AppColors.textTertiary),
+                  icon: Icon(Icons.clear,
+                      size: 18, color: AppColors.textTertiary),
                   onPressed: () => onChanged(''),
                 )
               : null,
           filled: true,
           fillColor: AppColors.background,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
@@ -304,9 +306,11 @@ class _FilterSortRow extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   sort.label,
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style:
+                      TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
-                Icon(Icons.arrow_drop_down, size: 16, color: AppColors.textSecondary),
+                Icon(Icons.arrow_drop_down,
+                    size: 16, color: AppColors.textSecondary),
               ],
             ),
             itemBuilder: (context) => TaskSort.values.map((s) {
@@ -323,7 +327,8 @@ class _FilterSortRow extends StatelessWidget {
           if (hasActiveFilters)
             TextButton.icon(
               onPressed: onClearFilters,
-              icon: Icon(Icons.filter_alt_off, size: 14, color: AppColors.primary),
+              icon: Icon(Icons.filter_alt_off,
+                  size: 14, color: AppColors.primary),
               label: Text(
                 'クリア',
                 style: TextStyle(fontSize: 12, color: AppColors.primary),
@@ -425,7 +430,7 @@ class _TaskRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDelayed = task.delayStatus == DelayStatus.overdue;
-    final isWaiting = task.delayStatus == DelayStatus.waiting;
+    final isWaiting = task.delayStatus == DelayStatus.blocked;
     final minHeight = isMobile ? 56.0 : 48.0;
 
     return InkWell(
@@ -478,7 +483,8 @@ class _TaskRow extends StatelessWidget {
                     task.name,
                     style: TextStyle(
                       fontSize: isMobile ? 15 : 13,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
                       color: AppColors.textPrimary,
                     ),
                     maxLines: 2,
@@ -502,11 +508,11 @@ class _TaskRow extends StatelessWidget {
               children: [
                 // 遅延バッジ
                 if (isDelayed)
-                  _DelayBadge(daysOverdue: task.daysOverdue, isMobile: isMobile),
+                  _DelayBadge(
+                      daysOverdue: task.daysOverdue, isMobile: isMobile),
 
                 // 待ちバッジ
-                if (isWaiting)
-                  _WaitingBadge(isMobile: isMobile),
+                if (isWaiting) _WaitingBadge(isMobile: isMobile),
 
                 // クイックアクション
                 if (onQuickAction != null && !isMobile)
@@ -541,7 +547,7 @@ class _StatusIndicator extends StatelessWidget {
       case DelayStatus.atRisk:
         color = AppColors.warning;
         break;
-      case DelayStatus.waiting:
+      case DelayStatus.blocked:
         color = AppColors.info;
         icon = Icons.hourglass_empty;
         break;

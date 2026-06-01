@@ -69,7 +69,7 @@ class SyncProviderState {
   int get unackedCount => syncState.unackedCount;
 
   /// オンラインメンバー数
-  int get onlineMembers => presenceState.onlineCount;
+  int get onlineMembers => presenceState.onlineUserCount;
 
   /// 保留中のOutboxアイテム数
   int get pendingOutbox => outboxState.pendingCount;
@@ -118,7 +118,7 @@ class SyncProvider extends StatefulWidget {
 
   /// PresenceServiceを取得
   static PresenceService presenceService(BuildContext context) {
-    return PresenceServiceProvider.instance;
+    return PresenceService();
   }
 
   /// OutboxServiceを取得
@@ -130,12 +130,14 @@ class SyncProvider extends StatefulWidget {
   State<SyncProvider> createState() => _SyncProviderState();
 }
 
-class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver {
+class _SyncProviderState extends State<SyncProvider>
+    with WidgetsBindingObserver {
   late SyncProviderState _state;
   bool _initialized = false;
   StreamSubscription<dynamic>? _syncSubscription;
   StreamSubscription<dynamic>? _presenceSubscription;
   StreamSubscription<dynamic>? _outboxSubscription;
+  final PresenceService _presenceService = PresenceService();
 
   @override
   void initState() {
@@ -152,12 +154,8 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
     ));
 
     // PresenceServiceを初期化
-    PresenceServiceProvider.initialize(
-      PresenceConfig(
-        heartbeatIntervalMs: widget.options.heartbeatMs,
-        apiBaseUrl: widget.options.apiBaseUrl,
-      ),
-      userId: widget.options.userId,
+    _presenceService.initialize(
+      userId: widget.options.userId ?? widget.options.deviceId ?? 'anonymous',
     );
 
     // OutboxServiceを初期化
@@ -169,12 +167,13 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
     // 初期状態を設定
     _state = SyncProviderState(
       syncState: SyncServiceProvider.instance.state,
-      presenceState: PresenceServiceProvider.instance.state,
+      presenceState: _presenceService.state,
       outboxState: OutboxServiceProvider.instance.state,
     );
 
     // 状態変更をリッスン
-    _syncSubscription = SyncServiceProvider.instance.stateStream.listen((syncState) {
+    _syncSubscription =
+        SyncServiceProvider.instance.stateStream.listen((syncState) {
       if (mounted) {
         setState(() {
           _state = SyncProviderState(
@@ -188,7 +187,8 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
       }
     });
 
-    _presenceSubscription = PresenceServiceProvider.instance.stateStream.listen((presenceState) {
+    _presenceSubscription =
+        _presenceService.stateStream.listen((presenceState) {
       if (mounted) {
         setState(() {
           _state = SyncProviderState(
@@ -202,7 +202,8 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
       }
     });
 
-    _outboxSubscription = OutboxServiceProvider.instance.stateStream.listen((outboxState) {
+    _outboxSubscription =
+        OutboxServiceProvider.instance.stateStream.listen((outboxState) {
       if (mounted) {
         setState(() {
           _state = SyncProviderState(
@@ -223,7 +224,9 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
 
     // ポーリング開始
     SyncServiceProvider.instance.startPolling();
-    PresenceServiceProvider.instance.startHeartbeat();
+    _presenceService.startHeartbeat(
+      Duration(milliseconds: widget.options.heartbeatMs),
+    );
 
     setState(() {
       _initialized = true;
@@ -250,11 +253,13 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
 
     if (isActive) {
       // フォアグラウンド復帰時
-      PresenceServiceProvider.instance.startHeartbeat();
+      _presenceService.startHeartbeat(
+        Duration(milliseconds: widget.options.heartbeatMs),
+      );
       OutboxServiceProvider.instance.processOutbox();
     } else {
       // バックグラウンド移行時
-      PresenceServiceProvider.instance.stopHeartbeat();
+      _presenceService.stopHeartbeat();
     }
   }
 
@@ -269,12 +274,13 @@ class _SyncProviderState extends State<SyncProvider> with WidgetsBindingObserver
 
     // コールバックを解除
     if (widget.onChangesReceived != null) {
-      SyncServiceProvider.instance.removeEventListener(widget.onChangesReceived!);
+      SyncServiceProvider.instance
+          .removeEventListener(widget.onChangesReceived!);
     }
 
     // サービスを停止（破棄はしない - シングルトンなので）
     SyncServiceProvider.instance.stopPolling();
-    PresenceServiceProvider.instance.stopHeartbeat();
+    _presenceService.stopHeartbeat();
     OutboxServiceProvider.instance.stopProcessing();
 
     super.dispose();

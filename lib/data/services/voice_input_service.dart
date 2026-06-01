@@ -145,17 +145,3 @@ external void _jsStop();
 
 @JS('VoiceInput.setCallbacks')
 external void _jsSetCallbacks(JSFunction onResult, JSFunction onError, JSFunction onStateChange);
-
-extension on void Function(String, bool) {
-  JSFunction get toJS => _createResultCallback(this);
-}
-
-extension on void Function(String) {
-  JSFunction get toJS => _createStringCallback(this);
-}
-
-@JS('eval')
-external JSFunction _createResultCallback(void Function(String, bool) callback);
-
-@JS('eval')
-external JSFunction _createStringCallback(void Function(String) callback);

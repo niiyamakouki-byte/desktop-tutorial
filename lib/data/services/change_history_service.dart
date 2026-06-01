@@ -8,7 +8,8 @@ import '../models/models.dart';
 /// 誰がいつ何を変えたかを追跡
 class ChangeHistoryService extends ChangeNotifier {
   /// シングルトンインスタンス
-  static final ChangeHistoryService _instance = ChangeHistoryService._internal();
+  static final ChangeHistoryService _instance =
+      ChangeHistoryService._internal();
   factory ChangeHistoryService() => _instance;
   ChangeHistoryService._internal();
 
@@ -339,16 +340,16 @@ class ChangeHistoryService extends ChangeNotifier {
         id: 'user_demo_1',
         name: '田中 一郎',
         email: 'tanaka@example.com',
-        role: UserRole.manager,
-        createdAt: now,
+        role: UserRole.siteManager,
+        department: '工事部',
         isOnline: false,
       ),
       User(
         id: 'user_demo_2',
         name: '鈴木 花子',
         email: 'suzuki@example.com',
-        role: UserRole.worker,
-        createdAt: now,
+        role: UserRole.engineer,
+        department: '施工管理部',
         isOnline: true,
       ),
     ];
@@ -366,7 +367,9 @@ class ChangeHistoryService extends ChangeNotifier {
         changes: [
           FieldChange(
             field: TaskFieldType.endDate,
-            oldValue: task.endDate.subtract(const Duration(days: 2)).toIso8601String(),
+            oldValue: task.endDate
+                .subtract(const Duration(days: 2))
+                .toIso8601String(),
             newValue: task.endDate.toIso8601String(),
           ),
         ],

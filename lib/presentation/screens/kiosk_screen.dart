@@ -49,7 +49,8 @@ class _KioskScreenState extends State<KioskScreen> {
     await _attendanceService.initialize();
 
     // サンプルデータがなければ生成
-    final persons = await _attendanceService.getPersonsByProject(widget.projectId);
+    final persons =
+        await _attendanceService.getPersonsByProject(widget.projectId);
     if (persons.isEmpty) {
       await _attendanceService.generateSampleData(widget.projectId);
     }
@@ -72,7 +73,8 @@ class _KioskScreenState extends State<KioskScreen> {
 
     // 会社フィルター
     if (_selectedCompanyFilter != null) {
-      filtered = filtered.where((p) => p.companyId == _selectedCompanyFilter).toList();
+      filtered =
+          filtered.where((p) => p.companyId == _selectedCompanyFilter).toList();
     }
 
     // 検索フィルター
@@ -80,7 +82,7 @@ class _KioskScreenState extends State<KioskScreen> {
       final query = _searchQuery.toLowerCase();
       filtered = filtered.where((p) {
         return p.name.toLowerCase().contains(query) ||
-            p.qrCode.toLowerCase().contains(query);
+            (p.qrCode?.toLowerCase().contains(query) ?? false);
       }).toList();
     }
 
@@ -118,7 +120,8 @@ class _KioskScreenState extends State<KioskScreen> {
     }
   }
 
-  void _showSuccessDialog(String message, bool hasWarning, String? warningMessage) {
+  void _showSuccessDialog(
+      String message, bool hasWarning, String? warningMessage) {
     setState(() {
       _showSuccess = true;
       _successMessage = message;
@@ -184,7 +187,8 @@ class _KioskScreenState extends State<KioskScreen> {
             builder: (context, snapshot) {
               final now = DateTime.now();
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -234,8 +238,7 @@ class _KioskScreenState extends State<KioskScreen> {
             ],
           ),
           // 成功メッセージオーバーレイ
-          if (_showSuccess)
-            _buildSuccessOverlay(),
+          if (_showSuccess) _buildSuccessOverlay(),
           // ローディングオーバーレイ
           if (_isLoading)
             Container(
@@ -275,7 +278,8 @@ class _KioskScreenState extends State<KioskScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                     ),
                     onChanged: (value) {
                       setState(() => _searchQuery = value);
@@ -300,9 +304,9 @@ class _KioskScreenState extends State<KioskScreen> {
                           child: Text('全会社'),
                         ),
                         ..._companies.map((c) => DropdownMenuItem<String?>(
-                          value: c.id,
-                          child: Text(c.displayName),
-                        )),
+                              value: c.id,
+                              child: Text(c.displayName),
+                            )),
                       ],
                       onChanged: (value) {
                         setState(() => _selectedCompanyFilter = value);
@@ -344,7 +348,8 @@ class _KioskScreenState extends State<KioskScreen> {
                       final isSelected = _selectedPerson?.id == person.id;
 
                       return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         child: Material(
                           color: isSelected
                               ? const Color(0xFF1A237E).withOpacity(0.1)
@@ -373,7 +378,8 @@ class _KioskScreenState extends State<KioskScreen> {
                                   // アバター
                                   CircleAvatar(
                                     radius: 28,
-                                    backgroundColor: _getJobTypeColor(person.jobType),
+                                    backgroundColor:
+                                        _getJobTypeColor(person.jobType),
                                     child: Text(
                                       person.name.substring(0, 1),
                                       style: const TextStyle(
@@ -387,7 +393,8 @@ class _KioskScreenState extends State<KioskScreen> {
                                   // 名前・会社
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           person.name,
@@ -400,13 +407,15 @@ class _KioskScreenState extends State<KioskScreen> {
                                         Row(
                                           children: [
                                             Container(
-                                              padding: const EdgeInsets.symmetric(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
                                                 horizontal: 8,
                                                 vertical: 2,
                                               ),
                                               decoration: BoxDecoration(
                                                 color: Colors.grey[200],
-                                                borderRadius: BorderRadius.circular(4),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
                                               ),
                                               child: Text(
                                                 company?.displayName ?? '不明',
@@ -418,19 +427,24 @@ class _KioskScreenState extends State<KioskScreen> {
                                             ),
                                             const SizedBox(width: 8),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
                                                 horizontal: 8,
                                                 vertical: 2,
                                               ),
                                               decoration: BoxDecoration(
-                                                color: _getJobTypeColor(person.jobType).withOpacity(0.2),
-                                                borderRadius: BorderRadius.circular(4),
+                                                color: _getJobTypeColor(
+                                                        person.jobType)
+                                                    .withOpacity(0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
                                               ),
                                               child: Text(
                                                 person.jobType.displayName,
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: _getJobTypeColor(person.jobType),
+                                                  color: _getJobTypeColor(
+                                                      person.jobType),
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
@@ -529,9 +543,8 @@ class _KioskScreenState extends State<KioskScreen> {
               child: ElevatedButton(
                 onPressed: canRecord ? () => _recordAttendance(true) : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: canRecord
-                      ? const Color(0xFF4CAF50)
-                      : Colors.grey[400],
+                  backgroundColor:
+                      canRecord ? const Color(0xFF4CAF50) : Colors.grey[400],
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -571,9 +584,8 @@ class _KioskScreenState extends State<KioskScreen> {
               child: ElevatedButton(
                 onPressed: canRecord ? () => _recordAttendance(false) : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: canRecord
-                      ? const Color(0xFFF44336)
-                      : Colors.grey[400],
+                  backgroundColor:
+                      canRecord ? const Color(0xFFF44336) : Colors.grey[400],
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),

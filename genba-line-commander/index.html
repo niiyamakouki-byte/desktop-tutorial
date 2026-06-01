@@ -430,8 +430,13 @@
       try {
         const result = await callGAS('getScheduleByDate', { projectId, date });
         if (result.success && result.data.tasks && result.data.tasks.length > 0) {
-          const tasksList = result.data.tasks.map(t => `・${t.taskName}`).join('<br>');
-          document.getElementById('rain-tasks-list').innerHTML = tasksList;
+          const tasksList = document.getElementById('rain-tasks-list');
+          tasksList.replaceChildren();
+          result.data.tasks.forEach((task) => {
+            const line = document.createElement('div');
+            line.textContent = `・${task.taskName ?? ''}`;
+            tasksList.appendChild(line);
+          });
           document.getElementById('rain-affected-tasks').classList.remove('hidden');
         } else {
           document.getElementById('rain-affected-tasks').classList.add('hidden');

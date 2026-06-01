@@ -12,12 +12,12 @@ class TaskCascadeService extends ChangeNotifier {
   TaskCascadeService._internal();
 
   List<Task> _tasks = [];
-  List<Dependency> _dependencies = [];
+  List<TaskDependency> _dependencies = [];
 
   /// 初期化
   void initialize({
     required List<Task> tasks,
-    required List<Dependency> dependencies,
+    required List<TaskDependency> dependencies,
   }) {
     _tasks = List.from(tasks);
     _dependencies = List.from(dependencies);
@@ -30,7 +30,7 @@ class TaskCascadeService extends ChangeNotifier {
   }
 
   /// 依存関係リストを更新
-  void updateDependencies(List<Dependency> dependencies) {
+  void updateDependencies(List<TaskDependency> dependencies) {
     _dependencies = List.from(dependencies);
     notifyListeners();
   }
@@ -110,14 +110,14 @@ class TaskCascadeService extends ChangeNotifier {
     required Set<String> visitedIds,
   }) {
     // このタスクに依存している後続タスクを取得
-    final successorDeps = _dependencies.where((d) => d.predecessorId == taskId);
+    final successorDeps = _dependencies.where((d) => d.fromTaskId == taskId);
 
     for (final dep in successorDeps) {
-      if (visitedIds.contains(dep.successorId)) continue;
-      visitedIds.add(dep.successorId);
+      if (visitedIds.contains(dep.toTaskId)) continue;
+      visitedIds.add(dep.toTaskId);
 
       final successor = _tasks.firstWhere(
-        (t) => t.id == dep.successorId,
+        (t) => t.id == dep.toTaskId,
         orElse: () => throw Exception('Successor not found'),
       );
 
@@ -127,8 +127,10 @@ class TaskCascadeService extends ChangeNotifier {
       // 後続タスクの開始日が先行タスク終了日より前なら調整が必要
       if (successor.startDate.isBefore(minStartDate)) {
         final shiftDays = minStartDate.difference(successor.startDate).inDays;
-        final newSuccessorStart = successor.startDate.add(Duration(days: shiftDays));
-        final newSuccessorEnd = successor.endDate.add(Duration(days: shiftDays));
+        final newSuccessorStart =
+            successor.startDate.add(Duration(days: shiftDays));
+        final newSuccessorEnd =
+            successor.endDate.add(Duration(days: shiftDays));
 
         affectedTasks.add(TaskChangeInfo(
           task: successor,
@@ -154,8 +156,8 @@ class TaskCascadeService extends ChangeNotifier {
   /// 後続タスクを取得（直接依存のみ）
   List<Task> getDirectSuccessors(String taskId) {
     final successorIds = _dependencies
-        .where((d) => d.predecessorId == taskId)
-        .map((d) => d.successorId)
+        .where((d) => d.fromTaskId == taskId)
+        .map((d) => d.toTaskId)
         .toSet();
 
     return _tasks.where((t) => successorIds.contains(t.id)).toList();
@@ -164,8 +166,8 @@ class TaskCascadeService extends ChangeNotifier {
   /// 先行タスクを取得（直接依存のみ）
   List<Task> getDirectPredecessors(String taskId) {
     final predecessorIds = _dependencies
-        .where((d) => d.successorId == taskId)
-        .map((d) => d.predecessorId)
+        .where((d) => d.toTaskId == taskId)
+        .map((d) => d.fromTaskId)
         .toSet();
 
     return _tasks.where((t) => predecessorIds.contains(t.id)).toList();
@@ -267,8 +269,8 @@ class TaskCascadeService extends ChangeNotifier {
       } else {
         DateTime maxEnd = DateTime(1970);
         for (final pred in predecessors) {
-          final predEnd = earliestStart[pred.id]!
-              .add(Duration(days: pred.durationDays));
+          final predEnd =
+              earliestStart[pred.id]!.add(Duration(days: pred.durationDays));
           if (predEnd.isAfter(maxEnd)) {
             maxEnd = predEnd;
           }
@@ -278,9 +280,8 @@ class TaskCascadeService extends ChangeNotifier {
     }
 
     // 最遅開始時刻（後退計算）
-    final projectEnd = _tasks
-        .map((t) => t.endDate)
-        .reduce((a, b) => a.isAfter(b) ? a : b);
+    final projectEnd =
+        _tasks.map((t) => t.endDate).reduce((a, b) => a.isAfter(b) ? a : b);
 
     for (final taskId in sorted.reversed) {
       final task = _tasks.firstWhere((t) => t.id == taskId);
@@ -330,8 +331,8 @@ class TaskCascadeService extends ChangeNotifier {
     }
 
     for (final dep in _dependencies) {
-      inDegree[dep.successorId] = (inDegree[dep.successorId] ?? 0) + 1;
-      adjList[dep.predecessorId]?.add(dep.successorId);
+      inDegree[dep.toTaskId] = (inDegree[dep.toTaskId] ?? 0) + 1;
+      adjList[dep.fromTaskId]?.add(dep.toTaskId);
     }
 
     final queue = <String>[];
@@ -394,8 +395,7 @@ class TaskChangeInfo {
 
   int get deltaDays => newEnd.difference(originalEnd).inDays;
 
-  bool get hasChanged =>
-      originalStart != newStart || originalEnd != newEnd;
+  bool get hasChanged => originalStart != newStart || originalEnd != newEnd;
 }
 
 /// カスケード処理結果
@@ -418,9 +418,8 @@ class TaskCascadeResult {
       );
 
   /// カスケードで変更されたタスク
-  List<TaskChangeInfo> get cascadedChanges => changedTasks
-      .where((c) => c.reason == TaskChangeReason.cascade)
-      .toList();
+  List<TaskChangeInfo> get cascadedChanges =>
+      changedTasks.where((c) => c.reason == TaskChangeReason.cascade).toList();
 
   /// カスケード数
   int get cascadeCount => cascadedChanges.length;

@@ -14,17 +14,21 @@ class ProjectWorkspace extends StatefulWidget {
   final String projectId;
   final Project project;
   final List<Task> tasks;
-  final List<Dependency> dependencies;
+  final List<TaskDependency> dependencies;
   final Permissions permissions;
 
   /// 左カラムビルダー
-  final Widget Function(BuildContext context, ProjectWorkspaceController controller) leftBuilder;
+  final Widget Function(
+      BuildContext context, ProjectWorkspaceController controller) leftBuilder;
 
   /// 中央カラムビルダー
-  final Widget Function(BuildContext context, ProjectWorkspaceController controller) centerBuilder;
+  final Widget Function(
+          BuildContext context, ProjectWorkspaceController controller)
+      centerBuilder;
 
   /// 右カラムビルダー
-  final Widget Function(BuildContext context, ProjectWorkspaceController controller) rightBuilder;
+  final Widget Function(
+      BuildContext context, ProjectWorkspaceController controller) rightBuilder;
 
   const ProjectWorkspace({
     super.key,
@@ -69,7 +73,8 @@ class _ProjectWorkspaceState extends State<ProjectWorkspace> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 768;
-        final isTablet = constraints.maxWidth >= 768 && constraints.maxWidth < 1200;
+        final isTablet =
+            constraints.maxWidth >= 768 && constraints.maxWidth < 1200;
 
         if (isMobile) {
           return _buildMobileLayout(context);
@@ -183,7 +188,8 @@ class _MobileProjectWorkspaceState extends State<MobileProjectWorkspace>
 
   void _onControllerChanged() {
     // タスク選択時に詳細タブへ自動遷移
-    final currentHash = widget.controller.state.selection.selectedTaskId?.hashCode ?? 0;
+    final currentHash =
+        widget.controller.state.selection.selectedTaskId?.hashCode ?? 0;
     if (currentHash != _previousSelectedTaskHashCode &&
         widget.controller.state.selection.hasSelection) {
       _tabController.animateTo(2); // 詳細タブへ
@@ -362,7 +368,7 @@ TaskCounts calculateTaskCounts(
     }
 
     // 待ち
-    if (task.delayStatus == DelayStatus.waiting) {
+    if (task.delayStatus == DelayStatus.blocked) {
       waiting++;
     }
 

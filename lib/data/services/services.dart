@@ -4,8 +4,6 @@ library services;
 
 // Core services
 export 'dependency_service.dart';
-export 'critical_path_service.dart';
-export 'rain_cancellation_service.dart';
 export 'phase_cascade_service.dart';
 
 // Sync & Real-time services
