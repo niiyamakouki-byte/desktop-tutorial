@@ -217,6 +217,6 @@ class PhaseColors {
 
   /// 淡い背景色を取得
   static Color getLightColorForOrder(int order) {
-    return getColorForOrder(order).withOpacity(0.15);
+    return getColorForOrder(order).withValues(alpha: 0.15);
   }
 }

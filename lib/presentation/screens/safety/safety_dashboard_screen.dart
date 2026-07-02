@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../data/models/safety_models.dart';
 import '../../../data/services/safety_service.dart';
 import 'ky_activity_screen.dart';
@@ -68,7 +67,7 @@ class _SafetyDashboardScreenState extends State<SafetyDashboardScreen> {
             ),
             Text(
               widget.projectName,
-              style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.8)),
+              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
             ),
           ],
         ),
@@ -177,7 +176,7 @@ class _SafetyDashboardScreenState extends State<SafetyDashboardScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -191,7 +190,7 @@ class _SafetyDashboardScreenState extends State<SafetyDashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -356,7 +355,7 @@ class _SafetyDashboardScreenState extends State<SafetyDashboardScreen> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 28),
@@ -388,7 +387,7 @@ class _SafetyDashboardScreenState extends State<SafetyDashboardScreen> {
                       children: features.map((f) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -478,7 +477,7 @@ class _SafetyDashboardScreenState extends State<SafetyDashboardScreen> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -507,7 +506,7 @@ class _SafetyDashboardScreenState extends State<SafetyDashboardScreen> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: activity.color.withOpacity(0.1),
+          color: activity.color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(activity.icon, color: activity.color, size: 20),

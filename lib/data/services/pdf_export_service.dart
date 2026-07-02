@@ -1,8 +1,6 @@
 /// PDF Export Service
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
-import '../models/construction_photo_model.dart';
-import '../models/attendance_model.dart';
 
 class PDFExportResult {
   final bool success;

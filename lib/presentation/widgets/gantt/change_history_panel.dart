@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
 import '../../../data/services/change_history_service.dart';
 import '../chat/user_avatar.dart';
@@ -346,7 +345,7 @@ class _ChangeHistoryPanelState extends State<ChangeHistoryPanel> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: history.changeType.color.withOpacity(0.15),
+                    color: history.changeType.color.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: history.changeType.color,
@@ -509,7 +508,7 @@ class _HistoryDetailDialog extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: history.changeType.color.withOpacity(0.15),
+              color: history.changeType.color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -724,10 +723,10 @@ class ChangeHistoryIndicator extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: latest.changeType.color.withOpacity(0.1),
+            color: latest.changeType.color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: latest.changeType.color.withOpacity(0.3),
+              color: latest.changeType.color.withValues(alpha: 0.3),
             ),
           ),
           child: Row(

@@ -143,12 +143,12 @@ class _TeamMemberManagementDialogState extends State<TeamMemberManagementDialog>
                       itemBuilder: (context, index) {
                         final user = members[index];
                         return ListTile(
-                          tileColor: AppColors.surfaceVariant.withOpacity(0.45),
+                          tileColor: AppColors.surfaceVariant.withValues(alpha: 0.45),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                           leading: CircleAvatar(
-                            backgroundColor: AppColors.primary.withOpacity(0.15),
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                             child: Text(user.initials),
                           ),
                           title: Text(user.name),
@@ -198,7 +198,7 @@ class _TeamMemberManagementDialogState extends State<TeamMemberManagementDialog>
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: _role,
+                            initialValue: _role,
                             decoration: const InputDecoration(labelText: '役割'),
                             items: UserRole.labels.entries
                                 .map(

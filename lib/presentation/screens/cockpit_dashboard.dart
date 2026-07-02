@@ -4,15 +4,10 @@ import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/models.dart';
-import '../../data/models/material_model.dart';
-import '../../data/models/project_flow_model.dart';
-import '../../data/models/project_health_model.dart';
-import '../../data/models/dependency_model.dart';
 import '../../data/services/order_service.dart';
 import '../../data/services/template_service.dart';
 import '../../data/services/project_health_service.dart';
 import '../../data/services/dependency_service.dart';
-import '../widgets/common/glass_container.dart';
 import '../widgets/dashboard/dashboard.dart';
 
 /// Main Cockpit Dashboard - Inspired by Construction DX Cockpit
@@ -410,9 +405,9 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
       margin: const EdgeInsets.only(bottom: AppConstants.paddingL),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.constructionRed.withOpacity(0.05),
+        color: AppColors.constructionRed.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.constructionRed.withOpacity(0.3)),
+        border: Border.all(color: AppColors.constructionRed.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,7 +417,7 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.constructionRed.withOpacity(0.1),
+                  color: AppColors.constructionRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -557,20 +552,20 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
         gradient: LinearGradient(
           colors: [
             Colors.white,
-            Colors.purple.withOpacity(0.05),
+            Colors.purple.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.purple.withOpacity(0.2)),
+        border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.1),
+              color: Colors.purple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.purple.withOpacity(0.2)),
+              border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
             ),
             child: const Icon(
               Icons.auto_awesome,
@@ -597,9 +592,9 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.purple.withOpacity(0.1),
+                        color: Colors.purple.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.purple.withOpacity(0.2)),
+                        border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
                       ),
                       child: const Text(
                         'リアルタイム',
@@ -637,7 +632,7 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
             label: const Text('最新分析'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.purple,
-              side: BorderSide(color: Colors.purple.withOpacity(0.3)),
+              side: BorderSide(color: Colors.purple.withValues(alpha: 0.3)),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
           ),
@@ -849,7 +844,7 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
                   color: Colors.white,
                 ),
               ),
-              Icon(Icons.wb_sunny, color: Colors.white.withOpacity(0.8), size: 32),
+              Icon(Icons.wb_sunny, color: Colors.white.withValues(alpha: 0.8), size: 32),
             ],
           ),
           const SizedBox(height: 12),
@@ -871,7 +866,7 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
                   '湿度 45% / 風速 2m',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
               ),
@@ -881,7 +876,7 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -976,7 +971,7 @@ class _CockpitDashboardState extends State<CockpitDashboard> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.purple.withOpacity(0.1),
+                      color: Colors.purple.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.auto_awesome, color: Colors.purple),
@@ -1148,7 +1143,7 @@ class _KPICard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -1238,12 +1233,12 @@ class _ActivityLogItem extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: log.isUrgent
-            ? AppColors.industrialOrange.withOpacity(0.05)
+            ? AppColors.industrialOrange.withValues(alpha: 0.05)
             : AppColors.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: log.isUrgent
-              ? AppColors.industrialOrange.withOpacity(0.3)
+              ? AppColors.industrialOrange.withValues(alpha: 0.3)
               : AppColors.border,
         ),
       ),
@@ -1253,7 +1248,7 @@ class _ActivityLogItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _color.withOpacity(0.1),
+              color: _color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(_icon, color: _color, size: 18),
@@ -1369,9 +1364,9 @@ class _QuickActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [

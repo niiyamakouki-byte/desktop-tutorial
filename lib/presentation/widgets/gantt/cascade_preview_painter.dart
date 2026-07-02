@@ -66,11 +66,11 @@ class CascadePreviewPainter extends CustomPainter {
     final originalWidth = task.durationDays * dayWidth;
 
     final ghostPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
+      ..color = Colors.grey.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
 
     final ghostBorderPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.5)
+      ..color = Colors.grey.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -114,11 +114,11 @@ class CascadePreviewPainter extends CustomPainter {
         previewItem.originalStart.difference(startDate).inDays * dayWidth;
 
     final ghostPaint = Paint()
-      ..color = AppColors.warning.withOpacity(0.15)
+      ..color = AppColors.warning.withValues(alpha: 0.15)
       ..style = PaintingStyle.fill;
 
     final ghostBorderPaint = Paint()
-      ..color = AppColors.warning.withOpacity(0.4)
+      ..color = AppColors.warning.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
       ..strokeCap = StrokeCap.round;
@@ -141,7 +141,7 @@ class CascadePreviewPainter extends CustomPainter {
         previewItem.previewStart.difference(startDate).inDays * dayWidth;
 
     final previewPaint = Paint()
-      ..color = AppColors.warning.withOpacity(0.6)
+      ..color = AppColors.warning.withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
 
     final previewBorderPaint = Paint()
@@ -190,7 +190,7 @@ class CascadePreviewPainter extends CustomPainter {
     Color color,
   ) {
     final paint = Paint()
-      ..color = color.withOpacity(0.5)
+      ..color = color.withValues(alpha: 0.5)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
@@ -233,7 +233,7 @@ class CascadePreviewPainter extends CustomPainter {
     Color color,
   ) {
     final paint = Paint()
-      ..color = color.withOpacity(0.7)
+      ..color = color.withValues(alpha: 0.7)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -346,7 +346,7 @@ class CascadePreviewPainter extends CustomPainter {
 
     // 左側にハイライトバーを描画
     final highlightPaint = Paint()
-      ..color = AppColors.warning.withOpacity(0.08)
+      ..color = AppColors.warning.withValues(alpha: 0.08)
       ..style = PaintingStyle.fill;
 
     final highlightRect = Rect.fromLTWH(
@@ -360,7 +360,7 @@ class CascadePreviewPainter extends CustomPainter {
 
     // 左端にアクセントバー
     final accentPaint = Paint()
-      ..color = AppColors.warning.withOpacity(0.6)
+      ..color = AppColors.warning.withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
 
     final accentRect = Rect.fromLTWH(
@@ -405,10 +405,10 @@ class CascadePreviewOverlay extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.warning.withOpacity(0.5)),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.warning.withOpacity(0.2),
+              color: AppColors.warning.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -441,7 +441,7 @@ class CascadePreviewOverlay extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
+                color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(

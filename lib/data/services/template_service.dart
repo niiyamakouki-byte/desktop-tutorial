@@ -2,7 +2,6 @@
 /// Provides AI prompts and spreadsheet templates for users
 /// Users can use these with their own AI tools (ChatGPT, Claude, etc.)
 
-import '../models/material_model.dart';
 import '../models/models.dart';
 
 /// AI Prompt Templates for various construction workflows

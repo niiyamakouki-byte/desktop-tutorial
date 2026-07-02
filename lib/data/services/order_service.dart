@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../models/material_model.dart';
 import '../models/models.dart';
-import '../models/project_health_model.dart';
 
 /// Order Management Service
 /// Handles material ordering, deadline tracking, and alerts
@@ -138,9 +136,6 @@ class OrderService extends ChangeNotifier {
 
         if (deadline == null) continue;
         final daysUntil = deadline.difference(DateTime.now()).inDays;
-
-        // Use configurable thresholds
-        final severity = getAlertSeverityFromConfig(daysUntil);
 
         if (daysUntil < 0) {
           // Overdue - Critical

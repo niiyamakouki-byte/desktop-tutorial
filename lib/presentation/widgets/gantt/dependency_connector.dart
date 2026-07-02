@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
-import '../../../data/models/dependency_model.dart';
 import '../../../data/services/dependency_service.dart';
 import 'gantt_constants.dart';
 import 'dependency_dialog.dart';
@@ -201,7 +200,7 @@ class _TaskConnectorsState extends State<TaskConnectors>
                         BoxShadow(
                           color: (isValidDrop
                               ? AppColors.constructionGreen
-                              : AppColors.industrialOrange).withOpacity(0.5),
+                              : AppColors.industrialOrange).withValues(alpha: 0.5),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),
@@ -254,7 +253,6 @@ class DependencyDragPainter extends CustomPainter {
     path.moveTo(start.dx, start.dy);
 
     // Calculate control points for smooth bezier curve
-    final midX = (start.dx + end.dx) / 2;
     final dx = (end.dx - start.dx).abs();
     final controlOffset = math.max(dx * 0.5, 50);
 
@@ -273,7 +271,7 @@ class DependencyDragPainter extends CustomPainter {
     final glowPaint = Paint()
       ..color = (isValidTarget
           ? AppColors.constructionGreen
-          : AppColors.industrialOrange).withOpacity(0.3)
+          : AppColors.industrialOrange).withValues(alpha: 0.3)
       ..strokeWidth = 8.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -426,7 +424,6 @@ class DependencyCreationLayer extends StatefulWidget {
 
 class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
   DependencyDragState? _dragState;
-  String? _hoveredTaskId;
   late DependencyDragController _internalController;
 
   DependencyDragController get _controller =>
@@ -458,7 +455,6 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
   void _onControllerChanged() {
     setState(() {
       _dragState = _controller.dragState;
-      _hoveredTaskId = _controller.hoveredTaskId;
     });
   }
 
@@ -526,7 +522,6 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
         currentPosition: localPosition,
         hoveredTaskId: hoveredId,
       );
-      _hoveredTaskId = hoveredId;
     });
   }
 
@@ -548,7 +543,6 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
       // Clear drag state first
       setState(() {
         _dragState = null;
-        _hoveredTaskId = null;
       });
 
       // Show dialog to select dependency type
@@ -569,7 +563,6 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
     } else {
       setState(() {
         _dragState = null;
-        _hoveredTaskId = null;
       });
     }
   }
@@ -594,9 +587,6 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
   @override
   Widget build(BuildContext context) {
     final taskBounds = _computeTaskBounds();
-    final rowHeight = widget.rowHeight ?? GanttConstants.rowHeight;
-    final dayWidth = widget.dayWidth ?? GanttConstants.dayWidth;
-    final startDate = widget.startDate ?? DateTime.now();
 
     return GestureDetector(
       onPanStart: (details) {
@@ -677,7 +667,7 @@ class _DependencyCreationLayerState extends State<DependencyCreationLayer> {
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),

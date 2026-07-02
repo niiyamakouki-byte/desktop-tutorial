@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../../data/services/project_provider.dart';
 
 /// Dialog for data backup (export/import)
@@ -275,8 +273,8 @@ class _DataBackupDialogState extends State<DataBackupDialog> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: _statusMessage!.contains('失敗')
-                      ? Colors.red.withOpacity(0.1)
-                      : Colors.green.withOpacity(0.1),
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: _statusMessage!.contains('失敗')

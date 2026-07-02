@@ -43,8 +43,8 @@ class BudgetDashboard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             summary.isOverBudget
-                ? AppColors.error.withOpacity(0.1)
-                : AppColors.success.withOpacity(0.1),
+                ? AppColors.error.withValues(alpha: 0.1)
+                : AppColors.success.withValues(alpha: 0.1),
             Colors.white,
           ],
           begin: Alignment.topLeft,
@@ -53,8 +53,8 @@ class BudgetDashboard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: summary.isOverBudget
-              ? AppColors.error.withOpacity(0.3)
-              : AppColors.success.withOpacity(0.3),
+              ? AppColors.error.withValues(alpha: 0.3)
+              : AppColors.success.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -157,10 +157,10 @@ class BudgetDashboard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
-                      color: AppColors.error.withOpacity(0.3),
+                      color: AppColors.error.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -256,8 +256,8 @@ class BudgetDashboard extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: summary.todayProfitForecast >= 0
-                    ? AppColors.success.withOpacity(0.1)
-                    : AppColors.error.withOpacity(0.1),
+                    ? AppColors.success.withValues(alpha: 0.1)
+                    : AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -307,7 +307,7 @@ class BudgetDashboard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -426,7 +426,7 @@ class BudgetDashboard extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: category.color.withOpacity(0.15),
+              color: category.color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
@@ -531,12 +531,12 @@ class BudgetOverageAlert extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.warning.withOpacity(0.15),
-            AppColors.error.withOpacity(0.1),
+            AppColors.warning.withValues(alpha: 0.15),
+            AppColors.error.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,7 +546,7 @@ class BudgetOverageAlert extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.15),
+                  color: AppColors.warning.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../data/services/attendance_service.dart';
 import '../../data/models/person.dart';
 import '../../data/models/company.dart';
@@ -148,8 +147,6 @@ class _KioskScreenState extends State<KioskScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -173,7 +170,7 @@ class _KioskScreenState extends State<KioskScreen> {
                   widget.projectName,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -205,7 +202,7 @@ class _KioskScreenState extends State<KioskScreen> {
                       '${now.year}/${now.month}/${now.day}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -242,7 +239,7 @@ class _KioskScreenState extends State<KioskScreen> {
           // ローディングオーバーレイ
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               child: const Center(
                 child: CircularProgressIndicator(
                   color: Colors.white,
@@ -352,7 +349,7 @@ class _KioskScreenState extends State<KioskScreen> {
                             horizontal: 8, vertical: 4),
                         child: Material(
                           color: isSelected
-                              ? const Color(0xFF1A237E).withOpacity(0.1)
+                              ? const Color(0xFF1A237E).withValues(alpha: 0.1)
                               : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           child: InkWell(
@@ -435,7 +432,7 @@ class _KioskScreenState extends State<KioskScreen> {
                                               decoration: BoxDecoration(
                                                 color: _getJobTypeColor(
                                                         person.jobType)
-                                                    .withOpacity(0.2),
+                                                    .withValues(alpha: 0.2),
                                                 borderRadius:
                                                     BorderRadius.circular(4),
                                               ),
@@ -505,7 +502,7 @@ class _KioskScreenState extends State<KioskScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -637,7 +634,7 @@ class _KioskScreenState extends State<KioskScreen> {
 
   Widget _buildSuccessOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.6),
+      color: Colors.black.withValues(alpha: 0.6),
       child: Center(
         child: Container(
           margin: const EdgeInsets.all(48),
@@ -673,7 +670,7 @@ class _KioskScreenState extends State<KioskScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.2),
+                    color: Colors.orange.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(

@@ -4,8 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
-import '../../../data/models/dependency_model.dart';
-import '../../../data/models/phase_model.dart';
 import '../../../data/services/dependency_service.dart';
 import '../../../data/services/drag_cascade_preview_service.dart';
 import 'gantt_constants.dart';
@@ -91,7 +89,6 @@ class _TimelinePanelState extends State<TimelinePanel> {
   // Dependency drag state
   late DependencyDragController _dependencyDragController;
   DependencyDragState? _dependencyDragState;
-  String? _dependencyDragSourceId;
 
   // Resize state tracking
   String? _resizingTaskId;
@@ -151,7 +148,6 @@ class _TimelinePanelState extends State<TimelinePanel> {
   void _onDependencyDragChanged() {
     setState(() {
       _dependencyDragState = _dependencyDragController.dragState;
-      _dependencyDragSourceId = _dependencyDragController.sourceTaskId;
     });
   }
 
@@ -575,7 +571,7 @@ class _TimelinePanelState extends State<TimelinePanel> {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.25),
+                            color: Colors.black.withValues(alpha: 0.25),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -666,7 +662,7 @@ class _TimelinePanelState extends State<TimelinePanel> {
           boxShadow: widget.enableRowAnimations && isHovered && !isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.08),
+                    color: AppColors.primary.withValues(alpha: 0.08),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -989,7 +985,7 @@ class _VerticalGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.ganttGridLine.withOpacity(0.3)
+      ..color = AppColors.ganttGridLine.withValues(alpha: 0.3)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
 
@@ -1004,7 +1000,7 @@ class _VerticalGridPainter extends CustomPainter {
         paint.color = AppColors.ganttGridLine;
         paint.strokeWidth = 1;
       } else {
-        paint.color = AppColors.ganttGridLine.withOpacity(0.3);
+        paint.color = AppColors.ganttGridLine.withValues(alpha: 0.3);
         paint.strokeWidth = 0.5;
       }
 
@@ -1063,7 +1059,7 @@ class _TodayColumnPainter extends CustomPainter {
 
       // 今週帯の背景色（薄い）
       final weekPaint = Paint()
-        ..color = AppColors.primary.withOpacity(GanttConstants.thisWeekBandOpacity)
+        ..color = AppColors.primary.withValues(alpha: GanttConstants.thisWeekBandOpacity)
         ..style = PaintingStyle.fill;
 
       canvas.drawRect(weekRect, weekPaint);
@@ -1072,7 +1068,7 @@ class _TodayColumnPainter extends CustomPainter {
     // 今日のカラム背景（やや強調）
     final rect = Rect.fromLTWH(x, 0, dayWidth, size.height);
     final paint = Paint()
-      ..color = AppColors.ganttToday.withOpacity(0.35)
+      ..color = AppColors.ganttToday.withValues(alpha: 0.35)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(rect, paint);
@@ -1082,7 +1078,7 @@ class _TodayColumnPainter extends CustomPainter {
 
     // グロー（外側）
     final glowPaint = Paint()
-      ..color = AppColors.ganttTodayLine.withOpacity(0.3)
+      ..color = AppColors.ganttTodayLine.withValues(alpha: 0.3)
       ..strokeWidth = GanttConstants.todayLineWidth + GanttConstants.todayLineGlowRadius
       ..style = PaintingStyle.stroke
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);

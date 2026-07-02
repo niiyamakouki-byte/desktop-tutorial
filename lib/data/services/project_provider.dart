@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
-import '../models/dependency_model.dart';
 import '../repositories/task_repository.dart';
 import '../repositories/project_repository.dart';
 import 'mock_data_service.dart';

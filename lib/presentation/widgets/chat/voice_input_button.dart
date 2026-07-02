@@ -178,7 +178,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
             margin: const EdgeInsets.only(bottom: 4),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -214,7 +214,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
                       boxShadow: _isListening
                           ? [
                               BoxShadow(
-                                color: AppColors.error.withOpacity(0.4),
+                                color: AppColors.error.withValues(alpha: 0.4),
                                 blurRadius: 12,
                                 spreadRadius: 2,
                               ),
@@ -336,7 +336,7 @@ class _CompactVoiceButtonState extends State<CompactVoiceButton>
           tooltip: _isListening ? '音声入力を停止' : '音声で入力',
           style: IconButton.styleFrom(
             backgroundColor:
-                _isListening ? AppColors.error.withOpacity(0.1) : null,
+                _isListening ? AppColors.error.withValues(alpha: 0.1) : null,
           ),
         );
       },

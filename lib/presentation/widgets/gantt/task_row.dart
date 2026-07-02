@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
-import '../../../data/models/phase_model.dart';
 import 'gantt_constants.dart';
 
 /// Individual task row component for the task list panel
@@ -462,105 +461,15 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildStatusIndicator(Color statusColor) {
-    if (widget.task.isMilestone) {
-      return Transform.rotate(
-        angle: 0.785398, // 45 degrees
-        child: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: statusColor,
-            borderRadius: BorderRadius.circular(1),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      width: 4,
-      height: 24,
-      decoration: BoxDecoration(
-        color: statusColor,
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
-  }
-
-  Widget _buildTaskInfo(Color categoryColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                widget.task.name,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: widget.task.level == 0
-                      ? FontWeight.w600
-                      : FontWeight.w400,
-                  color: AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Row(
-          children: [
-            // Phase badge (if task has a phase)
-            if (widget.phase != null) ...[
-              _buildPhaseBadge(widget.phase!),
-              const SizedBox(width: 6),
-            ],
-            // Category badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: categoryColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(3),
-              ),
-              child: Text(
-                TaskCategory.getLabel(widget.task.category),
-                style: TextStyle(
-                  fontSize: 10,
-                  color: categoryColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Date range
-            Flexible(
-              child: Text(
-                _formatDateRange(),
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textTertiary,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildPhaseBadge(Phase phase) {
     final phaseColor = PhaseColors.getColorForOrder(phase.order);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
-        color: phaseColor.withOpacity(0.15),
+        color: phaseColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(3),
         border: Border.all(
-          color: phaseColor.withOpacity(0.4),
+          color: phaseColor.withValues(alpha: 0.4),
           width: 1,
         ),
       ),
@@ -606,7 +515,7 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.12),
+        color: badgeColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -620,11 +529,6 @@ class _TaskRowState extends State<TaskRow> with SingleTickerProviderStateMixin {
     );
   }
 
-  String _formatDateRange() {
-    final start = widget.task.startDate;
-    final end = widget.task.endDate;
-    return GanttConstants.formatDateRange(start, end);
-  }
 }
 
 /// Enum to track which resize handle is being dragged
@@ -846,13 +750,13 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
               color: isActive
                   ? Colors.white
                   : (isHovered
-                      ? Colors.white.withOpacity(0.9)
-                      : Colors.white.withOpacity(0.5)),
+                      ? Colors.white.withValues(alpha: 0.9)
+                      : Colors.white.withValues(alpha: 0.5)),
               borderRadius: BorderRadius.circular(2),
               boxShadow: isActive || isHovered
                   ? [
                       BoxShadow(
-                        color: barColor.withOpacity(0.5),
+                        color: barColor.withValues(alpha: 0.5),
                         blurRadius: 4,
                         spreadRadius: 1,
                       ),
@@ -869,9 +773,6 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
   Widget _buildDependencyHandle(Color barColor) {
     final isActive = _isDependencyDragging;
     final showHandle = _isHovered || isActive || widget.isDependencyDragActive;
-
-    // Pulse animation for valid drop target
-    final isPulsingTarget = widget.isValidDropTarget;
 
     return Positioned(
       right: -_dependencyHandleSize / 2 - 2,
@@ -901,8 +802,8 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
               color: isActive
                   ? AppColors.industrialOrange
                   : (_isDependencyHandleHovered
-                      ? AppColors.industrialOrange.withOpacity(0.9)
-                      : barColor.withOpacity(showHandle ? 0.8 : 0.5)),
+                      ? AppColors.industrialOrange.withValues(alpha: 0.9)
+                      : barColor.withValues(alpha: showHandle ? 0.8 : 0.5)),
               shape: BoxShape.circle,
               border: Border.all(
                 color: Colors.white,
@@ -912,7 +813,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                   ? [
                       BoxShadow(
                         color: (isActive ? AppColors.industrialOrange : barColor)
-                            .withOpacity(0.4),
+                            .withValues(alpha: 0.4),
                         blurRadius: 6,
                         spreadRadius: 1,
                       ),
@@ -960,7 +861,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.constructionGreen.withOpacity(0.5),
+                    color: AppColors.constructionGreen.withValues(alpha: 0.5),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -1044,8 +945,8 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              barColor.withOpacity(isInteracting ? 0.95 : 0.9),
-                              barColor.withOpacity(isInteracting ? 0.72 : 0.75),
+                              barColor.withValues(alpha: isInteracting ? 0.95 : 0.9),
+                              barColor.withValues(alpha: isInteracting ? 0.72 : 0.75),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -1056,19 +957,19 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                                 ? Colors.white
                                 : (widget.isSelected
                                     ? AppColors.primary
-                                    : barColor.withOpacity(0.3 + _glowAnimation.value * 0.5)),
+                                    : barColor.withValues(alpha: 0.3 + _glowAnimation.value * 0.5)),
                             width: isInteracting ? 2.0 : (widget.isSelected ? 2.5 : 1 + _glowAnimation.value),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: barColor.withOpacity(isInteracting ? 0.5 : 0.15 + _glowAnimation.value * 0.25),
+                              color: barColor.withValues(alpha: isInteracting ? 0.5 : 0.15 + _glowAnimation.value * 0.25),
                               blurRadius: isInteracting ? 12 : 4 + _glowAnimation.value * 8,
                               spreadRadius: isInteracting ? 3 : _glowAnimation.value * 2,
                               offset: Offset(0, isInteracting ? 4 : 2 + _glowAnimation.value * 2),
                             ),
                             if (widget.isSelected)
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.3),
+                                color: AppColors.primary.withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 spreadRadius: 2,
                               ),
@@ -1086,7 +987,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                                 child: Container(
                                   width: widget.width * widget.task.progress,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(GanttConstants.progressOpacity),
+                                    color: Colors.white.withValues(alpha: GanttConstants.progressOpacity),
                                   ),
                                 ),
                               ),
@@ -1099,7 +1000,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.18),
+                                        color: Colors.black.withValues(alpha: 0.18),
                                         borderRadius: BorderRadius.circular(999),
                                       ),
                                       child: const Icon(
@@ -1138,7 +1039,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(3),
                                       ),
                                       child: Text(
@@ -1163,7 +1064,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                                       borderRadius: BorderRadius.circular(4),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppColors.error.withOpacity(0.4),
+                                          color: AppColors.error.withValues(alpha: 0.4),
                                           blurRadius: 4,
                                           spreadRadius: 0,
                                         ),
@@ -1233,7 +1134,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(6),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.25),
+                                color: Colors.black.withValues(alpha: 0.25),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -1291,7 +1192,7 @@ class _TaskBarState extends State<TaskBar> with SingleTickerProviderStateMixin {
                 boxShadow: _isHovered || widget.isSelected
                     ? [
                         BoxShadow(
-                          color: color.withOpacity(0.4),
+                          color: color.withValues(alpha: 0.4),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -1356,7 +1257,7 @@ class TaskBarTooltip extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.2),
+                  color: statusColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -1373,7 +1274,7 @@ class TaskBarTooltip extends StatelessWidget {
                 '優先度: $priorityLabel',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -1393,7 +1294,7 @@ class TaskBarTooltip extends StatelessWidget {
                 '${GanttConstants.formatFullDate(task.startDate)} - ${GanttConstants.formatFullDate(task.endDate)}',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -1405,7 +1306,7 @@ class TaskBarTooltip extends StatelessWidget {
             '期間: ${task.durationDays}日',
             style: TextStyle(
               fontSize: 11,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 8),
@@ -1421,7 +1322,7 @@ class TaskBarTooltip extends StatelessWidget {
                     '進捗',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                   Text(
@@ -1462,7 +1363,7 @@ class TaskBarTooltip extends StatelessWidget {
                   task.assignees.map((a) => a.name).join(', '),
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -1561,9 +1462,9 @@ class PhaseLegend extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

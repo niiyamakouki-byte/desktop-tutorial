@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
-import 'user_avatar.dart';
 import 'voice_input_button.dart';
 
 /// 現場向けクイック返信テンプレート
@@ -343,7 +342,7 @@ class _MessageInputState extends State<MessageInput> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant.withOpacity(0.5),
+        color: AppColors.surfaceVariant.withValues(alpha: 0.5),
         border: const Border(
           bottom: BorderSide(color: AppColors.border, width: 1),
         ),
@@ -451,7 +450,7 @@ class _MessageInputState extends State<MessageInput> {
         boxShadow: _focusNode.hasFocus
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   blurRadius: 8,
                   spreadRadius: 1,
                 ),
@@ -576,7 +575,7 @@ class _MessageInputState extends State<MessageInput> {
                 boxShadow: canSend && widget.enabled
                     ? [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4),
+                          color: AppColors.primary.withValues(alpha: 0.4),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -618,10 +617,10 @@ class _QuickReplyButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: template.color.withOpacity(0.1),
+            color: template.color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: template.color.withOpacity(0.3),
+              color: template.color.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -850,7 +849,7 @@ class _QuickActionButton extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(

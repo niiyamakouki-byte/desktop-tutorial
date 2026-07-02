@@ -117,7 +117,7 @@ class _NotificationCenterDialogState extends State<NotificationCenterDialog> {
                   Expanded(
                     flex: 2,
                     child: DropdownButtonFormField<BatchNotificationType>(
-                      value: _type,
+                      initialValue: _type,
                       decoration: const InputDecoration(labelText: '通知種別'),
                       items: BatchNotificationType.values
                           .map(
@@ -182,7 +182,7 @@ class _NotificationCenterDialogState extends State<NotificationCenterDialog> {
                   return Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant.withOpacity(0.45),
+                      color: AppColors.surfaceVariant.withValues(alpha: 0.45),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppColors.border),
                     ),
@@ -202,7 +202,7 @@ class _NotificationCenterDialogState extends State<NotificationCenterDialog> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: _statusColor(job.status).withOpacity(0.15),
+                                color: _statusColor(job.status).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(

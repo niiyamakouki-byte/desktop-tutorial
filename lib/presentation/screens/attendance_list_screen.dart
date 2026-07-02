@@ -36,7 +36,6 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   DateTime _selectedDate = DateTime.now();
   List<DailyAttendanceSummary> _summaries = [];
   String? _selectedCompanyFilter;
-  List<String> _companyList = [];
 
   @override
   void initState() {
@@ -57,9 +56,8 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
         _selectedDate,
       );
 
-      // 会社リスト取得
-      final companies = await _attendanceService.getAllCompanies();
-      _companyList = companies.map((c) => c.id).toList();
+      // 会社リスト取得（未使用だが今後の参照のためサービス呼び出しは維持）
+      await _attendanceService.getAllCompanies();
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -165,7 +163,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
               widget.projectName,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -211,7 +209,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -310,7 +308,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -424,7 +422,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -437,7 +435,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A237E).withOpacity(0.05),
+              color: const Color(0xFF1A237E).withValues(alpha: 0.05),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
@@ -460,7 +458,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A237E).withOpacity(0.1),
+                    color: const Color(0xFF1A237E).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

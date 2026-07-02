@@ -59,7 +59,7 @@ class GlassContainer extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   spreadRadius: -5,
                 ),
@@ -125,11 +125,11 @@ class _GlassButtonState extends State<GlassButton>
   Color _getBackgroundColor() {
     if (widget.isPrimary) {
       return widget.isDarkMode
-          ? AppColors.primaryDarkMode.withOpacity(0.3)
-          : AppColors.primary.withOpacity(0.15);
+          ? AppColors.primaryDarkMode.withValues(alpha: 0.3)
+          : AppColors.primary.withValues(alpha: 0.15);
     }
     if (widget.isWarning) {
-      return AppColors.industrialOrange.withOpacity(0.2);
+      return AppColors.industrialOrange.withValues(alpha: 0.2);
     }
     return widget.isDarkMode ? AppColors.glassDark : AppColors.glassWhite;
   }
@@ -137,11 +137,11 @@ class _GlassButtonState extends State<GlassButton>
   Color _getBorderColor() {
     if (widget.isPrimary) {
       return widget.isDarkMode
-          ? AppColors.primaryDarkMode.withOpacity(0.5)
-          : AppColors.primary.withOpacity(0.3);
+          ? AppColors.primaryDarkMode.withValues(alpha: 0.5)
+          : AppColors.primary.withValues(alpha: 0.3);
     }
     if (widget.isWarning) {
-      return AppColors.industrialOrange.withOpacity(0.5);
+      return AppColors.industrialOrange.withValues(alpha: 0.5);
     }
     return _isHovered
         ? AppColors.glassBorderLight
@@ -183,7 +183,7 @@ class _GlassButtonState extends State<GlassButton>
                             color: (widget.isWarning
                                     ? AppColors.industrialOrange
                                     : AppColors.primary)
-                                .withOpacity(0.2),
+                                .withValues(alpha: 0.2),
                             blurRadius: 12,
                             spreadRadius: 0,
                           ),
@@ -289,10 +289,10 @@ class IndustrialAlert extends StatelessWidget {
       decoration: BoxDecoration(
         color: _backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _accentColor.withOpacity(0.3)),
+        border: Border.all(color: _accentColor.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: _accentColor.withOpacity(0.1),
+            color: _accentColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -313,7 +313,7 @@ class IndustrialAlert extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: _accentColor.withOpacity(0.15),
+                color: _accentColor.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: _accentColor, size: 20),
@@ -339,7 +339,7 @@ class IndustrialAlert extends StatelessWidget {
                       message,
                       style: TextStyle(
                         fontSize: 12,
-                        color: _accentColor.withOpacity(0.8),
+                        color: _accentColor.withValues(alpha: 0.8),
                       ),
                     ),
                   ],

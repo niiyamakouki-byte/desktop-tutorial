@@ -549,7 +549,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildAppHeader() {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = context.watch<ThemeProvider>().isDarkMode;
-    final iconColor = colorScheme.onSurface.withOpacity(0.72);
+    final iconColor = colorScheme.onSurface.withValues(alpha: 0.72);
 
     return Container(
       height: 56,
@@ -557,7 +557,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.45)),
+          bottom: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.45)),
         ),
       ),
       child: Row(
@@ -640,7 +640,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 40,
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppConstants.paddingM),
@@ -696,10 +696,10 @@ class _ViewTab extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? activeColor.withOpacity(0.1) : Colors.transparent,
+            color: isSelected ? activeColor.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: isSelected
-                ? Border.all(color: activeColor.withOpacity(0.35))
+                ? Border.all(color: activeColor.withValues(alpha: 0.35))
                 : null,
           ),
           child: Row(

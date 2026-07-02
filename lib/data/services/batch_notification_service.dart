@@ -422,7 +422,7 @@ class BatchNotificationService {
     int success = 0;
     int failed = 0;
 
-    for (final recipient in batch) {
+    for (final _ in batch) {
       if (_random.nextDouble() < 0.95) {
         success++;
       } else {

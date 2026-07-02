@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
-import '../../../data/models/phase_model.dart';
 import '../../../data/services/change_history_service.dart';
 import '../chat/user_avatar.dart';
 import 'change_history_panel.dart';
@@ -312,9 +310,9 @@ class _ContextPanelState extends State<ContextPanel>
             ),
           ),
           const SizedBox(height: 8),
-          if (project.description != null && project.description!.isNotEmpty)
+          if (project.description.isNotEmpty)
             Text(
-              project.description!,
+              project.description,
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,
@@ -410,9 +408,9 @@ class _ContextPanelState extends State<ContextPanel>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -543,7 +541,7 @@ class _ContextPanelState extends State<ContextPanel>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -632,14 +630,14 @@ class _ContextPanelState extends State<ContextPanel>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            phaseColor.withOpacity(0.15),
-            phaseColor.withOpacity(0.05),
+            phaseColor.withValues(alpha: 0.15),
+            phaseColor.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: phaseColor.withOpacity(0.3)),
+        border: Border.all(color: phaseColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,9 +731,9 @@ class _ContextPanelState extends State<ContextPanel>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.15),
+        color: status.color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: status.color.withOpacity(0.5)),
+        border: Border.all(color: status.color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -845,9 +843,9 @@ class _ContextPanelState extends State<ContextPanel>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -871,9 +869,9 @@ class _ContextPanelState extends State<ContextPanel>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: task.delayStatus.color.withOpacity(0.1),
+        color: task.delayStatus.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: task.delayStatus.color.withOpacity(0.3)),
+        border: Border.all(color: task.delayStatus.color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -964,7 +962,7 @@ class _ContextPanelState extends State<ContextPanel>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -1062,7 +1060,7 @@ class _ContextPanelState extends State<ContextPanel>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.15),
+                  color: AppColors.success.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -1221,7 +1219,7 @@ class _ContextPanelState extends State<ContextPanel>
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: history.changeType.color.withOpacity(0.15),
+              color: history.changeType.color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(

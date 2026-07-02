@@ -24,7 +24,6 @@ class _TemplatePanelState extends State<TemplatePanel>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _selectedPromptId;
-  String? _selectedSpreadsheetId;
   String? _selectedProjectTemplateId;
   bool _showPromptPreview = false;
 
@@ -83,7 +82,7 @@ class _TemplatePanelState extends State<TemplatePanel>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -224,7 +223,7 @@ class _TemplatePanelState extends State<TemplatePanel>
           Icon(
             Icons.touch_app_outlined,
             size: 48,
-            color: AppColors.textTertiary.withOpacity(0.5),
+            color: AppColors.textTertiary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -515,7 +514,7 @@ class _PromptCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.surface,
+      color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
@@ -534,7 +533,7 @@ class _PromptCard extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.primary.withOpacity(0.2)
+                      ? AppColors.primary.withValues(alpha: 0.2)
                       : AppColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -729,7 +728,7 @@ class _SpreadsheetCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.constructionGreen.withOpacity(0.1),
+                color: AppColors.constructionGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(

@@ -3,9 +3,6 @@
 
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
-import '../../data/models/models.dart';
-import '../../data/services/project_provider.dart';
-import '../widgets/common/glass_container.dart';
 import '../widgets/common/dark_mode_toggle.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
@@ -194,7 +191,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -260,7 +257,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               border: Border.all(color: AppColors.border),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -305,7 +302,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         selected: isSelected,
         onSelected: (_) => setState(() => _filterStatus = status),
         backgroundColor: Colors.white,
-        selectedColor: AppColors.primary.withOpacity(0.15),
+        selectedColor: AppColors.primary.withValues(alpha: 0.15),
         labelStyle: TextStyle(
           color: isSelected ? AppColors.primary : AppColors.textSecondary,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -485,10 +482,10 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -548,7 +545,7 @@ class _ProjectCardState extends State<_ProjectCard> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          transform: Matrix4.identity()..scale(_isHovered ? 1.02 : 1.0),
+          transform: Matrix4.identity()..scaleByDouble(_isHovered ? 1.02 : 1.0, _isHovered ? 1.02 : 1.0, 1.0, 1.0),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -559,8 +556,8 @@ class _ProjectCardState extends State<_ProjectCard> {
             boxShadow: [
               BoxShadow(
                 color: _isHovered
-                    ? AppColors.primary.withOpacity(0.15)
-                    : Colors.black.withOpacity(0.05),
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : Colors.black.withValues(alpha: 0.05),
                 blurRadius: _isHovered ? 20 : 10,
                 offset: Offset(0, _isHovered ? 8 : 4),
               ),
@@ -576,9 +573,9 @@ class _ProjectCardState extends State<_ProjectCard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: statusColor.withOpacity(0.3)),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         project.status.label,
@@ -786,7 +783,7 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
               _buildTextField(_locationController, '所在地', Icons.location_on),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 decoration: InputDecoration(
                   labelText: 'カテゴリ',
                   labelStyle: TextStyle(color: AppColors.textSecondary),

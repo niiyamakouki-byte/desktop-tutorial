@@ -261,7 +261,7 @@ class _StatusSelectorState extends State<StatusSelector>
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: selectedItem.color.withOpacity(0.15),
+                      color: selectedItem.color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppConstants.radiusS),
                     ),
                     child: Icon(
@@ -341,7 +341,7 @@ class _StatusOptionTileState extends State<_StatusOptionTile> {
           ),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? widget.item.color.withOpacity(0.1)
+                ? widget.item.color.withValues(alpha: 0.1)
                 : _isHovered
                     ? AppColors.surfaceVariant
                     : Colors.transparent,
@@ -353,7 +353,7 @@ class _StatusOptionTileState extends State<_StatusOptionTile> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: widget.item.color.withOpacity(0.15),
+                  color: widget.item.color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppConstants.radiusS),
                 ),
                 child: Icon(

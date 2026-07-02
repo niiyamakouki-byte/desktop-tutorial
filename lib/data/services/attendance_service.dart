@@ -2,9 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../models/attendance_event.dart';
-import '../models/person.dart';
-import '../models/company.dart';
 import 'attendance_storage_service.dart';
 
 /// 入退場管理サービス
@@ -20,8 +17,6 @@ class AttendanceService extends ChangeNotifier {
   bool _isInitialized = false;
 
   // キャッシュ
-  List<Person> _cachedPersons = [];
-  List<Company> _cachedCompanies = [];
   List<CurrentAttendee> _currentAttendees = [];
 
   List<CurrentAttendee> get currentAttendees => _currentAttendees;
@@ -39,8 +34,8 @@ class AttendanceService extends ChangeNotifier {
 
   /// キャッシュ更新
   Future<void> _refreshCache() async {
-    _cachedPersons = await _storage.getAllPersons();
-    _cachedCompanies = await _storage.getAllCompanies();
+    await _storage.getAllPersons();
+    await _storage.getAllCompanies();
   }
 
   /// 破棄
@@ -608,8 +603,6 @@ class AttendanceService extends ChangeNotifier {
   Future<void> clearAll() async {
     await _storage.clearAll();
     _currentAttendees = [];
-    _cachedPersons = [];
-    _cachedCompanies = [];
     notifyListeners();
   }
 }

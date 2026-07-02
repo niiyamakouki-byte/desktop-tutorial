@@ -158,7 +158,7 @@ class MessageBubble extends StatelessWidget {
                 vertical: 3,
               ),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppConstants.radiusS),
               ),
               child: Text(
@@ -228,7 +228,7 @@ class MessageBubble extends StatelessWidget {
       padding: const EdgeInsets.all(AppConstants.paddingS),
       decoration: BoxDecoration(
         color: isOwnMessage
-            ? Colors.white.withOpacity(0.15)
+            ? Colors.white.withValues(alpha: 0.15)
             : AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppConstants.radiusS),
         border: Border(
@@ -245,7 +245,7 @@ class MessageBubble extends StatelessWidget {
             message.replyTo?.sender?.name ?? '不明',
             style: TextStyle(
               color: isOwnMessage
-                  ? Colors.white.withOpacity(0.8)
+                  ? Colors.white.withValues(alpha: 0.8)
                   : AppColors.primary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -256,7 +256,7 @@ class MessageBubble extends StatelessWidget {
             message.replyTo?.content ?? '',
             style: TextStyle(
               color: isOwnMessage
-                  ? Colors.white.withOpacity(0.7)
+                  ? Colors.white.withValues(alpha: 0.7)
                   : AppColors.textSecondary,
               fontSize: 11,
             ),
@@ -419,7 +419,7 @@ class MessageBubble extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: AppColors.chatReadIndicator.withOpacity(0.15),
+              color: AppColors.chatReadIndicator.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -589,7 +589,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: AppColors.textTertiary.withOpacity(0.3 + opacity * 0.7),
+                      color: AppColors.textTertiary.withValues(alpha: 0.3 + opacity * 0.7),
                       shape: BoxShape.circle,
                     ),
                   );

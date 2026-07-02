@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'data/services/project_provider.dart';
 import 'data/repositories/task_repository.dart';
@@ -94,10 +93,10 @@ class _AppNavigatorState extends State<AppNavigator> {
       );
     }
 
-    return WillPopScope(
-      onWillPop: () async {
-        setState(() => _selectedProject = null);
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) setState(() => _selectedProject = null);
       },
       child: HomeScreen(
         projectId: _selectedProject!.id,

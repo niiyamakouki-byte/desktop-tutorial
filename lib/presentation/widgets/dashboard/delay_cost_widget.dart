@@ -1,7 +1,6 @@
 /// Delay Cost Visualization Widget
 /// 遅延コスト可視化ウィジェット
 
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -40,7 +39,7 @@ class DelayCostCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.constructionRed.withOpacity(0.1),
+                      color: AppColors.constructionRed.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
@@ -214,7 +213,7 @@ class DelayImpactVisualization extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.constructionRed.withOpacity(0.3)),
+        border: Border.all(color: AppColors.constructionRed.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,7 +222,7 @@ class DelayImpactVisualization extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.constructionRed.withOpacity(0.1),
+              color: AppColors.constructionRed.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
@@ -389,7 +388,7 @@ class DelayImpactVisualization extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.constructionRed.withOpacity(0.1),
+            color: AppColors.constructionRed.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -501,7 +500,7 @@ class DelayImpactVisualization extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.constructionRed.withOpacity(0.1),
+              color: AppColors.constructionRed.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -562,13 +561,13 @@ class DelayCostIndicator extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: hasCost
-            ? AppColors.constructionRed.withOpacity(0.1)
-            : AppColors.constructionGreen.withOpacity(0.1),
+            ? AppColors.constructionRed.withValues(alpha: 0.1)
+            : AppColors.constructionGreen.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: hasCost
-              ? AppColors.constructionRed.withOpacity(0.3)
-              : AppColors.constructionGreen.withOpacity(0.3),
+              ? AppColors.constructionRed.withValues(alpha: 0.3)
+              : AppColors.constructionGreen.withValues(alpha: 0.3),
         ),
       ),
       child: Row(

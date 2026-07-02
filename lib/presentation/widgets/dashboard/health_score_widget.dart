@@ -271,7 +271,7 @@ class _HealthGaugePainter extends CustomPainter {
 
     // Glow effect
     final glowPaint = Paint()
-      ..color = color.withOpacity(0.3)
+      ..color = color.withValues(alpha: 0.3)
       ..strokeWidth = 20
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -364,7 +364,7 @@ class HealthScoreCard extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: [
                 AppColors.surface,
-                statusColor.withOpacity(0.05),
+                statusColor.withValues(alpha: 0.05),
               ],
             ),
           ),
@@ -376,7 +376,7 @@ class HealthScoreCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -421,7 +421,7 @@ class HealthScoreCard extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
+                                color: statusColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(

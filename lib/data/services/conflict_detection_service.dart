@@ -5,7 +5,6 @@
 /// 衝突（コンフリクト）を検出し、警告を生成する。
 
 import '../models/models.dart';
-import '../models/phase_model.dart';
 
 /// 検出されたコンフリクト（衝突）
 class WorkerConflict {
@@ -200,7 +199,7 @@ class ConflictDetectionService {
         var current = task.startDate;
 
         while (!current.isAfter(task.endDate)) {
-          if (!current.isBefore(fromDate!) && !current.isAfter(toDate!)) {
+          if (!current.isBefore(fromDate) && !current.isAfter(toDate)) {
             final dateKey = DateTime(current.year, current.month, current.day);
             tasksByDate.putIfAbsent(dateKey, () => []);
             tasksByDate[dateKey]!.add(taskInfo);

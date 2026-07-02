@@ -42,7 +42,6 @@ class _AIActionCardState extends State<AIActionCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
 
   @override
   void initState() {
@@ -63,17 +62,17 @@ class _AIActionCardState extends State<AIActionCard>
   }
 
   void _handleTapDown(TapDownDetails details) {
-    setState(() => _isPressed = true);
+    setState(() {});
     _animationController.forward();
   }
 
   void _handleTapUp(TapUpDetails details) {
-    setState(() => _isPressed = false);
+    setState(() {});
     _animationController.reverse();
   }
 
   void _handleTapCancel() {
-    setState(() => _isPressed = false);
+    setState(() {});
     _animationController.reverse();
   }
 
@@ -105,20 +104,20 @@ class _AIActionCardState extends State<AIActionCard>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  type.color.withOpacity(0.15),
-                  type.color.withOpacity(0.05),
+                  type.color.withValues(alpha: 0.15),
+                  type.color.withValues(alpha: 0.05),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: type.color.withOpacity(action.isUrgent ? 0.6 : 0.3),
+                color: type.color.withValues(alpha: action.isUrgent ? 0.6 : 0.3),
                 width: action.isUrgent ? 2 : 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: type.color.withOpacity(0.1),
+                  color: type.color.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -144,7 +143,7 @@ class _AIActionCardState extends State<AIActionCard>
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: type.color.withOpacity(0.15),
+                                color: type.color.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -214,7 +213,7 @@ class _AIActionCardState extends State<AIActionCard>
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -282,7 +281,7 @@ class _AIActionCardState extends State<AIActionCard>
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: type.color.withOpacity(0.3),
+                                  color: type.color.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -367,10 +366,10 @@ class _AIActionCardState extends State<AIActionCard>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: type.color.withOpacity(0.1),
+        color: type.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: type.color.withOpacity(0.3),
+          color: type.color.withValues(alpha: 0.3),
         ),
       ),
       child: Material(
@@ -386,7 +385,7 @@ class _AIActionCardState extends State<AIActionCard>
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: type.color.withOpacity(0.15),
+                    color: type.color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
@@ -494,7 +493,7 @@ class AIActionList extends StatelessWidget {
                   Icon(
                     Icons.check_circle_outline,
                     size: 48,
-                    color: AppColors.success.withOpacity(0.5),
+                    color: AppColors.success.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -565,12 +564,12 @@ class AIActionSummaryBar extends StatelessWidget {
           gradient: LinearGradient(
             colors: urgentCount > 0
                 ? [
-                    AppColors.error.withOpacity(0.15),
-                    AppColors.warning.withOpacity(0.1),
+                    AppColors.error.withValues(alpha: 0.15),
+                    AppColors.warning.withValues(alpha: 0.1),
                   ]
                 : [
-                    AppColors.warning.withOpacity(0.1),
-                    AppColors.info.withOpacity(0.05),
+                    AppColors.warning.withValues(alpha: 0.1),
+                    AppColors.info.withValues(alpha: 0.05),
                   ],
           ),
           border: Border(
@@ -584,8 +583,8 @@ class AIActionSummaryBar extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: urgentCount > 0
-                    ? AppColors.error.withOpacity(0.15)
-                    : AppColors.warning.withOpacity(0.15),
+                    ? AppColors.error.withValues(alpha: 0.15)
+                    : AppColors.warning.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

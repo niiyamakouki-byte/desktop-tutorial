@@ -55,12 +55,12 @@ class _WorkerTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border.withOpacity(0.5))),
+        border: Border(bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5))),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.primary.withOpacity(0.2),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
             child: Text(worker.workerName[0], style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 12),
@@ -130,7 +130,7 @@ class _StatItem extends StatelessWidget {
         Icon(icon, color: highlight ? Colors.white : Colors.white70, size: 24),
         const SizedBox(height: 8),
         Text(value, style: TextStyle(color: Colors.white, fontSize: highlight ? 28 : 24, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11)),
+        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11)),
       ],
     );
   }

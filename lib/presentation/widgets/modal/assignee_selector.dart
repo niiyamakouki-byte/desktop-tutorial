@@ -275,7 +275,7 @@ class _AssigneeSelectorState extends State<AssigneeSelector> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppConstants.radiusS),
                   ),
                   child: Text(
@@ -335,7 +335,7 @@ class _AssigneeSelectorState extends State<AssigneeSelector> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -404,11 +404,11 @@ class _SelectedUserChipState extends State<_SelectedUserChip> {
         ),
         decoration: BoxDecoration(
           color: _isHovered
-              ? AppColors.primary.withOpacity(0.15)
+              ? AppColors.primary.withValues(alpha: 0.15)
               : AppColors.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
           border: Border.all(
-            color: AppColors.primary.withOpacity(_isHovered ? 0.5 : 0.3),
+            color: AppColors.primary.withValues(alpha: _isHovered ? 0.5 : 0.3),
           ),
           boxShadow: [
             BoxShadow(
@@ -428,7 +428,7 @@ class _SelectedUserChipState extends State<_SelectedUserChip> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       width: 2,
                     ),
                   ),
@@ -483,7 +483,7 @@ class _SelectedUserChipState extends State<_SelectedUserChip> {
                   height: 22,
                   decoration: BoxDecoration(
                     color: _isHovered
-                        ? AppColors.error.withOpacity(0.15)
+                        ? AppColors.error.withValues(alpha: 0.15)
                         : AppColors.surfaceVariant,
                     shape: BoxShape.circle,
                   ),
@@ -536,7 +536,7 @@ class _UserListTileState extends State<_UserListTile> {
           ),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? AppColors.primary.withOpacity(0.08)
+                ? AppColors.primary.withValues(alpha: 0.08)
                 : _isHovered
                     ? AppColors.surfaceVariant
                     : Colors.transparent,
@@ -634,7 +634,7 @@ class _UserAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.15),
+        color: AppColors.primary.withValues(alpha: 0.15),
         shape: BoxShape.circle,
         image: user.avatarUrl != null
             ? DecorationImage(
@@ -680,7 +680,7 @@ class UserAvatar extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.15),
+            color: AppColors.primary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
             image: user.avatarUrl != null
                 ? DecorationImage(

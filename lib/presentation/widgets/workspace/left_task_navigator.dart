@@ -233,7 +233,7 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? chipColor.withOpacity(0.15) : Colors.transparent,
+          color: isSelected ? chipColor.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? chipColor : AppColors.border,
@@ -445,7 +445,7 @@ class _TaskRow extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
+              ? AppColors.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           border: Border(
             left: BorderSide(
@@ -566,7 +566,7 @@ class _StatusIndicator extends StatelessWidget {
       width: 20,
       height: 20,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
       child: icon != null

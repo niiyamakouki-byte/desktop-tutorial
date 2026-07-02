@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../data/models/dependency_model.dart';
 import '../../../data/models/models.dart';
 
 /// Dialog result for dependency creation
@@ -95,7 +93,7 @@ class _DependencyDialogState extends State<DependencyDialog> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -284,7 +282,7 @@ class _DependencyDialogState extends State<DependencyDialog> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppColors.primary.withOpacity(0.1)
+                  ? AppColors.primary.withValues(alpha: 0.1)
                   : AppColors.surface,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(

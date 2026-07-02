@@ -58,10 +58,6 @@ class _DatePickerSectionState extends State<DatePickerSection> {
     });
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.year}年${date.month}月${date.day}日';
-  }
-
   int get _durationDays {
     return widget.endDate.difference(widget.startDate).inDays + 1;
   }
@@ -106,7 +102,7 @@ class _DatePickerSectionState extends State<DatePickerSection> {
                 vertical: AppConstants.paddingS,
               ),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppConstants.radiusS),
               ),
               child: Row(
@@ -222,7 +218,7 @@ class _DateField extends StatelessWidget {
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.15),
+                    color: AppColors.primary.withValues(alpha: 0.15),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -297,8 +293,8 @@ class _DateField extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isWeekend
                           ? (date.weekday == DateTime.sunday
-                              ? AppColors.error.withOpacity(0.1)
-                              : AppColors.primary.withOpacity(0.1))
+                              ? AppColors.error.withValues(alpha: 0.1)
+                              : AppColors.primary.withValues(alpha: 0.1))
                           : AppColors.surfaceVariant,
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -547,7 +543,7 @@ class _CalendarViewState extends State<_CalendarView> {
                 vertical: AppConstants.paddingS,
               ),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppConstants.radiusS),
               ),
               child: const Row(
@@ -622,14 +618,14 @@ class _CalendarDayState extends State<_CalendarDay> {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       );
     } else if (widget.isStartDate || widget.isEndDate) {
-      backgroundColor = AppColors.primary.withOpacity(0.8);
+      backgroundColor = AppColors.primary.withValues(alpha: 0.8);
       textColor = Colors.white;
       decoration = BoxDecoration(
         color: backgroundColor,
@@ -643,7 +639,7 @@ class _CalendarDayState extends State<_CalendarDay> {
         ),
       );
     } else if (widget.isInRange) {
-      backgroundColor = AppColors.primary.withOpacity(0.15);
+      backgroundColor = AppColors.primary.withValues(alpha: 0.15);
       textColor = AppColors.primary;
       decoration = BoxDecoration(
         color: backgroundColor,
@@ -746,7 +742,7 @@ class DateRangeDisplay extends StatelessWidget {
                 vertical: 2,
               ),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppConstants.radiusS),
               ),
               child: Text(

@@ -5,7 +5,6 @@
 /// AI支援で自動生成する。監督の精神的苦痛を和らげる。
 
 import '../models/models.dart';
-import '../models/phase_model.dart';
 
 /// 遅延の原因カテゴリ
 enum DelayReasonCategory {
@@ -341,7 +340,6 @@ ${newCompletionDate != null ? '【変更後完了予定日】${_formatDate(newCo
     String? senderName,
     DateTime? newCompletionDate,
   }) {
-    final dateStr = _formatDate(event.occurredAt);
     final phaseName = affectedPhase?.name ?? '該当工程';
 
     final subject = '【日程変更】${project.name}邸 ${event.delayDays}日延長のご連絡';

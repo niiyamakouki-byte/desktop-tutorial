@@ -5,19 +5,11 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/models.dart';
-import '../../../data/models/dependency_model.dart';
-import '../../../data/models/phase_model.dart';
 import '../../../data/services/weather_service.dart';
 import '../../../data/services/dependency_service.dart';
-import '../common/context_menu.dart';
 import 'gantt_constants.dart';
 import 'task_list_panel.dart';
 import 'timeline_panel.dart';
-import 'dependency_painter.dart';
-import 'enhanced_dependency_painter.dart';
-import 'dependency_connector.dart';
-import 'dependency_dialog.dart';
-import 'task_row.dart';
 import 'rain_cancel_dialog.dart';
 
 /// Main Gantt Chart widget that combines task list and timeline panels
@@ -258,108 +250,6 @@ class _GanttChartState extends State<GanttChart> {
       final newZoom = _baseZoom * _currentScale;
       _handleZoomChange(newZoom);
     }
-  }
-
-  /// Snap position to grid
-  double _snapToGrid(double position) {
-    if (!widget.enableGridSnap) return position;
-    return (position / widget.gridSnapSize).round() * widget.gridSnapSize;
-  }
-
-  /// Show context menu for a task
-  void _showTaskContextMenu(BuildContext context, Offset position, Task task) {
-    showContextMenu(
-      context: context,
-      position: position,
-      items: [
-        ContextMenuItem(
-          label: '編集',
-          icon: Icons.edit_outlined,
-          onTap: () => widget.onTaskDoubleTap?.call(task),
-        ),
-        ContextMenuItem(
-          label: '複製',
-          icon: Icons.copy_outlined,
-          onTap: () => widget.onTaskDuplicate?.call(task),
-        ),
-        ContextMenuItem(
-          label: '色を変更',
-          icon: Icons.palette_outlined,
-          color: AppColors.primary,
-          onTap: () => _showColorPicker(context, position, task),
-        ),
-        ContextMenuItem(
-          label: '依存関係を追加',
-          icon: Icons.link_outlined,
-          onTap: () {
-            // TODO: Show dependency picker
-          },
-        ),
-        ContextMenuItem(
-          label: '削除',
-          icon: Icons.delete_outline,
-          isDanger: true,
-          onTap: () => _confirmDelete(context, task),
-        ),
-      ],
-    );
-  }
-
-  /// Show color picker for task
-  void _showColorPicker(BuildContext context, Offset position, Task task) {
-    final overlay = Overlay.of(context);
-    late OverlayEntry overlayEntry;
-
-    overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => overlayEntry.remove(),
-              child: Container(color: Colors.transparent),
-            ),
-          ),
-          Positioned(
-            left: position.dx,
-            top: position.dy + 40,
-            child: ColorPickerMenu(
-              selectedColor: AppColors.getCategoryColor(task.category),
-              onColorSelected: (color) {
-                widget.onTaskColorChange?.call(task, color);
-              },
-              onDismiss: () => overlayEntry.remove(),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    overlay.insert(overlayEntry);
-  }
-
-  /// Confirm task deletion
-  void _confirmDelete(BuildContext context, Task task) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('タスクを削除'),
-        content: Text('「${task.name}」を削除してもよろしいですか？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              widget.onTaskDelete?.call(task);
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('削除'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -620,8 +510,8 @@ class _GanttChartState extends State<GanttChart> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.safetyYellow.withOpacity(0.1),
-            AppColors.industrialOrange.withOpacity(0.05),
+            AppColors.safetyYellow.withValues(alpha: 0.1),
+            AppColors.industrialOrange.withValues(alpha: 0.05),
           ],
         ),
         border: const Border(
@@ -633,7 +523,7 @@ class _GanttChartState extends State<GanttChart> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.industrialOrange.withOpacity(0.15),
+              color: AppColors.industrialOrange.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -714,7 +604,7 @@ class _GanttChartState extends State<GanttChart> {
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         border: Border(
           bottom: BorderSide(color: colorScheme.outlineVariant),
         ),
@@ -753,7 +643,7 @@ class _GanttChartState extends State<GanttChart> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.12),
+                  color: AppColors.info.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(
@@ -801,10 +691,10 @@ class _GanttChartState extends State<GanttChart> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.blue[700]!.withOpacity(0.1),
+            color: Colors.blue[700]!.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: Colors.blue[700]!.withOpacity(0.3),
+              color: Colors.blue[700]!.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -859,10 +749,10 @@ class _GanttChartState extends State<GanttChart> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -903,13 +793,13 @@ class _GanttChartState extends State<GanttChart> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: _showWeekends
-                ? AppColors.primary.withOpacity(0.1)
+                ? AppColors.primary.withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
               color: _showWeekends
-                  ? AppColors.primary.withOpacity(0.3)
-                  : AppColors.textSecondary.withOpacity(0.3),
+                  ? AppColors.primary.withValues(alpha: 0.3)
+                  : AppColors.textSecondary.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -975,10 +865,6 @@ class _GanttChartState extends State<GanttChart> {
   }
 
   Widget _buildTimelinePanel() {
-    final totalDays = _endDate.difference(_startDate).inDays + 1;
-    final totalWidth = totalDays * _effectiveDayWidth;
-    final totalHeight = _visibleTasks.length * GanttConstants.rowHeight;
-
     // Build task index map for dependency painter
     final taskIndexMap = <String, int>{};
     for (var i = 0; i < _visibleTasks.length; i++) {
@@ -1037,7 +923,7 @@ class _GanttChartState extends State<GanttChart> {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         border: Border(
           top: BorderSide(color: colorScheme.outlineVariant),
         ),

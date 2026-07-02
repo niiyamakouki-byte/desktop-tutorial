@@ -25,7 +25,7 @@ class PhotoGridView extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: photo.category.color.withOpacity(0.5)),
+              border: Border.all(color: photo.category.color.withValues(alpha: 0.5)),
             ),
             child: Stack(
               fit: StackFit.expand,
@@ -33,7 +33,7 @@ class PhotoGridView extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(11),
                   child: Container(
-                    color: photo.category.color.withOpacity(0.2),
+                    color: photo.category.color.withValues(alpha: 0.2),
                     child: Icon(photo.category.icon, color: photo.category.color, size: 32),
                   ),
                 ),
@@ -72,7 +72,7 @@ class PhotoUploadCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2, strokeAlign: BorderSide.strokeAlignInside),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2, strokeAlign: BorderSide.strokeAlignInside),
         ),
         child: const Column(
           children: [
@@ -110,7 +110,7 @@ class CategoryFilterChips extends StatelessWidget {
             child: FilterChip(
               label: Text(cat.label),
               selected: selected == cat,
-              selectedColor: cat.color.withOpacity(0.3),
+              selectedColor: cat.color.withValues(alpha: 0.3),
               onSelected: (_) => onSelected(cat),
             ),
           )),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/material_model.dart';
-import '../common/glass_container.dart';
 
 /// Order Dashboard Widget
 /// Shows critical alerts, pending orders, and deadlines
@@ -135,9 +134,9 @@ class OrderDashboard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -168,19 +167,19 @@ class OrderDashboard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.constructionRed.withOpacity(0.15),
-            AppColors.industrialOrange.withOpacity(0.1),
+            AppColors.constructionRed.withValues(alpha: 0.15),
+            AppColors.industrialOrange.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.constructionRed.withOpacity(0.3)),
+        border: Border.all(color: AppColors.constructionRed.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.constructionRed.withOpacity(0.2),
+              color: AppColors.constructionRed.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -511,7 +510,7 @@ class _PendingMaterialCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.constructionRed.withOpacity(0.15),
+                      color: AppColors.constructionRed.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(
@@ -528,8 +527,8 @@ class _PendingMaterialCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: daysUntil <= 3
-                          ? AppColors.industrialOrange.withOpacity(0.15)
-                          : AppColors.safetyYellow.withOpacity(0.15),
+                          ? AppColors.industrialOrange.withValues(alpha: 0.15)
+                          : AppColors.safetyYellow.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -539,7 +538,7 @@ class _PendingMaterialCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: daysUntil <= 3
                             ? AppColors.industrialOrange
-                            : AppColors.safetyYellow.withOpacity(0.8),
+                            : AppColors.safetyYellow.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -591,9 +590,9 @@ class _AlertCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(AppConstants.paddingS),
         decoration: BoxDecoration(
-          color: _severityColor.withOpacity(0.05),
+          color: _severityColor.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _severityColor.withOpacity(0.2)),
+          border: Border.all(color: _severityColor.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -657,9 +656,9 @@ class _QuickActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [

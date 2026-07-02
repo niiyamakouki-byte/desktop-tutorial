@@ -215,7 +215,7 @@ class _ChatSectionState extends State<ChatSection> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: resultCount > 0 ? AppColors.primary.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
+                color: resultCount > 0 ? AppColors.primary.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -338,7 +338,7 @@ class _ChatSectionState extends State<ChatSection> {
                 borderRadius: BorderRadius.circular(AppConstants.radiusRound),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.chatUnread.withOpacity(0.4),
+                    color: AppColors.chatUnread.withValues(alpha: 0.4),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -367,7 +367,7 @@ class _ChatSectionState extends State<ChatSection> {
           const SizedBox(width: AppConstants.paddingS),
           Container(
             decoration: BoxDecoration(
-              color: _isSearching ? AppColors.primary.withOpacity(0.1) : AppColors.surfaceVariant,
+              color: _isSearching ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
@@ -560,7 +560,7 @@ class EmptyChatState extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

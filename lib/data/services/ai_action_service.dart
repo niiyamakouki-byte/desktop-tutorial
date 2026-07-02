@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import '../models/ai_action_model.dart';
 import '../models/models.dart';
 
 /// AIアクションサービス

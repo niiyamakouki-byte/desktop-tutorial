@@ -40,7 +40,7 @@ class CriticalPathProgressChart extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.constructionRed.withOpacity(0.1),
+                    color: AppColors.constructionRed.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -136,7 +136,7 @@ class CriticalPathProgressChart extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.constructionRed.withOpacity(0.1),
+                        color: AppColors.constructionRed.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Row(
@@ -174,7 +174,7 @@ class CriticalPathProgressChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -247,7 +247,7 @@ class CriticalPathProgressChart extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.constructionRed.withOpacity(0.3),
+                      color: AppColors.constructionRed.withValues(alpha: 0.3),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -277,12 +277,12 @@ class CriticalPathProgressChart extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: task.isDelayed
-                ? AppColors.constructionRed.withOpacity(0.05)
+                ? AppColors.constructionRed.withValues(alpha: 0.05)
                 : AppColors.surfaceVariant,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: task.isDelayed
-                  ? AppColors.constructionRed.withOpacity(0.3)
+                  ? AppColors.constructionRed.withValues(alpha: 0.3)
                   : AppColors.border,
             ),
           ),
@@ -295,7 +295,7 @@ class CriticalPathProgressChart extends StatelessWidget {
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: progressColor.withOpacity(0.1),
+                      color: progressColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
@@ -422,13 +422,13 @@ class CriticalPathIndicator extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: hasDelays
-            ? AppColors.constructionRed.withOpacity(0.1)
-            : AppColors.constructionGreen.withOpacity(0.1),
+            ? AppColors.constructionRed.withValues(alpha: 0.1)
+            : AppColors.constructionGreen.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: hasDelays
-              ? AppColors.constructionRed.withOpacity(0.3)
-              : AppColors.constructionGreen.withOpacity(0.3),
+              ? AppColors.constructionRed.withValues(alpha: 0.3)
+              : AppColors.constructionGreen.withValues(alpha: 0.3),
         ),
       ),
       child: Row(

@@ -610,6 +610,7 @@ class SafetyService extends ChangeNotifier {
 
   void dispose() {
     // Cleanup if needed
+    super.dispose();
   }
 }
 

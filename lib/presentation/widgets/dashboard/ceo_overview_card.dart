@@ -7,8 +7,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../data/models/models.dart';
-import '../../../data/models/notification_feedback_model.dart';
 
 /// プロジェクトの健全性ステータス
 enum ProjectHealthStatus {
@@ -161,7 +159,7 @@ class CEOOverviewCard extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   AppColors.primary,
-                  AppColors.primary.withOpacity(0.8),
+                  AppColors.primary.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -169,7 +167,7 @@ class CEOOverviewCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -235,9 +233,9 @@ class CEOOverviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -363,7 +361,7 @@ class CEOOverviewCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: project.status.color.withOpacity(0.1),
+                color: project.status.color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -501,7 +499,7 @@ class CEOOverviewCard extends StatelessWidget {
             Icon(
               Icons.folder_off_outlined,
               size: 48,
-              color: AppColors.textTertiary.withOpacity(0.5),
+              color: AppColors.textTertiary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -686,7 +684,7 @@ class CEOOverviewCompact extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
@@ -722,7 +720,7 @@ class CEOOverviewCompact extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.constructionRed.withOpacity(0.1),
+                  color: AppColors.constructionRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(

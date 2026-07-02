@@ -240,7 +240,7 @@ class ColorPickerMenu extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: _colors.map((color) {
-              final isSelected = color.value == selectedColor.value;
+              final isSelected = color.toARGB32() == selectedColor.toARGB32();
               return GestureDetector(
                 onTap: () {
                   onColorSelected(color);
@@ -260,7 +260,7 @@ class ColorPickerMenu extends StatelessWidget {
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: color.withOpacity(0.5),
+                              color: color.withValues(alpha: 0.5),
                               blurRadius: 8,
                             ),
                           ]

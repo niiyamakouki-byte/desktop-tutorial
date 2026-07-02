@@ -77,7 +77,7 @@ class DependencyPainter extends CustomPainter {
     final paint = Paint()
       ..color = isHighlighted
           ? AppColors.ganttDependencyHighlight
-          : AppColors.ganttDependencyLine.withOpacity(0.7)
+          : AppColors.ganttDependencyLine.withValues(alpha: 0.7)
       ..strokeWidth = isHighlighted ? 3.0 : 2.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
@@ -302,7 +302,7 @@ class WeekendHighlightPainter extends CustomPainter {
         );
 
         final paint = Paint()
-          ..color = AppColors.ganttWeekend.withOpacity(GanttConstants.weekendOpacity)
+          ..color = AppColors.ganttWeekend.withValues(alpha: GanttConstants.weekendOpacity)
           ..style = PaintingStyle.fill;
 
         canvas.drawRect(rect, paint);
@@ -364,7 +364,7 @@ class GridPainter extends CustomPainter {
           paint.color = AppColors.ganttGridLine;
           paint.strokeWidth = 1.5;
         } else {
-          paint.color = AppColors.ganttGridLine.withOpacity(0.5);
+          paint.color = AppColors.ganttGridLine.withValues(alpha: 0.5);
           paint.strokeWidth = 0.5;
         }
 

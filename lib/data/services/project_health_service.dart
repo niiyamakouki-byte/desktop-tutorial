@@ -3,9 +3,6 @@
 
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
-import '../models/project_health_model.dart';
-import '../models/dependency_model.dart';
-import '../models/material_model.dart';
 import 'schedule_calculator.dart';
 
 class ProjectHealthService extends ChangeNotifier {
@@ -215,7 +212,6 @@ class ProjectHealthService extends ChangeNotifier {
 
     // Check for resource allocation issues
     int unassignedTasks = 0;
-    int overloadedResources = 0;
 
     for (final task in tasks) {
       if (task.assignees.isEmpty && task.status != 'completed') {

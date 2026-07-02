@@ -89,8 +89,8 @@ class _DarkModeToggleState extends State<DarkModeToggle>
                   boxShadow: [
                     BoxShadow(
                       color: isDark
-                          ? AppColors.primaryDarkMode.withOpacity(0.2)
-                          : AppColors.safetyYellow.withOpacity(0.3),
+                          ? AppColors.primaryDarkMode.withValues(alpha: 0.2)
+                          : AppColors.safetyYellow.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),

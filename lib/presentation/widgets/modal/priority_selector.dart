@@ -135,7 +135,6 @@ class _PriorityChipState extends State<_PriorityChip>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
 
   @override
   void initState() {
@@ -157,17 +156,17 @@ class _PriorityChipState extends State<_PriorityChip>
 
   void _handleTapDown(TapDownDetails details) {
     if (!widget.enabled) return;
-    setState(() => _isPressed = true);
+    setState(() {});
     _animationController.forward();
   }
 
   void _handleTapUp(TapUpDetails details) {
-    setState(() => _isPressed = false);
+    setState(() {});
     _animationController.reverse();
   }
 
   void _handleTapCancel() {
-    setState(() => _isPressed = false);
+    setState(() {});
     _animationController.reverse();
   }
 
@@ -197,7 +196,7 @@ class _PriorityChipState extends State<_PriorityChip>
           ),
           decoration: BoxDecoration(
             color: isSelected
-                ? color.withOpacity(0.15)
+                ? color.withValues(alpha: 0.15)
                 : widget.enabled
                     ? AppColors.surface
                     : AppColors.surfaceVariant,
@@ -209,7 +208,7 @@ class _PriorityChipState extends State<_PriorityChip>
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -225,7 +224,7 @@ class _PriorityChipState extends State<_PriorityChip>
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isSelected ? color : color.withOpacity(0.15),
+                  color: isSelected ? color : color.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -307,7 +306,7 @@ class PriorityIndicator extends StatelessWidget {
         vertical: AppConstants.paddingXS,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppConstants.radiusS),
       ),
       child: Row(

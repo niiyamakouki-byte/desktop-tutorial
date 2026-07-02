@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
-import '../../../data/models/phase_model.dart';
 
 /// Card showing today's top 5 priority tasks
 class TodaysTop5Card extends StatelessWidget {
@@ -79,7 +78,7 @@ class TodaysTop5Card extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   AppColors.industrialOrange,
-                  AppColors.industrialOrange.withOpacity(0.8),
+                  AppColors.industrialOrange.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -87,7 +86,7 @@ class TodaysTop5Card extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.industrialOrange.withOpacity(0.3),
+                  color: AppColors.industrialOrange.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -125,7 +124,7 @@ class TodaysTop5Card extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.industrialOrange.withOpacity(0.1),
+              color: AppColors.industrialOrange.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -172,7 +171,7 @@ class TodaysTop5Card extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isOverdue
-              ? AppColors.constructionRed.withOpacity(0.05)
+              ? AppColors.constructionRed.withValues(alpha: 0.05)
               : Colors.transparent,
           border: const Border(
             bottom: BorderSide(color: AppColors.border, width: 0.5),
@@ -193,7 +192,7 @@ class TodaysTop5Card extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: _getRankColors(rank).first.withOpacity(0.3),
+                    color: _getRankColors(rank).first.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -274,7 +273,7 @@ class TodaysTop5Card extends StatelessWidget {
                             vertical: 1,
                           ),
                           decoration: BoxDecoration(
-                            color: phaseColor.withOpacity(0.1),
+                            color: phaseColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(3),
                           ),
                           child: Text(
@@ -293,7 +292,7 @@ class TodaysTop5Card extends StatelessWidget {
                             vertical: 1,
                           ),
                           decoration: BoxDecoration(
-                            color: phaseColor.withOpacity(0.1),
+                            color: phaseColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(3),
                           ),
                           child: Text(
@@ -413,7 +412,7 @@ class TodaysTop5Card extends StatelessWidget {
             Icon(
               Icons.check_circle_outline,
               size: 48,
-              color: AppColors.constructionGreen.withOpacity(0.5),
+              color: AppColors.constructionGreen.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -636,7 +635,7 @@ class TodaysTop5Compact extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.industrialOrange.withOpacity(0.1),
+                color: AppColors.industrialOrange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(

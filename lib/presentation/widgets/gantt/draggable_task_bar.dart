@@ -254,8 +254,8 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            categoryColor.withOpacity(0.9),
-                            categoryColor.withOpacity(0.75),
+                            categoryColor.withValues(alpha: 0.9),
+                            categoryColor.withValues(alpha: 0.75),
                           ],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -266,25 +266,25 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                               ? AppColors.primary
                               : (widget.isSelected
                                   ? AppColors.primary
-                                  : categoryColor.withOpacity(0.3 + _glowAnimation.value * 0.5)),
+                                  : categoryColor.withValues(alpha: 0.3 + _glowAnimation.value * 0.5)),
                           width: isDragging ? 2.5 : (widget.isSelected ? 2.5 : 1 + _glowAnimation.value),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: categoryColor.withOpacity(isDragging ? 0.4 : 0.15 + _glowAnimation.value * 0.25),
+                            color: categoryColor.withValues(alpha: isDragging ? 0.4 : 0.15 + _glowAnimation.value * 0.25),
                             blurRadius: isDragging ? 16 : 4 + _glowAnimation.value * 8,
                             spreadRadius: isDragging ? 4 : _glowAnimation.value * 2,
                             offset: Offset(0, isDragging ? 4 : 2 + _glowAnimation.value * 2),
                           ),
                           if (widget.isSelected || isDragging)
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 12,
                               spreadRadius: 2,
                             ),
                           if (widget.isCriticalPath)
                             BoxShadow(
-                              color: AppColors.error.withOpacity(0.3),
+                              color: AppColors.error.withValues(alpha: 0.3),
                               blurRadius: 8,
                               spreadRadius: 1,
                             ),
@@ -302,7 +302,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                               child: Container(
                                 width: displayWidth * widget.task.progress,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(GanttConstants.progressOpacity),
+                                  color: Colors.white.withValues(alpha: GanttConstants.progressOpacity),
                                 ),
                               ),
                             ),
@@ -317,8 +317,8 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        AppColors.error.withOpacity(0.8),
-                                        AppColors.error.withOpacity(0.4),
+                                        AppColors.error.withValues(alpha: 0.8),
+                                        AppColors.error.withValues(alpha: 0.4),
                                       ],
                                     ),
                                   ),
@@ -354,7 +354,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(3),
                                     ),
                                     child: Text(
@@ -380,7 +380,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                                   child: Container(
                                     width: _handleWidth,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.3),
+                                      color: Colors.white.withValues(alpha: 0.3),
                                       borderRadius: const BorderRadius.only(
                                         topLeft: Radius.circular(GanttConstants.taskBarRadius),
                                         bottomLeft: Radius.circular(GanttConstants.taskBarRadius),
@@ -391,7 +391,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                                         width: 2,
                                         height: 16,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: Colors.white.withValues(alpha: 0.7),
                                           borderRadius: BorderRadius.circular(1),
                                         ),
                                       ),
@@ -409,7 +409,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                                   child: Container(
                                     width: _handleWidth,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.3),
+                                      color: Colors.white.withValues(alpha: 0.3),
                                       borderRadius: const BorderRadius.only(
                                         topRight: Radius.circular(GanttConstants.taskBarRadius),
                                         bottomRight: Radius.circular(GanttConstants.taskBarRadius),
@@ -420,7 +420,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                                         width: 2,
                                         height: 16,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: Colors.white.withValues(alpha: 0.7),
                                           borderRadius: BorderRadius.circular(1),
                                         ),
                                       ),
@@ -472,7 +472,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -508,7 +508,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: AppColors.error.withOpacity(0.4),
+            color: AppColors.error.withValues(alpha: 0.4),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -553,7 +553,7 @@ class _DraggableTaskBarState extends State<DraggableTaskBar>
                 boxShadow: _isHovered || widget.isSelected
                     ? [
                         BoxShadow(
-                          color: color.withOpacity(0.4),
+                          color: color.withValues(alpha: 0.4),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -594,10 +594,10 @@ class DragPreviewBar extends StatelessWidget {
         width: width,
         height: GanttConstants.taskBarHeight,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(GanttConstants.taskBarRadius),
           border: Border.all(
-            color: color.withOpacity(0.5),
+            color: color.withValues(alpha: 0.5),
             width: 2,
             strokeAlign: BorderSide.strokeAlignOutside,
           ),

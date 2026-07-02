@@ -65,7 +65,7 @@ class _CurrentWorkersCardState extends State<CurrentWorkersCard> {
               end: Alignment.bottomRight,
               colors: [
                 AppColors.surface,
-                const Color(0xFF4CAF50).withOpacity(0.05),
+                const Color(0xFF4CAF50).withValues(alpha: 0.05),
               ],
             ),
           ),
@@ -107,7 +107,7 @@ class _CurrentWorkersCardState extends State<CurrentWorkersCard> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF4CAF50).withOpacity(0.1),
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(
@@ -252,7 +252,7 @@ class _CurrentWorkersCardState extends State<CurrentWorkersCard> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: attendee.hasWarning
-            ? Colors.orange.withOpacity(0.1)
+            ? Colors.orange.withValues(alpha: 0.1)
             : Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
@@ -416,7 +416,7 @@ class CurrentWorkersCompactCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(

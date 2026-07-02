@@ -140,7 +140,7 @@ class _CommunicationSidebarState extends State<CommunicationSidebar>
               GestureDetector(
                 onTap: widget.onClose,
                 child: Container(
-                  color: Colors.black.withOpacity(0.3 * _fadeAnimation.value),
+                  color: Colors.black.withValues(alpha: 0.3 * _fadeAnimation.value),
                 ),
               ),
             // Sidebar
@@ -241,7 +241,7 @@ class _CommunicationSidebarState extends State<CommunicationSidebar>
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: const Icon(

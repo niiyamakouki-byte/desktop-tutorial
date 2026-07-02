@@ -520,7 +520,7 @@ class _TaskEditModalState extends State<TaskEditModal>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppConstants.radiusM),
             ),
             child: const Icon(
@@ -692,7 +692,7 @@ class _TaskEditModalState extends State<TaskEditModal>
                   vertical: AppConstants.paddingS,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? color.withOpacity(0.15) : AppColors.surface,
+                  color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surface,
                   borderRadius: BorderRadius.circular(AppConstants.radiusRound),
                   border: Border.all(
                     color: isSelected ? color : AppColors.border,

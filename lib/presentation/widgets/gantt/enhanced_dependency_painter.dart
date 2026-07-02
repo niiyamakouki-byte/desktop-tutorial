@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/models.dart';
-import '../../../data/models/dependency_model.dart';
 import 'gantt_constants.dart';
 
 /// Enhanced dependency painter with full feature support
@@ -111,13 +110,13 @@ class EnhancedDependencyPainter extends CustomPainter {
       lineColor = AppColors.constructionRed;
       strokeWidth = 3.0;
     } else if (isCritical) {
-      lineColor = AppColors.constructionRed.withOpacity(0.8);
+      lineColor = AppColors.constructionRed.withValues(alpha: 0.8);
       strokeWidth = 2.5;
     } else if (isSelected || isHovered) {
       lineColor = AppColors.primary;
       strokeWidth = 2.5;
     } else {
-      lineColor = AppColors.ganttDependencyLine.withOpacity(0.6);
+      lineColor = AppColors.ganttDependencyLine.withValues(alpha: 0.6);
       strokeWidth = 1.5;
     }
 
@@ -454,7 +453,7 @@ class CriticalPathOverlay extends CustomPainter {
 
       // Draw glow effect
       final glowPaint = Paint()
-        ..color = AppColors.constructionRed.withOpacity(0.2)
+        ..color = AppColors.constructionRed.withValues(alpha: 0.2)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
       final rect = RRect.fromRectAndRadius(
@@ -525,7 +524,7 @@ class DelayImpactOverlay extends CustomPainter {
 
       // Draw delay extension (dashed)
       final delayPaint = Paint()
-        ..color = AppColors.constructionRed.withOpacity(0.3)
+        ..color = AppColors.constructionRed.withValues(alpha: 0.3)
         ..strokeWidth = rowHeight * 0.5
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;

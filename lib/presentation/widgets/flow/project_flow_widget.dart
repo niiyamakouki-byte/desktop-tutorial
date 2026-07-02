@@ -91,7 +91,7 @@ class ProjectFlowWidget extends StatelessWidget {
             boxShadow: isCurrent
                 ? [
                     BoxShadow(
-                      color: AppColors.industrialOrange.withOpacity(0.4),
+                      color: AppColors.industrialOrange.withValues(alpha: 0.4),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),
@@ -116,7 +116,7 @@ class ProjectFlowWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -246,11 +246,11 @@ class ProjectFlowWidget extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppConstants.paddingM),
       decoration: BoxDecoration(
-        color: isCurrent ? AppColors.industrialOrange.withOpacity(0.05) : AppColors.surface,
+        color: isCurrent ? AppColors.industrialOrange.withValues(alpha: 0.05) : AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isCurrent
-              ? AppColors.industrialOrange.withOpacity(0.3)
+              ? AppColors.industrialOrange.withValues(alpha: 0.3)
               : AppColors.border,
           width: isCurrent ? 2 : 1,
         ),
@@ -277,7 +277,7 @@ class ProjectFlowWidget extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: isCurrent
-                        ? AppColors.industrialOrange.withOpacity(0.2)
+                        ? AppColors.industrialOrange.withValues(alpha: 0.2)
                         : AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -346,15 +346,15 @@ class ProjectFlowWidget extends StatelessWidget {
 
     switch (progress.status) {
       case StageStatus.completed:
-        bgColor = AppColors.constructionGreen.withOpacity(0.15);
+        bgColor = AppColors.constructionGreen.withValues(alpha: 0.15);
         iconColor = AppColors.constructionGreen;
         break;
       case StageStatus.inProgress:
-        bgColor = AppColors.industrialOrange.withOpacity(0.15);
+        bgColor = AppColors.industrialOrange.withValues(alpha: 0.15);
         iconColor = AppColors.industrialOrange;
         break;
       case StageStatus.blocked:
-        bgColor = AppColors.constructionRed.withOpacity(0.15);
+        bgColor = AppColors.constructionRed.withValues(alpha: 0.15);
         iconColor = AppColors.constructionRed;
         break;
       default:
@@ -416,7 +416,7 @@ class ProjectFlowWidget extends StatelessWidget {
                   color: item.isCompleted
                       ? AppColors.constructionGreen
                       : (item.isRequired
-                          ? AppColors.industrialOrange.withOpacity(0.5)
+                          ? AppColors.industrialOrange.withValues(alpha: 0.5)
                           : AppColors.border),
                   width: item.isRequired && !item.isCompleted ? 2 : 1,
                 ),
@@ -445,7 +445,7 @@ class ProjectFlowWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
-                        color: AppColors.industrialOrange.withOpacity(0.15),
+                        color: AppColors.industrialOrange.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(3),
                       ),
                       child: const Text(
@@ -485,7 +485,7 @@ class ProjectFlowIndicator extends StatelessWidget {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant.withOpacity(0.5),
+        color: AppColors.surfaceVariant.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(

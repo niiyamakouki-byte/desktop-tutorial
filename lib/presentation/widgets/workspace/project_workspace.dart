@@ -349,17 +349,15 @@ TaskCounts calculateTaskCounts(
 
   for (final task in tasks) {
     // 今日のタスク
-    if (task.startDate != null) {
-      final startDate = DateTime(
-        task.startDate!.year,
-        task.startDate!.month,
-        task.startDate!.day,
-      );
-      if (startDate == todayDate ||
-          (startDate.isBefore(todayDate) &&
-              (task.endDate?.isAfter(todayDate) ?? false))) {
-        today++;
-      }
+    final startDate = DateTime(
+      task.startDate.year,
+      task.startDate.month,
+      task.startDate.day,
+    );
+    if (startDate == todayDate ||
+        (startDate.isBefore(todayDate) &&
+            task.endDate.isAfter(todayDate))) {
+      today++;
     }
 
     // 遅延

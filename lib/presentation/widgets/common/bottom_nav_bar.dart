@@ -43,14 +43,14 @@ class AppBottomNavBar extends StatelessWidget {
         color: AppColors.surfaceDark,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
         ],
         border: Border(
           top: BorderSide(
-            color: AppColors.border.withOpacity(0.3),
+            color: AppColors.border.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -134,7 +134,7 @@ class _NavBarItemState extends State<_NavBarItem>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? AppColors.primary.withOpacity(0.15)
+                ? AppColors.primary.withValues(alpha: 0.15)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
           ),
@@ -165,7 +165,7 @@ class _NavBarItemState extends State<_NavBarItem>
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: (widget.item.badgeColor ?? AppColors.error).withOpacity(0.4),
+                              color: (widget.item.badgeColor ?? AppColors.error).withValues(alpha: 0.4),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -226,15 +226,15 @@ class CriticalAlertsBanner extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.error.withOpacity(0.15),
-            AppColors.error.withOpacity(0.05),
+            AppColors.error.withValues(alpha: 0.15),
+            AppColors.error.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.error.withOpacity(0.3),
+          color: AppColors.error.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -249,7 +249,7 @@ class CriticalAlertsBanner extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.2),
+                    color: AppColors.error.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -274,7 +274,7 @@ class CriticalAlertsBanner extends StatelessWidget {
                       Text(
                         '緊急: $criticalCount件 / 重要: $highCount件',
                         style: TextStyle(
-                          color: AppColors.error.withOpacity(0.8),
+                          color: AppColors.error.withValues(alpha: 0.8),
                           fontSize: 12,
                         ),
                       ),
@@ -307,7 +307,7 @@ class CriticalAlertsBanner extends StatelessWidget {
                 child: Text(
                   '他 ${alerts.length - 3}件のアラート',
                   style: TextStyle(
-                    color: AppColors.error.withOpacity(0.7),
+                    color: AppColors.error.withValues(alpha: 0.7),
                     fontSize: 12,
                   ),
                 ),
@@ -337,7 +337,7 @@ class _AlertItem extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: AppColors.error.withOpacity(0.1),
+              color: AppColors.error.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -352,7 +352,7 @@ class _AlertItem extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: alert.severity.color.withOpacity(0.5),
+                    color: alert.severity.color.withValues(alpha: 0.5),
                     blurRadius: 4,
                   ),
                 ],
@@ -375,7 +375,7 @@ class _AlertItem extends StatelessWidget {
                   Text(
                     alert.message,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 11,
                     ),
                     maxLines: 1,
@@ -387,7 +387,7 @@ class _AlertItem extends StatelessWidget {
             const SizedBox(width: 8),
             Icon(
               Icons.chevron_right,
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               size: 20,
             ),
           ],
@@ -481,18 +481,18 @@ class BudgetOverviewCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.surfaceDark,
-            AppColors.surfaceDark.withOpacity(0.8),
+            AppColors.surfaceDark.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
+          color: AppColors.border.withValues(alpha: 0.3),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -510,7 +510,7 @@ class BudgetOverviewCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -534,7 +534,7 @@ class BudgetOverviewCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.2),
+                    color: AppColors.error.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Row(
@@ -590,7 +590,7 @@ class BudgetOverviewCard extends StatelessWidget {
                   Text(
                     '予算消化率',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 12,
                     ),
                   ),
@@ -610,7 +610,7 @@ class BudgetOverviewCard extends StatelessWidget {
                   Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -628,7 +628,7 @@ class BudgetOverviewCard extends StatelessWidget {
                         boxShadow: [
                           BoxShadow(
                             color: (percentUsed > 90 ? AppColors.error : AppColors.primary)
-                                .withOpacity(0.4),
+                                .withValues(alpha: 0.4),
                             blurRadius: 4,
                           ),
                         ],
@@ -655,7 +655,7 @@ class BudgetOverviewCard extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: onViewDetails,
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -689,7 +689,7 @@ class _BudgetAmount extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             fontSize: 11,
           ),
         ),
@@ -726,10 +726,10 @@ class _CategoryChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: category.color.withOpacity(0.15),
+        color: category.color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: category.color.withOpacity(0.3),
+          color: category.color.withValues(alpha: 0.3),
         ),
       ),
       child: Row(

@@ -96,7 +96,7 @@ class _ProgressSliderState extends State<ProgressSlider>
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: progressColor.withOpacity(0.1),
+                      color: progressColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -134,13 +134,13 @@ class _ProgressSliderState extends State<ProgressSlider>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        progressColor.withOpacity(0.15),
-                        progressColor.withOpacity(0.08),
+                        progressColor.withValues(alpha: 0.15),
+                        progressColor.withValues(alpha: 0.08),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     border: Border.all(
-                      color: progressColor.withOpacity(0.3),
+                      color: progressColor.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -159,7 +159,7 @@ class _ProgressSliderState extends State<ProgressSlider>
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: progressColor.withOpacity(0.7),
+                          color: progressColor.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -223,7 +223,7 @@ class _ProgressSliderState extends State<ProgressSlider>
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                progressColor.withOpacity(0.8),
+                                progressColor.withValues(alpha: 0.8),
                                 progressColor,
                               ],
                             ),
@@ -233,7 +233,7 @@ class _ProgressSliderState extends State<ProgressSlider>
                             boxShadow: _isDragging
                                 ? [
                                     BoxShadow(
-                                      color: progressColor.withOpacity(0.4),
+                                      color: progressColor.withValues(alpha: 0.4),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -316,7 +316,7 @@ class _ProgressSliderState extends State<ProgressSlider>
         Container(
           padding: const EdgeInsets.all(AppConstants.paddingM),
           decoration: BoxDecoration(
-            color: AppColors.surfaceVariant.withOpacity(0.5),
+            color: AppColors.surfaceVariant.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppConstants.radiusM),
           ),
           child: Row(
@@ -349,7 +349,7 @@ class _ProgressSliderState extends State<ProgressSlider>
             height: 32,
             decoration: BoxDecoration(
               color: isActive
-                  ? progressColor.withOpacity(isPassed ? 1.0 : 0.15)
+                  ? progressColor.withValues(alpha: isPassed ? 1.0 : 0.15)
                   : AppColors.surface,
               shape: BoxShape.circle,
               border: Border.all(
@@ -359,7 +359,7 @@ class _ProgressSliderState extends State<ProgressSlider>
               boxShadow: isPassed
                   ? [
                       BoxShadow(
-                        color: progressColor.withOpacity(0.3),
+                        color: progressColor.withValues(alpha: 0.3),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
